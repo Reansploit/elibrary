@@ -34,7 +34,6 @@ export default function Settings() {
           <li>Klik field UID / otomatis fokus, lalu tap kartu.</li>
           <li>UID + Enter terbaca otomatis (tidak perlu klik tombol).</li>
           <li>Klik ikon mata untuk mengintip UID yang tersensor.</li>
-          <li>Untuk tes tanpa hardware pakai tombol “Simulasi scan”.</li>
         </ol>
       </div>
     </div>

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { checkin, checkout, getLoanSettings, listBooks, listLoans, lookupMember } from '../lib/api';
 import type { Book, Loan, LoanSettings } from '../lib/types';
 import { ApiError } from '../lib/types';
-import { simulateScan, useRfidScan } from '../hooks/useRfidScan';
+import { useRfidScan } from '../hooks/useRfidScan';
 import { normalizeUid } from '../lib/rfid';
 import { EyeIcon } from '../components/EyeIcon';
 
@@ -99,8 +99,6 @@ export default function Checkout() {
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <ScanInput value={uid} onChange={setUid} onEnter={() => doLookup(uid)} placeholder="Tap kartu / ketik UID + Enter" />
           <button onClick={() => doLookup(uid)} className="rounded-lg bg-ink px-3 py-2 text-sm text-surface">Cari</button>
-          <button onClick={() => simulateScan('A1B2C3D4')} className="text-xs text-faint underline">Simulasi scan Ana</button>
-          <button onClick={() => simulateScan('C3D4E5F6')} className="text-xs text-faint underline">Simulasi scan (blacklist)</button>
         </div>
         {err && <p className={errCls}>{err}</p>}
         {member && (

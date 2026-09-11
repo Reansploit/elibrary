@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { EyeIcon } from '../components/EyeIcon';
-import { useRfidScan, simulateScan } from '../hooks/useRfidScan';
+import { useRfidScan } from '../hooks/useRfidScan';
 import { registerMember, isValidKamar, normalizeKamar } from '../lib/api';
 import { isValidUid, maskUid, normalizeUid } from '../lib/rfid';
 import { ApiError } from '../lib/types';
@@ -93,11 +93,6 @@ export default function Register() {
               className="absolute right-2.5 top-1/2 -translate-y-1/2 text-faint hover:text-ink"
             >
               <EyeIcon off={showUid} className="h-5 w-5" />
-            </button>
-          </span>
-          <span className="mt-2 block">
-            <button onClick={() => simulateScan('DEADBEEF01')} className="text-xs text-faint underline">
-              Simulasi scan (tanpa hardware)
             </button>
           </span>
         </div>

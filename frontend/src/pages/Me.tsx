@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { EyeIcon } from '../components/EyeIcon';
 import { listLoans, lookupMember } from '../lib/api';
 import { ApiError } from '../lib/types';
-import { simulateScan, useRfidScan } from '../hooks/useRfidScan';
+import { useRfidScan } from '../hooks/useRfidScan';
 
 /** Portal anggota: scan kartu sendiri untuk lihat pinjaman + denda. UID tersensor. */
 export default function Me() {
@@ -44,7 +44,6 @@ export default function Me() {
             </button>
           </span>
           <button onClick={() => load(uid)} className="rounded-lg bg-ink px-4 py-2 text-sm text-surface">Lihat</button>
-          <button onClick={() => simulateScan('A1B2C3D4')} className="self-center text-xs text-faint underline">Demo</button>
         </div>
         {err && <p className="mt-2 rounded-lg bg-red-100 px-3 py-2 text-sm text-red-700 dark:bg-red-500/15 dark:text-red-300">{err}</p>}
       </div>
