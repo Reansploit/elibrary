@@ -1,0 +1,150 @@
+openapi: 3.0.3
+info:
+  title: E-Library API (kontrak front-end ↔ back-end)
+  version: 1.0.0
+  description: >
+    Kontrak resmi v1. Front-end (web/Vite + nanti Tauri & mobile) develop
+    dengan mock sesuai spec ini. Back-end wajib implement persis.
+    Scanner RFID = keyboard-wedge (tap -> UID + Enter), tanpa driver khusus.
+servers:
+  - url: http://localhost:3000/api
+  - url: https://api.perpuskamu.id/api
+security:
+  - bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT }
+  schemas:
+    Role: { type: string, enum: [Administrator, Petugas, Anggota] }
+    Book:
+      type: object
+      required: [id_buku, isbn, judul, pengarang, stok_total]
+      properties:
+        id_buku: { type: string, example: B001 }
+        isbn: { type: string, example: '978-602-1234' }
+        judul: { type: string, example: Magnolia Palace }
+        pengarang: { type: string }
+        penerbit: { type: string }
+        th_terbit: { type: integer, example: 2020 }
+        kategori: { type: string }
+        rak: { type: string, example: A1 }
+        cover_url: { type: string }
+        stok_total: { type: integer }
+        stok_tersedia: { type: integer }
+    Member:
+      type: object
+      properties:
+        id_anggota: { type: string, example: A006 }
+        rfid_uid: { type: string, description: 'Hex uppercase 8-10 char, UNIQUE, immutable', example: A1B2C3D4 }
+        nama: { type: string }
+        jekel: { type: string, enum: [Laki-laki, Perempuan] }
+        kelas: { type: string }
+        no_hp: { type: string }
+        status: { type: string, enum: [active, blacklisted] }
+        blacklist_reason: { type: string }
+        registered_via: { type: string, enum: [kiosk, petugas] }
+        registered_at: { type: string, format: date }
+    Loan:
+      type: object
+      properties:
+        id_sk: { type: string, example: '#48964' }
+        id_buku: { type: string }
+        isbn: { type: string }
+        judul: { type: string }
+        author: { type: string }
+        id_anggota: { type: string }
+        member: { type: string }
+        issued_date: { type: string, format: date }
+        due_date: { type: string, format: date }
+        return_date: { type: string, format: date }
+        fine: { type: integer }
+        status: { type: string, enum: [borrowed, returned, overdue] }
+    LoanSettings:
+      type: object
+      properties:
+        default_loan_days: { type: integer, example: 7 }
+        max_books_per_member: { type: integer, example: 4 }
+        max_extend_times: { type: integer, example: 1 }
+        fine_per_day: { type: integer, example: 1000 }
+    Error:
+      type: object
+      properties:
+        error: { type: string, example: BLACKLISTED }
+        message: { type: string }
+paths:
+  /auth/login:
+    post:
+      security: []
+      summary: Login multi-role
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [username, password], properties: { username: { type: string }, password: { type: string } } } } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: object, properties: { accessToken: { type: string }, user: { type: object } } } } } }
+        '401': { description: Salah kredensial, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+  /auth/me: { get: { summary: Profil saya, responses: { '200': { description: OK } } } }
+  /stats/summary:
+    get: { summary: 8 kartu dashboard (borrowed, returned, overdue, missing, totalBooks, visitors, newMembers, pendingFees + delta), responses: { '200': { description: OK } } }
+  /stats/checkouts:
+    get: { summary: Chart 7 hari borrowed vs returned, responses: { '200': { description: OK } } }
+  /books:
+    get:
+      summary: Search ISBN/judul/author (dipakai page peminjaman)
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+        - { name: available, in: query, schema: { type: boolean } }
+      responses: { '200': { description: OK } }
+    post: { summary: Tambah buku (Admin/Petugas), responses: { '201': { description: Created } } }
+  /members/register:
+    post:
+      security: []
+      summary: Daftar mandiri kiosk via RFID (rate-limit 10/menit/IP)
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [rfid_uid, nama], properties: { rfid_uid: { type: string }, nama: { type: string }, jekel: { type: string }, kelas: { type: string }, no_hp: { type: string } } } } }
+      responses:
+        '201': { description: Terdaftar, kartu langsung aktif }
+        '400': { description: UID_INVALID }
+        '409': { description: ALREADY_REGISTERED }
+  /members/lookup:
+    get:
+      summary: Scan kartu saat pinjam/kembali
+      parameters: [{ name: rfid_uid, in: query, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: Anggota ditemukan + pinjaman_aktif/overdue/denda }
+        '403': { description: BLACKLISTED }
+        '404': { description: NOT_FOUND, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+  /members:
+    get: { summary: List + filter status active|blacklisted, responses: { '200': { description: OK } } }
+  /members/{id}/blacklist:
+    patch:
+      summary: Blacklist/unblacklist oleh petugas
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, properties: { is_blacklisted: { type: boolean }, reason: { type: string } } } } } }
+      responses: { '200': { description: OK } }
+  /loans/checkout:
+    post:
+      summary: Pinjam (member_rfid + book_ids + due_days override; kosong = global)
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [member_rfid, book_ids], properties: { member_rfid: { type: string }, book_ids: { type: array, items: { type: string } }, due_days: { type: integer } } } } }
+      responses:
+        '201': { description: OK, content: { application/json: { schema: { type: object, properties: { id_transaksi: { type: string }, due_date: { type: string, format: date } } } } } }
+        '403': { description: BLACKLISTED }
+        '422': { description: BOOK_UNAVAILABLE / LOAN_LIMIT_EXCEEDED }
+  /loans/checkin:
+    post:
+      summary: Kembali, WAJIB scan ganda (confirm_uid harus sama dengan member_rfid)
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [member_rfid, loan_ids, confirm_uid], properties: { member_rfid: { type: string }, loan_ids: { type: array, items: { type: string } }, confirm_uid: { type: string } } } } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: object, properties: { returned: { type: integer }, total_fine: { type: integer } } } } } }
+        '422': { description: CONFIRM_MISMATCH }
+  /settings/loan:
+    get: { summary: Baca aturan global, responses: { '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/LoanSettings' } } } } } }
+    put: { summary: Ubah aturan (Administrator), responses: { '200': { description: OK } } }
+  /me/loans:
+    get: { summary: Portal anggota — pinjaman saya, responses: { '200': { description: OK } } }
+  /reports/sirkulasi:
+    get: { summary: Laporan + export pdf, responses: { '200': { description: OK } } }

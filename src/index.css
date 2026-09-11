@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand: #5cb86b;
+  --color-brand-dark: #45a055;
+  --color-ink: #1e293b;
+  --color-muted: #64748b;
+  --color-line: #eef0f3;
+  --color-bg: #f4f5f6;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scanner burst input: jangan tampilkan caret blink mengganggu di kiosk */
+.rfid-input {
+  caret-color: var(--color-brand);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+}
