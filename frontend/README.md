@@ -1,32 +1,58 @@
-# React + TypeScript + Vite
+# Frontend — Perpustakaan Wonosalam (E-Library)
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Front-end only (React + Vite + TypeScript + Tailwind). Back-end digarap tim
+terpisah sesuai kontrak `openapi.yaml`. Folder ini di repo tampil sebagai
+`frontend/` (nama lokal lama `web/` sudah di-rename).
 
-Currently, two official plugins are available:
+## Jalankan
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+cd frontend
+npm install
+npm run dev      # http://localhost:5173  (login mock: admin/123, petugas/123)
+npm run build    # output statis di dist/ — siap dibungkus Tauri+Rust
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## Mode Mock (default)
+
+`VITE_API_MOCK=true` → semua API dimock di browser (localStorage), jadi
+front-end bisa jalan & dites scanner RFID fisik tanpa back-end.
+Ganti ke API asli:
+
+```bash
+VITE_API_MOCK=false
+VITE_API_URL=http://localhost:3000/api
+```
+
+Lihat `.env.example`.
+
+## Kontrak untuk tim back-end
+
+Acuan wajib: **`openapi.yaml`** (v1.2.0) — auth JWT multi-role, stats
+dashboard + filter range, CRUD buku + filter, members + RFID kiosk/lookup/
+blacklist, checkout/checkin scan-ganda, setting durasi global, notifikasi,
+portal anggota, ganti password.
+
+Poin penting:
+
+- Scanner RFID = keyboard-wedge (tap kartu → UID + Enter). UID valid: hex
+  8–10 char; di UI selalu tampil tersensor (`••••XXXX`).
+- Daftar mandiri via `/register` (kiosk, tanpa login). Rate-limit 10/mnt/IP.
+- Field anggota: `kamar` format `angka-angka-angka` (cth. `1-3-4`),
+  bukan nomor HP.
+- Pengembalian wajib scan ulang kartu yang sama (`confirm_uid`).
+
+## Struktur singkat
+
+```
+src/
+  pages/       Dashboard, Members, Books (Data Buku + modal CRUD),
+               Checkout (pinjam/kembali), Register (kiosk), Me (portal),
+               Settings, Profile, Login
+  components/  Layout, Notifications, ThemeToggle, BookModal, EyeIcon
+  hooks/       useRfidScan (tangkap scan keyboard-wedge)
+  lib/         api.ts (mock ↔ real), types.ts, rfid.ts
+  mocks/       db.ts (seed + localStorage)
+  store/       auth.ts, theme.ts (light/dark/system)
+openapi.yaml   KONTRAK API
+```
