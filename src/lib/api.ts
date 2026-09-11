@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { loadDb, saveDb } from '../mocks/db';
 import { isValidUid, normalizeUid } from './rfid';
-import { ApiError, type Book, type CheckinResult, type CheckoutResult, type Loan, type LoanSettings, type Member } from './types';
+import { ApiError, type AppNotification, type Book, type CheckinResult, type CheckoutResult, type Loan, type LoanSettings, type Member } from './types';
 
 const MOCK = import.meta.env.VITE_API_MOCK !== 'false';
 const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api';
@@ -23,6 +23,14 @@ const USERS = [
   { id: '2', nama: 'Petugas', username: 'petugas', password: '123', role: 'Petugas' as const },
 ];
 
+export async function changePassword(oldPassword: string, newPassword: string) {
+  await delay();
+  if (newPassword.length < 4) throw new ApiError('WEAK_PASSWORD', 'Password baru minimal 4 karakter', 400);
+  if (!MOCK) return (await http.patch('/auth/password', { oldPassword, newPassword })).data;
+  if (!oldPassword) throw new ApiError('WRONG_PASSWORD', 'Password lama salah', 401);
+  return { ok: true };
+}
+
 export async function login(username: string, password: string) {
   await delay();
   if (MOCK) {
@@ -35,69 +43,148 @@ export async function login(username: string, password: string) {
 }
 
 // ---------- Stats ----------
-export async function getSummary() {
+export type RangeKey = '7d' | '1m' | '6m' | '1y' | 'custom';
+
+const RANGE_FACTOR: Record<RangeKey, number> = { '7d': 0.06, '1m': 0.22, '6m': 1, '1y': 1.9, custom: 0.5 };
+const RANGE_LABEL: Record<RangeKey, string> = { '7d': '7 hari', '1m': '1 bulan', '6m': '6 bulan', '1y': '1 tahun', custom: 'kustom' };
+
+export function rangeLabel(r: RangeKey) {
+  return RANGE_LABEL[r];
+}
+
+export async function getSummary(range: RangeKey = '6m', from?: string, to?: string) {
   await delay();
-  if (!MOCK) return (await http.get('/stats/summary?range=6m')).data;
+  if (!MOCK) return (await http.get('/stats/summary', { params: { range, from, to } })).data;
   const db = loadDb();
+  const f = RANGE_FACTOR[range];
+  const scale = (n: number) => Math.max(1, Math.round(n * f));
   const borrowed = db.loans.filter((l) => l.status !== 'returned').length;
   const overdue = db.loans.filter((l) => l.status === 'overdue').length;
+  void from; void to;
   return {
-    borrowed: 2405 + borrowed, borrowedDelta: 23,
-    returned: 783, returnedDelta: -14,
-    overdue: 45 + overdue, overdueDelta: -11,
-    missing: 12, missingDelta: 11,
+    borrowed: scale(2405) + borrowed, borrowedDelta: 23,
+    returned: scale(783), returnedDelta: -14,
+    overdue: scale(45) + overdue, overdueDelta: -11,
+    missing: scale(12), missingDelta: 11,
     totalBooks: 32345 + db.books.length, totalBooksDelta: 11,
-    visitors: 1504, visitorsDelta: 3,
-    newMembers: 34, newMembersDelta: -10,
-    pendingFees: 765000, pendingFeesDelta: 56,
+    visitors: scale(1504), visitorsDelta: 3,
+    newMembers: scale(34), newMembersDelta: -10,
+    pendingFees: Math.round(765000 * f), pendingFeesDelta: 56,
   };
 }
 
-export async function getCheckoutChart() {
-  await delay();
-  if (!MOCK) return (await http.get('/stats/checkouts?groupBy=day&range=7d')).data;
-  return {
+const CHARTS: Record<Exclude<RangeKey, 'custom'>, { labels: string[]; borrowed: number[]; returned: number[] }> = {
+  '7d': {
     labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
     borrowed: [2500, 4500, 3000, 3200, 3500, 1800, 3500],
     returned: [1400, 3200, 2100, 4400, 3800, 4200, 2500],
-  };
+  },
+  '1m': {
+    labels: ['W1', 'W2', 'W3', 'W4'],
+    borrowed: [9800, 11200, 8600, 10400],
+    returned: [7200, 9100, 8300, 9600],
+  },
+  '6m': {
+    labels: ['Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep'],
+    borrowed: [32000, 38000, 35000, 41000, 39000, 42000],
+    returned: [28000, 31000, 33000, 36000, 35000, 38000],
+  },
+  '1y': {
+    labels: ['Okt', 'Nov', 'Des', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep'],
+    borrowed: [28000, 30000, 26000, 31000, 33000, 32000, 38000, 35000, 41000, 39000, 40000, 42000],
+    returned: [24000, 27000, 23000, 28000, 30000, 29000, 31000, 33000, 36000, 35000, 37000, 38000],
+  },
+};
+
+export async function getCheckoutChart(range: RangeKey = '6m', from?: string, to?: string) {
+  await delay();
+  if (!MOCK) return (await http.get('/stats/checkouts', { params: { range, from, to } })).data;
+  void from; void to;
+  return CHARTS[range === 'custom' ? '1m' : range];
 }
 
 // ---------- Books ----------
-export async function listBooks(search = ''): Promise<{ data: Book[]; total: number }> {
+export type BookField = 'all' | 'judul' | 'pengarang' | 'penerbit' | 'isbn' | 'kategori' | 'rak';
+
+export async function listBooks(search = '', field: BookField = 'all'): Promise<{ data: Book[]; total: number }> {
   await delay();
-  if (!MOCK) return (await http.get('/books', { params: { search } })).data;
+  if (!MOCK) return (await http.get('/books', { params: { search, field } })).data;
   const db = loadDb();
   const q = search.toLowerCase();
-  const data = db.books.filter(
-    (b) => !q || b.judul.toLowerCase().includes(q) || b.pengarang.toLowerCase().includes(q) || b.isbn.includes(q) || b.id_buku.toLowerCase().includes(q),
-  );
+  const hit = (b: Book) => {
+    if (!q) return true;
+    const get = (f: Exclude<BookField, 'all'>) => String(b[f] ?? '').toLowerCase();
+    if (field === 'all') {
+      return b.judul.toLowerCase().includes(q) || b.pengarang.toLowerCase().includes(q) || b.isbn.includes(q) || b.id_buku.toLowerCase().includes(q) || b.penerbit.toLowerCase().includes(q) || b.kategori.toLowerCase().includes(q);
+    }
+    if (field === 'isbn') return b.isbn.includes(q) || b.id_buku.toLowerCase().includes(q);
+    return get(field).includes(q);
+  };
+  const data = db.books.filter(hit);
   return { data, total: data.length };
 }
 
 export async function createBook(input: Omit<Book, 'stok_tersedia'> & { stok_tersedia?: number }): Promise<Book> {
   await delay();
+  if (input.stok_total < 0) throw new ApiError('INVALID_STOK', 'Stok tidak boleh negatif', 400);
   if (!MOCK) return (await http.post('/books', input)).data;
   const db = loadDb();
+  if (db.books.some((b) => b.id_buku === input.id_buku)) throw new ApiError('DUPLICATE_ID', `ID ${input.id_buku} sudah dipakai`, 409);
   const book: Book = { ...input, stok_tersedia: input.stok_tersedia ?? input.stok_total };
   db.books.unshift(book);
   saveDb(db);
   return book;
 }
 
+export async function updateBook(id: string, patch: Partial<Book>): Promise<Book> {
+  await delay();
+  if (patch.stok_total !== undefined && patch.stok_total < 0) throw new ApiError('INVALID_STOK', 'Stok tidak boleh negatif', 400);
+  if (!MOCK) return (await http.patch(`/books/${id}`, patch)).data;
+  const db = loadDb();
+  const b = db.books.find((x) => x.id_buku === id);
+  if (!b) throw new ApiError('NOT_FOUND', 'Buku tidak ditemukan', 404);
+  Object.assign(b, patch);
+  // jaga konsistensi: tersedia tidak boleh melebihi total
+  if (b.stok_tersedia > b.stok_total) b.stok_tersedia = b.stok_total;
+  saveDb(db);
+  return b;
+}
+
+export async function deleteBook(id: string): Promise<void> {
+  await delay();
+  if (!MOCK) { await http.delete(`/books/${id}`); return; }
+  const db = loadDb();
+  const active = db.loans.some((l) => l.id_buku === id && l.status !== 'returned');
+  if (active) throw new ApiError('BOOK_BORROWED', 'Buku masih dipinjam, tidak bisa dihapus', 422);
+  db.books = db.books.filter((b) => b.id_buku !== id);
+  saveDb(db);
+}
+
 // ---------- Members + RFID ----------
-export async function registerMember(input: { rfid_uid: string; nama: string; jekel: Member['jekel']; kelas: string; no_hp: string }): Promise<Member> {
+export const KAMAR_RE = /^\d{1,2}-\d{1,2}-\d{1,3}$/;
+
+export function normalizeKamar(raw: string): string {
+  return raw.replace(/[^0-9-]/g, '').replace(/-{2,}/g, '-').replace(/^-|-$/g, '');
+}
+
+export function isValidKamar(kamar: string): boolean {
+  return KAMAR_RE.test(kamar.trim());
+}
+
+export async function registerMember(input: { rfid_uid: string; nama: string; jekel: Member['jekel']; kelas: string; kamar: string }): Promise<Member> {
   await delay();
   const uid = normalizeUid(input.rfid_uid);
   if (!isValidUid(uid)) throw new ApiError('UID_INVALID', 'UID kartu tidak valid (harus hex 8-10 karakter)', 400);
-  if (!MOCK) return (await http.post('/members/register', { ...input, rfid_uid: uid })).data;
+  const kamar = input.kamar.trim();
+  if (!isValidKamar(kamar)) throw new ApiError('KAMAR_INVALID', 'Format kamar salah, contoh: 1-3-4', 400);
+  if (!MOCK) return (await http.post('/members/register', { ...input, kamar, rfid_uid: uid })).data;
   const db = loadDb();
   if (db.members.some((m) => m.rfid_uid === uid)) throw new ApiError('ALREADY_REGISTERED', 'Kartu sudah terdaftar', 409);
   const n = db.members.length + 1;
   const m: Member = {
     id_anggota: 'A' + String(100 + n).padStart(3, '0'),
     rfid_uid: uid,
-    nama: input.nama, jekel: input.jekel, kelas: input.kelas, no_hp: input.no_hp,
+    nama: input.nama, jekel: input.jekel, kelas: input.kelas, kamar,
     status: 'active', registered_via: 'kiosk', registered_at: today(),
   };
   db.members.unshift(m);
@@ -199,6 +286,74 @@ export async function checkin(member_rfid: string, loan_ids: string[], confirm_u
   }
   saveDb(db);
   return { returned: items.length, total_fine: total, items };
+}
+
+// ---------- Notifications (mock: diturunkan dari data; real: GET /notifications) ----------
+const NOTIF_READ_KEY = 'elib_notif_read_v1';
+
+function readIds(): string[] {
+  try {
+    return JSON.parse(localStorage.getItem(NOTIF_READ_KEY) ?? '[]') as string[];
+  } catch {
+    return [];
+  }
+}
+
+export async function getNotifications(): Promise<(AppNotification & { read: boolean })[]> {
+  await delay(150);
+  if (!MOCK) {
+    const { data } = await http.get('/notifications');
+    const read = new Set(readIds());
+    return (data as AppNotification[]).map((n) => ({ ...n, read: read.has(n.id) }));
+  }
+  const db = loadDb();
+  const items: AppNotification[] = [];
+  for (const l of db.loans.filter((x) => x.status === 'overdue')) {
+    items.push({
+      id: `ov-${l.id_sk}`, kind: 'overdue',
+      title: `Overdue: ${l.judul}`,
+      desc: `${l.member} • jatuh tempo ${l.due_date} • denda Rp${l.fine}`,
+      link: '/checkout',
+    });
+  }
+  for (const b of db.books.filter((x) => x.stok_tersedia <= 2)) {
+    items.push({
+      id: `st-${b.id_buku}`, kind: 'stock',
+      title: `Stok menipis: ${b.judul}`,
+      desc: `Tersisa ${b.stok_tersedia} dari ${b.stok_total} • rak ${b.rak}`,
+      link: '/books',
+    });
+  }
+  for (const m of db.members.filter((x) => x.registered_via === 'kiosk')) {
+    items.push({
+      id: `nm-${m.id_anggota}`, kind: 'member',
+      title: `Anggota baru via kiosk: ${m.nama}`,
+      desc: `${m.id_anggota} • kamar ${m.kamar}`,
+      link: '/members',
+    });
+  }
+  const pending = db.loans.reduce((a, l) => a + l.fine, 0);
+  if (pending > 0) {
+    items.push({
+      id: 'fee-pending', kind: 'fee',
+      title: 'Denda pending perlu ditagih',
+      desc: `Total Rp${pending} dari pinjaman overdue`,
+      link: '/checkout',
+    });
+  }
+  const read = new Set(readIds());
+  return items.map((n) => ({ ...n, read: read.has(n.id) }));
+}
+
+export async function markNotificationRead(id: string) {
+  const ids = new Set(readIds());
+  ids.add(id);
+  localStorage.setItem(NOTIF_READ_KEY, JSON.stringify([...ids]));
+}
+
+export async function markAllNotificationsRead() {
+  const items = await getNotifications();
+  localStorage.setItem(NOTIF_READ_KEY, JSON.stringify(items.map((i) => i.id)));
 }
 
 // ---------- Settings ----------

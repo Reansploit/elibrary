@@ -27,7 +27,8 @@ export interface Member {
   nama: string;
   jekel: 'Laki-laki' | 'Perempuan';
   kelas: string;
-  no_hp: string;
+  /** Nomor kamar santri, format angka-angka-angka, contoh "1-3-4". */
+  kamar: string;
   status: 'active' | 'blacklisted';
   blacklist_reason?: string;
   registered_via: 'kiosk' | 'petugas';
@@ -54,6 +55,14 @@ export interface LoanSettings {
   max_books_per_member: number;
   max_extend_times: number;
   fine_per_day: number;
+}
+
+export interface AppNotification {
+  id: string;
+  kind: 'overdue' | 'stock' | 'fee' | 'member';
+  title: string;
+  desc: string;
+  link: string;
 }
 
 export interface CheckoutResult {

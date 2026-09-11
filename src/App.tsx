@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Me from './pages/Me';
 import Members from './pages/Members';
+import Profile from './pages/Profile';
 import Register from './pages/Register';
 import Settings from './pages/Settings';
 
@@ -32,6 +33,7 @@ export default function App() {
           <Route path="/books" element={<Guard><Books /></Guard>} />
           <Route path="/checkout" element={<Guard><Checkout /></Guard>} />
           <Route path="/me" element={<Guard><Me /></Guard>} />
+          <Route path="/profile" element={<Guard><Profile /></Guard>} />
           <Route path="/settings" element={<Guard><Settings /></Guard>} />
           <Route path="*" element={<p style={{ padding: 24 }}>Halaman tidak ditemukan. <a href="/">Kembali</a></p>} />
         </Routes>

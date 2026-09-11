@@ -1,12 +1,52 @@
 @import "tailwindcss";
 
-@theme {
-  --color-brand: #5cb86b;
-  --color-brand-dark: #45a055;
-  --color-ink: #1e293b;
-  --color-muted: #64748b;
-  --color-line: #eef0f3;
-  --color-bg: #f4f5f6;
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Token semantik: komponen memakai bg-surface, text-muted, bg-brand, dst.
+   Nilai riil hidup di :root / .dark sehingga satu ganti token = seluruh app ikut. */
+@theme inline {
+  --color-brand: var(--brand);
+  --color-brand-dark: var(--brand-dark);
+  --color-brand-soft: var(--brand-soft);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+}
+
+/* Light — disampling dari Refrences/gradient.png (oranye solid kiri → taupe kanan) */
+:root {
+  color-scheme: light;
+  --brand: #de7a00;
+  --brand-dark: #c66a00;
+  --brand-soft: #fbf0dc;
+  --bg: #f7f4ee;
+  --surface: #ffffff;
+  --surface-2: #f1eadd;
+  --ink: #2a2118;
+  --muted: #6e6252;
+  --faint: #8a8073;
+  --line: #e7dcc8;
+  --gradient: linear-gradient(135deg, #de7a00, #8a8073);
+}
+
+/* Dark — oranye digelapkan dikit + background gelap */
+.dark {
+  color-scheme: dark;
+  --brand: #c97600;
+  --brand-dark: #e07f0a;
+  --brand-soft: rgba(201, 118, 0, 0.16);
+  --bg: #171208;
+  --surface: #241b10;
+  --surface-2: #2e2314;
+  --ink: #f3e9d8;
+  --muted: #c9b895;
+  --faint: #8f7f63;
+  --line: #3a2d1c;
+  --gradient: linear-gradient(135deg, #a85e00, #6e6252);
 }
 
 html, body, #root {
@@ -16,14 +56,20 @@ html, body, #root {
 body {
   margin: 0;
   font-family: ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
-  background: var(--color-bg);
-  color: var(--color-ink);
+  background: var(--bg);
+  color: var(--ink);
   -webkit-font-smoothing: antialiased;
+}
+
+/* Gradien brand — hanya untuk aksen/dekorasi (strip login, boks kiosk).
+   Tombol & nav aktif tetap solid oranye demi kontras. */
+.bg-brand-gradient {
+  background-image: var(--gradient);
 }
 
 /* Scanner burst input: jangan tampilkan caret blink mengganggu di kiosk */
 .rfid-input {
-  caret-color: var(--color-brand);
+  caret-color: var(--brand);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.08em;
 }

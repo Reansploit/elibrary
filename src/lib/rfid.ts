@@ -13,6 +13,13 @@ export function isValidUid(uid: string): boolean {
   return /^[0-9A-F]{8}$/.test(v) || /^[0-9A-F]{10}$/.test(v) || /^[0-9]{8,10}$/.test(v);
 }
 
+/** Samarkan UID untuk tampilan: "A1B2C3D4" -> "••••C3D4". */
+export function maskUid(uid: string): string {
+  const v = normalizeUid(uid);
+  if (v.length <= 4) return '••••';
+  return '••••' + v.slice(-4);
+}
+
 /**
  * Heuristik bedakan scan vs ketikan manual:
  * scanner mengetik ~5-30ms/karakter, manusia >80ms.

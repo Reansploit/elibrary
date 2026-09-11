@@ -1,6 +1,6 @@
 import type { Book, Loan, LoanSettings, Member } from '../lib/types';
 
-const KEY = 'elib_db_v1';
+const KEY = 'elib_db_v2';
 
 export interface Db {
   books: Book[];
@@ -20,9 +20,9 @@ function seed(): Db {
       { id_buku: 'B005', isbn: '3234', judul: 'Treasure Island', pengarang: 'Philip Siphon', penerbit: 'Toni Perc', th_terbit: 2020, kategori: 'Petualangan', rak: 'C1', stok_total: 9, stok_tersedia: 7 },
     ],
     members: [
-      { id_anggota: 'A001', rfid_uid: 'A1B2C3D4', nama: 'Ana', jekel: 'Perempuan', kelas: 'Juwana', no_hp: '089987789000', status: 'active', registered_via: 'petugas', registered_at: '2024-01-10' },
-      { id_anggota: 'A002', rfid_uid: 'B2C3D4E5', nama: 'Bagus', jekel: 'Laki-laki', kelas: 'Demak', no_hp: '089987789098', status: 'active', registered_via: 'petugas', registered_at: '2024-02-01' },
-      { id_anggota: 'A005', rfid_uid: 'C3D4E5F6', nama: 'Edi', jekel: 'Laki-laki', kelas: 'Demak', no_hp: '089987789098', status: 'blacklisted', blacklist_reason: 'Buku hilang belum ganti', registered_via: 'petugas', registered_at: '2024-03-01' },
+      { id_anggota: 'A001', rfid_uid: 'A1B2C3D4', nama: 'Ana', jekel: 'Perempuan', kelas: 'Juwana', kamar: '1-2-3', status: 'active', registered_via: 'petugas', registered_at: '2024-01-10' },
+      { id_anggota: 'A002', rfid_uid: 'B2C3D4E5', nama: 'Bagus', jekel: 'Laki-laki', kelas: 'Demak', kamar: '1-3-4', status: 'active', registered_via: 'petugas', registered_at: '2024-02-01' },
+      { id_anggota: 'A005', rfid_uid: 'C3D4E5F6', nama: 'Edi', jekel: 'Laki-laki', kelas: 'Demak', kamar: '2-1-1', status: 'blacklisted', blacklist_reason: 'Buku hilang belum ganti', registered_via: 'petugas', registered_at: '2024-03-01' },
     ],
     loans: [
       { id_sk: '#48964', id_buku: 'B001', isbn: '3234', judul: 'Magnolia Palace', author: 'Fiona Davis', id_anggota: 'A001', member: 'Philip Workman', issued_date: '2026-09-02', due_date: '2026-09-09', fine: 10000, status: 'overdue' },
