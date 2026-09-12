@@ -109,6 +109,6 @@ return new class extends Migration
                 ->onDelete('cascade')
                 ->onUpdate('cascade')
                 ->name('log_pinjam_ibfk_1');
-        }
+        });
     }
 };
