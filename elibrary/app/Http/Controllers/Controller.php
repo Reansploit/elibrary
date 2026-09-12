@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 abstract class Controller
 {
@@ -33,44 +35,73 @@ abstract class Controller
 
     /**
      * URL publik untuk file foto (atau null bila tidak ada).
+     * Upload baru tinggal di public/, file lama (era symlink storage)
+     * tetap dilayani lewat /storage/ bila masih ada di sana.
      */
     protected static function photoUrl(?string $path): ?string
     {
-        return $path ? '/storage/' . ltrim($path, '/') : null;
+        if (! $path) {
+            return null;
+        }
+
+        $path = ltrim($path, '/');
+
+        if (is_file(public_path($path))) {
+            return '/' . $path;
+        }
+
+        return '/storage/' . $path;
     }
 
     /**
-     * Simpan upload foto baru (opsional): ganti file lama bila ada upload,
-     * hapus bila diminta via flag `hapus_foto`. Kembalikan path baru (atau lama).
+     * Simpan upload foto baru (opsional) langsung di public/ agar tidak
+     * bergantung pada symlink storage. Ganti/hapus file lama bila ada.
+     * Kembalikan path baru (atau lama).
      */
     protected function storePhoto(Request $request, string $field, string $dir, ?string $old = null): ?string
     {
+        $dir = trim($dir, '/');
+
         if ($request->boolean('hapus_foto')) {
-            if ($old) {
-                Storage::disk('public')->delete($old);
-            }
+            $this->deletePhoto($old);
 
             return null;
         }
 
         if ($request->hasFile($field)) {
-            if ($old) {
-                Storage::disk('public')->delete($old);
-            }
+            $this->deletePhoto($old);
 
-            return $request->file($field)->store($dir, 'public');
+            $file = $request->file($field);
+            $ext = strtolower($file->getClientOriginalExtension() ?: 'jpg');
+            $name = Str::random(40) . '.' . $ext;
+
+            File::ensureDirectoryExists(public_path($dir));
+            $file->move(public_path($dir), $name);
+
+            return $dir . '/' . $name;
         }
 
         return $old;
     }
 
     /**
-     * Hapus file foto dari storage (abaikan bila kosong).
+     * Hapus file foto (abaikan bila kosong). Cek lokasi baru dulu,
+     * lalu lokasi lama era symlink.
      */
     protected function deletePhoto(?string $path): void
     {
-        if ($path) {
-            Storage::disk('public')->delete($path);
+        if (! $path || str_contains($path, '..')) {
+            return;
         }
+
+        $path = ltrim($path, '/');
+
+        if (is_file(public_path($path))) {
+            @unlink(public_path($path));
+
+            return;
+        }
+
+        Storage::disk('public')->delete($path);
     }
 }

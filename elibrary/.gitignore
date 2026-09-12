@@ -16,6 +16,8 @@
 /node_modules
 /public/build
 /public/fonts-manifest.dev.json
+/public/foto-anggota
+/public/foto-buku
 /public/hot
 /public/storage
 /storage/*.key
