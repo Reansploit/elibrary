@@ -18,6 +18,15 @@ Hasil: `src-tauri\target\release\bundle\` (`.exe` + installer `.msi`/nsis).
 Prasyarat sekali saja: Node.js LTS + Rust (`rustup-init.exe`)
 + Visual Studio Build Tools workload C++.
 
+## Rilis update wrapper
+
+1. Naikkan versi di 3 tempat: `dist/index.html` (`WRAPPER_VERSION`),
+   `src-tauri/tauri.conf.json` (`version`), `src-tauri/Cargo.toml` (`version`)
+2. Build ulang seperti di atas, bagikan installer ke PC client
+3. Di server, isi `elibrary/public/wrapper-version.json`:
+   `version` baru + `download_url` installer + `notes` opsional —
+   splash di client otomatis menawarkan update
+
 ## Kembali ke versi lama
 
 Semua perubahan tercatat di git. Untuk membatalkan:
