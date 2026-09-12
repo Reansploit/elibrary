@@ -56,7 +56,7 @@ class DashboardController extends Controller
             ->where('tgl_kembali', '!=', '0000-00-00')
             ->orderBy('tgl_kembali')
             ->get()
-            ->map(function ($c) {
+            ->map(function ($c) use ($today) {
                 return [
                     'id' => $c->id_sk,
                     'book' => $c->book?->judul_buku ?? '-',
@@ -75,7 +75,7 @@ class DashboardController extends Controller
             ->where('tgl_kembali', '!=', '0000-00-00')
             ->orderBy('tgl_kembali')
             ->get()
-            ->map(function ($c) {
+            ->map(function ($c) use ($today) {
                 return [
                     'id' => $c->id_sk,
                     'book' => $c->book?->judul_buku ?? '-',
