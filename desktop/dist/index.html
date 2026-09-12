@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>E-Library</title>
+  <style>
+    body { font-family: system-ui, sans-serif; display: grid; place-items: center;
+      height: 100vh; margin: 0; background: #F9F8F6; color: #1C1917; }
+    .box { text-align: center; width: min(92vw, 340px); }
+    input, button { width: 100%; padding: 10px 12px; font-size: 14px;
+      border-radius: 8px; box-sizing: border-box; }
+    input { border: 1px solid #EDE4D8; margin: 12px 0 8px; }
+    button { border: 0; background: #EA580C; color: #fff; cursor: pointer; }
+    .link { background: none; color: #78716C; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="box" id="setup">
+    <h2 style="margin:0">E-Library</h2>
+    <p style="color:#78716C;font-size:13px">Masukkan alamat server perpustakaan</p>
+    <input id="url" placeholder="http://192.168.2.51:3002" />
+    <button onclick="save()">Hubungkan</button>
+  </div>
+  <div class="box" id="go" style="display:none">
+    <h2 style="margin:0">E-Library</h2>
+    <p style="color:#78716C;font-size:13px" id="target"></p>
+    <button onclick="connect()">Buka aplikasi</button>
+    <button class="link" onclick="reset()">Ganti server</button>
+  </div>
+  <script>
+    const saved = localStorage.getItem('server_url');
+    if (saved) {
+      document.getElementById('setup').style.display = 'none';
+      document.getElementById('go').style.display = 'block';
+      document.getElementById('target').textContent = saved;
+    }
+    function save() {
+      let u = document.getElementById('url').value.trim().replace(/\/+$/, '');
+      if (!/^https?:\/\//i.test(u)) u = 'http://' + u;
+      localStorage.setItem('server_url', u);
+      location.href = u;
+    }
+    function connect() { location.href = localStorage.getItem('server_url'); }
+    function reset() {
+      localStorage.removeItem('server_url');
+      document.getElementById('go').style.display = 'none';
+      document.getElementById('setup').style.display = 'block';
+    }
+  </script>
+</body>
+</html>
