@@ -20,7 +20,13 @@ class Book extends Model
         'th_terbit',
         'jumlah',
         'foto',
+        'lokasi',
     ];
+
+    public function lokasiRak()
+    {
+        return $this->belongsTo(Lokasi::class, 'lokasi', 'id_lokasi');
+    }
 
     public function circulations()
     {

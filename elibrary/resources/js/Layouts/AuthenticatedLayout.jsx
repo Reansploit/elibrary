@@ -15,6 +15,7 @@ import {
     ChevronsUpDown,
     Lock,
     Gavel,
+    MapPin,
 } from 'lucide-react';
 import { useTheme } from '@/components/theme-provider';
 import { useCan } from '@/hooks/useCan';
@@ -55,11 +56,18 @@ const navItems = [
         permission: ['view_circulation'],
     },
     {
-        label: 'Pembatasan',
+        label: 'Sanksi',
         icon: Gavel,
         href: 'sanksi.index',
         match: ['sanksi.index'],
         permission: ['view_members', 'manage_members'],
+    },
+    {
+        label: 'Lokasi',
+        icon: MapPin,
+        href: 'lokasi.index',
+        match: ['lokasi.index', 'lokasi.create', 'lokasi.edit'],
+        permission: ['view_books', 'manage_books'],
     },
     {
         label: 'Pengaturan',

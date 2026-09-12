@@ -86,6 +86,7 @@ export default function BookShow({ book, history }) {
                             <InfoRow label="ID buku">{book.id}</InfoRow>
                             <InfoRow label="Judul">{book.title}</InfoRow>
                             <InfoRow label="Pengarang">{book.author || '-'}</InfoRow>
+                            <InfoRow label="Lokasi">{book.location || '-'}</InfoRow>
                             <InfoRow label="Jumlah">{book.stock ?? 0}</InfoRow>
                         </CardContent>
                     </Card>

@@ -4,16 +4,30 @@ namespace App\Http\Controllers;
 
 use App\Models\Book;
 use App\Models\Circulation;
+use App\Models\Lokasi;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
 class BookController extends Controller
 {
+    /**
+     * Daftar lokasi untuk dropdown form (id => "KODE — Nama").
+     */
+    private function locationOptions()
+    {
+        return Lokasi::orderBy('id_lokasi')->get()->map(function ($l) {
+            return [
+                'id' => $l->id_lokasi,
+                'label' => $l->id_lokasi . ' — ' . $l->nama,
+            ];
+        });
+    }
+
     public function index()
     {
         if ($deny = $this->ensureCan(['view_books', 'manage_books'])) return $deny;
-        $books = Book::orderBy('judul_buku')->get()->map(function ($b) {
+        $books = Book::with('lokasiRak')->orderBy('judul_buku')->get()->map(function ($b) {
             return [
                 'id' => $b->id_buku,
                 'title' => $b->judul_buku,
@@ -22,6 +36,7 @@ class BookController extends Controller
                 'year' => $b->th_terbit,
                 'stock' => $b->jumlah,
                 'photo' => static::photoUrl($b->foto),
+                'location' => $b->lokasiRak ? $b->lokasiRak->id_lokasi . ' — ' . $b->lokasiRak->nama : null,
             ];
         });
 
@@ -97,6 +112,7 @@ class BookController extends Controller
         if ($deny = $this->ensureCan(['create_books', 'manage_books'])) return $deny;
         return Inertia::render('Books/Form', [
             'book' => null,
+            'locations' => $this->locationOptions(),
         ]);
     }
 
@@ -109,6 +125,7 @@ class BookController extends Controller
             'pengarang' => 'nullable|string|max:30',
             'jumlah' => 'required|integer|min:0|max:9999',
             'foto' => 'nullable|image|max:2048',
+            'lokasi' => 'nullable|string|max:10|exists:tb_lokasi,id_lokasi',
         ]);
 
         Book::create([
@@ -117,6 +134,7 @@ class BookController extends Controller
             'pengarang' => $validated['pengarang'] ?? null,
             'jumlah' => $validated['jumlah'],
             'foto' => $this->storePhoto($request, 'foto', 'foto-buku'),
+            'lokasi' => $validated['lokasi'] ?? null,
         ]);
 
         return redirect()->route('books.index')
@@ -137,7 +155,9 @@ class BookController extends Controller
                 'year' => $book->th_terbit,
                 'stock' => $book->jumlah,
                 'photo' => static::photoUrl($book->foto),
+                'location' => $book->lokasi,
             ],
+            'locations' => $this->locationOptions(),
         ]);
     }
 
@@ -152,6 +172,7 @@ class BookController extends Controller
             'pengarang' => 'nullable|string|max:30',
             'jumlah' => 'required|integer|min:0|max:9999',
             'foto' => 'nullable|image|max:2048',
+            'lokasi' => 'nullable|string|max:10|exists:tb_lokasi,id_lokasi',
         ]);
 
         // FK sirkulasi & log memakai ON UPDATE CASCADE, jadi ganti ID aman.
@@ -161,6 +182,7 @@ class BookController extends Controller
             'pengarang' => $validated['pengarang'] ?? null,
             'jumlah' => $validated['jumlah'],
             'foto' => $this->storePhoto($request, 'foto', 'foto-buku', $book->foto),
+            'lokasi' => $validated['lokasi'] ?? null,
         ]);
 
         return redirect()->route('books.index')
@@ -201,6 +223,7 @@ class BookController extends Controller
                 'author' => $book->pengarang,
                 'stock' => $book->jumlah,
                 'photo' => static::photoUrl($book->foto),
+                'location' => $book->lokasiRak ? $book->lokasiRak->id_lokasi . ' — ' . $book->lokasiRak->nama : null,
                 'borrowed' => $activeLoans->isNotEmpty(),
                 'remaining' => $stock - $activeLoans->count(),
                 'borrower' => $activeLoan?->member?->nama,

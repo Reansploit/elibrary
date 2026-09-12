@@ -29,7 +29,7 @@ class SearchController extends Controller
         $like = "%{$q}%";
 
         if ($user && $user->hasAnyPermission(['view_books', 'manage_books'])) {
-            $empty['books'] = Book::where('judul_buku', 'like', $like)
+            $empty['books'] = Book::with('lokasiRak')->where('judul_buku', 'like', $like)
                 ->orWhere('id_buku', 'like', $like)
                 ->orWhere('pengarang', 'like', $like)
                 ->orderBy('judul_buku')
@@ -49,6 +49,7 @@ class SearchController extends Controller
                         'author' => $b->pengarang,
                         'stock' => $b->jumlah,
                         'photo' => static::photoUrl($b->foto),
+                        'location' => $b->lokasiRak ? $b->lokasiRak->id_lokasi . ' — ' . $b->lokasiRak->nama : null,
                         'borrowed' => $activeLoans->isNotEmpty(),
                         'remaining' => $stock - $activeLoans->count(),
                         'borrower' => $activeLoan?->member?->nama,

@@ -106,6 +106,7 @@ export default function GlobalSearch() {
                                                     <span className="font-mono">{book.id}</span>
                                                     {book.author ? ` • ${book.author}` : ''}
                                                     {` • Stok ${book.stock ?? 0}`}
+                                                    {book.location ? ` • ${book.location}` : ''}
                                                 </p>
                                                 <div className="mt-1">
                                                     {book.borrowed ? (

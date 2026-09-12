@@ -104,7 +104,7 @@ export default function Borrow({ books, members, loan_duration = 7 }) {
                                     onEnter={handleBookEnter}
                                     options={(books || []).map((book) => ({
                                         value: book.id,
-                                        label: `${book.id} — ${book.title}`,
+                                        label: `${book.id} — ${book.title}${book.location ? ` • ${book.location}` : ''}`,
                                     }))}
                                     placeholder="Ketik judul atau ID buku…"
                                     emptyText="Buku tidak ditemukan."

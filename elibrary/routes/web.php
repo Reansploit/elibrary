@@ -5,6 +5,7 @@ use App\Http\Controllers\CirculationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KatalogController;
 use App\Http\Controllers\MemberController;
+use App\Http\Controllers\LokasiController;
 use App\Http\Controllers\SanksiController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\ProfileController;
@@ -35,6 +36,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/books/{id}', [BookController::class, 'show'])->name('books.show');
     Route::resource('members', MemberController::class)->except(['show']);
     Route::get('/members/{id}', [MemberController::class, 'show'])->name('members.show');
+
+    Route::resource('lokasi', LokasiController::class)->except(['show']);
 
     Route::get('/sanksi', [SanksiController::class, 'index'])->name('sanksi.index');
     Route::put('/sanksi/{id}', [SanksiController::class, 'update'])->name('sanksi.update');

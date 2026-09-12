@@ -29,6 +29,11 @@ export default function KatalogBookCard({ book }) {
                     <span className="font-mono">{book.id}</span>
                     {book.author ? ` • ${book.author}` : ''}
                 </p>
+                {book.location && (
+                    <p className="truncate text-xs text-muted-foreground">
+                        Lokasi: {book.location}
+                    </p>
+                )}
                 <div className="pt-1">
                     <AvailabilityBadge book={book} />
                 </div>

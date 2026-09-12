@@ -89,8 +89,12 @@ class CirculationController extends Controller
     public function create()
     {
         if ($deny = $this->ensureCan(['borrow_books'])) return $deny;
-        $books = Book::orderBy('judul_buku')->get()->map(function ($b) {
-            return ['id' => $b->id_buku, 'title' => $b->judul_buku];
+        $books = Book::with('lokasiRak')->orderBy('judul_buku')->get()->map(function ($b) {
+            return [
+                'id' => $b->id_buku,
+                'title' => $b->judul_buku,
+                'location' => $b->lokasiRak ? $b->lokasiRak->id_lokasi . ' — ' . $b->lokasiRak->nama : null,
+            ];
         });
 
         $members = Member::orderBy('nama')->get()->map(function ($m) {

@@ -72,6 +72,7 @@ class KatalogController extends Controller
             ->where('status', 'PIN')
             ->count();
         $stock = max(0, (int) $book->jumlah);
+        $book->loadMissing('lokasiRak');
 
         return [
             'id' => $book->id_buku,
@@ -79,6 +80,7 @@ class KatalogController extends Controller
             'author' => $book->pengarang,
             'stock' => $book->jumlah,
             'photo' => static::photoUrl($book->foto),
+            'location' => $book->lokasiRak ? $book->lokasiRak->id_lokasi . ' — ' . $book->lokasiRak->nama : null,
             'remaining' => $stock - $activeCount,
         ];
     }

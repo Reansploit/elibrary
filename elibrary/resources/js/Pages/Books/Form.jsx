@@ -13,6 +13,13 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectTrigger,
+    SelectValue,
+    SelectContent,
+    SelectItem,
+} from '@/components/ui/select';
 import PageHeader from '@/components/page-header';
 import { compressImage } from '@/lib/compress-image';
 
@@ -21,7 +28,7 @@ function FieldError({ message }) {
     return <p className="text-xs text-destructive">{message}</p>;
 }
 
-export default function BookForm({ book }) {
+export default function BookForm({ book, locations = [] }) {
     const isEdit = !!book;
     const [preview, setPreview] = useState(null);
     const [compressing, setCompressing] = useState(false);
@@ -31,6 +38,7 @@ export default function BookForm({ book }) {
         judul_buku: book?.title || '',
         pengarang: book?.author || '',
         jumlah: book?.stock ?? 1,
+        lokasi: book?.location || '',
         foto: null,
         hapus_foto: false,
         ...(isEdit ? { _method: 'PUT' } : {}),
@@ -155,6 +163,31 @@ export default function BookForm({ book }) {
                                     aria-invalid={!!errors.pengarang || undefined}
                                 />
                                 <FieldError message={errors.pengarang} />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="lokasi">Lokasi / rak (opsional)</Label>
+                                <Select
+                                    value={data.lokasi || '__none__'}
+                                    onValueChange={(val) => setData('lokasi', val === '__none__' ? '' : val)}
+                                >
+                                    <SelectTrigger
+                                        id="lokasi"
+                                        className="w-full"
+                                        aria-invalid={!!errors.lokasi || undefined}
+                                    >
+                                        <SelectValue placeholder="Pilih lokasi" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="__none__">Tanpa lokasi</SelectItem>
+                                        {locations.map((loc) => (
+                                            <SelectItem key={loc.id} value={loc.id}>
+                                                {loc.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <FieldError message={errors.lokasi} />
                             </div>
 
                             <div className="space-y-2">
