@@ -97,11 +97,11 @@ function NavLink({ item, onClick, collapsed }) {
                 title={`${item.label} — tidak punya akses`}
                 aria-disabled="true"
                 className={cn(
-                    'flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground opacity-40',
+                    'flex cursor-not-allowed items-center gap-3.5 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground opacity-40',
                     collapsed && 'justify-center px-0'
                 )}
             >
-                <Lock className="h-4 w-4 shrink-0" />
+                <Lock className="h-5 w-5 shrink-0" />
                 {!collapsed && <span className="truncate">{item.label}</span>}
             </div>
         );
@@ -113,14 +113,14 @@ function NavLink({ item, onClick, collapsed }) {
             onClick={onClick}
             title={collapsed ? item.label : undefined}
             className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                'flex items-center gap-3.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                 collapsed && 'justify-center px-0',
                 active
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:bg-muted hover:text-foreground'
             )}
         >
-            <Icon className="h-4 w-4 shrink-0" />
+            <Icon className="h-5 w-5 shrink-0" />
             {!collapsed && <span className="truncate">{item.label}</span>}
         </Link>
     );
@@ -180,7 +180,7 @@ export default function AuthenticatedLayout({ children }) {
             </div>
 
             <ScrollArea className="flex-1 px-3 py-4">
-                <nav className="flex flex-col gap-1">
+                <nav className="flex flex-col gap-2">
                     {!sidebarCollapsed && (
                         <p className="mb-1 px-3 text-xs font-medium text-muted-foreground">Menu</p>
                     )}
