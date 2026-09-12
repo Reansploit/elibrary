@@ -16,6 +16,7 @@ import {
     Lock,
     Gavel,
     MapPin,
+    Ticket,
 } from 'lucide-react';
 import { useTheme } from '@/components/theme-provider';
 import { useCan } from '@/hooks/useCan';
@@ -68,6 +69,13 @@ const navItems = [
         href: 'lokasi.index',
         match: ['lokasi.index', 'lokasi.create', 'lokasi.edit'],
         permission: ['view_books', 'manage_books'],
+    },
+    {
+        label: 'Reservasi',
+        icon: Ticket,
+        href: 'reservasi.index',
+        match: ['reservasi.index'],
+        permission: ['view_reservations', 'manage_reservations'],
     },
     {
         label: 'Pengaturan',

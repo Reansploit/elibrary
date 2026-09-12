@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KatalogController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\LokasiController;
+use App\Http\Controllers\ReservasiController;
 use App\Http\Controllers\SanksiController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\ProfileController;
@@ -39,6 +40,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::resource('lokasi', LokasiController::class)->except(['show']);
 
+    Route::get('/reservasi', [ReservasiController::class, 'index'])->name('reservasi.index');
+    Route::post('/reservasi', [ReservasiController::class, 'store'])->name('reservasi.store');
+    Route::post('/reservasi/{id}/batal', [ReservasiController::class, 'batal'])->name('reservasi.batal');
+    Route::post('/reservasi/{id}/selesai', [ReservasiController::class, 'selesai'])->name('reservasi.selesai');
+
     Route::get('/sanksi', [SanksiController::class, 'index'])->name('sanksi.index');
     Route::put('/sanksi/{id}', [SanksiController::class, 'update'])->name('sanksi.update');
 
@@ -49,6 +55,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/circulation/borrow', [CirculationController::class, 'create'])->name('circulation.create');
     Route::post('/circulation', [CirculationController::class, 'store'])->name('circulation.store');
     Route::post('/circulation/{id}/return', [CirculationController::class, 'returnBook'])->name('circulation.return');
+    Route::post('/circulation/{id}/extend', [CirculationController::class, 'extend'])->name('circulation.extend');
 
     // Settings
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');

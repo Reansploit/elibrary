@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { useState } from 'react';
-import { AlertCircle, ArrowLeft, RotateCcw, Clock, BookCheck } from 'lucide-react';
+import { AlertCircle, ArrowLeft, RotateCcw, Clock, BookCheck, CalendarPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,18 +9,22 @@ import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@
 import PageHeader from '@/components/page-header';
 import EmptyState from '@/components/empty-state';
 import ConfirmDialog from '@/components/confirm-dialog';
+import ExtendLoanDialog from '@/components/extend-loan-dialog';
 import StatCard from '@/components/stat-card';
 import Pagination from '@/components/pagination';
 import { useCan } from '@/hooks/useCan';
 import { usePagination } from '@/hooks/usePagination';
 
-export default function Overdue({ overdueLoans, dueSoonLoans }) {
+export default function Overdue({ overdueLoans, dueSoonLoans, loan_duration = 7 }) {
     const can = useCan();
     const canReturn = can('return_books');
+    const canBorrow = can('borrow_books');
     const overduePaging = usePagination(overdueLoans);
     const dueSoonPaging = usePagination(dueSoonLoans);
     const [returnDialogOpen, setReturnDialogOpen] = useState(false);
     const [circToReturn, setCircToReturn] = useState(null);
+    const [extendDialogOpen, setExtendDialogOpen] = useState(false);
+    const [circToExtend, setCircToExtend] = useState(null);
     const { post, processing } = useForm();
 
     const confirmReturn = (circ) => {
@@ -108,7 +112,20 @@ export default function Overdue({ overdueLoans, dueSoonLoans }) {
                                                 </Badge>
                                             </TableCell>
                                             <TableCell>
-                                                <div className="flex justify-end">
+                                                <div className="flex justify-end gap-2">
+                                                    {canBorrow && (
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => {
+                                                                setCircToExtend(loan);
+                                                                setExtendDialogOpen(true);
+                                                            }}
+                                                        >
+                                                            <CalendarPlus className="h-3.5 w-3.5" />
+                                                            Perpanjang
+                                                        </Button>
+                                                    )}
                                                     {canReturn && (
                                                         <Button
                                                             variant="outline"
@@ -174,7 +191,20 @@ export default function Overdue({ overdueLoans, dueSoonLoans }) {
                                                 </Badge>
                                             </TableCell>
                                             <TableCell>
-                                                <div className="flex justify-end">
+                                                <div className="flex justify-end gap-2">
+                                                    {canBorrow && (
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => {
+                                                                setCircToExtend(loan);
+                                                                setExtendDialogOpen(true);
+                                                            }}
+                                                        >
+                                                            <CalendarPlus className="h-3.5 w-3.5" />
+                                                            Perpanjang
+                                                        </Button>
+                                                    )}
                                                     {canReturn && (
                                                         <Button
                                                             variant="outline"
@@ -222,6 +252,13 @@ export default function Overdue({ overdueLoans, dueSoonLoans }) {
                 onConfirm={handleReturn}
                 processing={processing}
                 variant="default"
+            />
+
+            <ExtendLoanDialog
+                loan={circToExtend}
+                open={extendDialogOpen}
+                onOpenChange={setExtendDialogOpen}
+                defaultDays={loan_duration}
             />
         </AuthenticatedLayout>
     );

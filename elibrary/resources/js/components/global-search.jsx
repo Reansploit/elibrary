@@ -108,7 +108,7 @@ export default function GlobalSearch() {
                                                     {` • Stok ${book.stock ?? 0}`}
                                                     {book.location ? ` • ${book.location}` : ''}
                                                 </p>
-                                                <div className="mt-1">
+                                                <div className="mt-1 flex flex-wrap gap-1">
                                                     {book.borrowed ? (
                                                         <Badge variant="secondary">
                                                             {book.remaining > 0
@@ -119,6 +119,11 @@ export default function GlobalSearch() {
                                                         </Badge>
                                                     ) : (
                                                         <Badge variant="outline">Tersedia</Badge>
+                                                    )}
+                                                    {book.reserved > 0 && (
+                                                        <Badge variant="outline">
+                                                            Direservasi {book.reserved}
+                                                        </Badge>
                                                     )}
                                                 </div>
                                             </div>

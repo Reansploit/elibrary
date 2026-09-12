@@ -6,6 +6,7 @@ use App\Models\Book;
 use App\Models\Member;
 use App\Models\Circulation;
 use App\Models\LoanLog;
+use App\Models\Reservasi;
 use App\Models\Setting;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
@@ -34,6 +35,7 @@ class CirculationController extends Controller
 
         return Inertia::render('Circulation/Index', [
             'circulations' => $circulations,
+            'loan_duration' => (int) Setting::get('loan_duration_days', 7),
         ]);
     }
 
@@ -83,6 +85,7 @@ class CirculationController extends Controller
         return Inertia::render('Circulation/Overdue', [
             'overdueLoans' => $overdueLoans,
             'dueSoonLoans' => $dueSoonLoans,
+            'loan_duration' => (int) Setting::get('loan_duration_days', 7),
         ]);
     }
 
@@ -119,18 +122,31 @@ class CirculationController extends Controller
             'tgl_kembali' => 'nullable|date|after_or_equal:tgl_pinjam',
         ]);
 
-        // Check availability: active loans vs stock
+        // Check availability: active loans + others' reservations vs stock
         $book = Book::find($validated['id_buku']);
         $stock = (int) ($book->jumlah ?? 0);
         $activeCount = Circulation::where('id_buku', $validated['id_buku'])
             ->where('status', 'PIN')
             ->count();
+        $queueOthers = Reservasi::where('id_buku', $validated['id_buku'])
+            ->whereIn('status', ['antre', 'siap'])
+            ->where('id_anggota', '!=', $validated['id_anggota'])
+            ->count();
 
-        if ($stock <= 0 || $activeCount >= $stock) {
+        if ($stock <= 0 || ($activeCount + $queueOthers) >= $stock) {
+            $holder = Reservasi::with('member')
+                ->where('id_buku', $validated['id_buku'])
+                ->whereIn('status', ['antre', 'siap'])
+                ->where('id_anggota', '!=', $validated['id_anggota'])
+                ->orderBy('created_at')
+                ->first();
+
             return redirect()->back()->withErrors([
-                'id_buku' => $stock > 0
-                    ? "Semua {$stock} eksemplar buku ini sedang dipinjam."
-                    : 'Buku ini sedang tidak tersedia.',
+                'id_buku' => $holder
+                    ? "Buku ini direservasi oleh {$holder->member?->nama}."
+                    : ($stock > 0
+                        ? "Semua {$stock} eksemplar buku ini sedang dipinjam."
+                        : 'Buku ini sedang tidak tersedia.'),
             ]);
         }
 
@@ -187,6 +203,12 @@ class CirculationController extends Controller
             'status' => 'PIN',
         ]);
 
+        // Borrower held a reservation: mark it fulfilled
+        Reservasi::where('id_buku', $validated['id_buku'])
+            ->where('id_anggota', $validated['id_anggota'])
+            ->whereIn('status', ['antre', 'siap'])
+            ->update(['status' => 'selesai']);
+
         // Log the borrowing
         LoanLog::create([
             'id_buku' => $validated['id_buku'],
@@ -214,6 +236,13 @@ class CirculationController extends Controller
             'tgl_kembali' => now()->format('Y-m-d'),
         ]);
 
+        // Promote oldest waiting reservation to ready
+        Reservasi::where('id_buku', $circulation->id_buku)
+            ->where('status', 'antre')
+            ->orderBy('created_at')
+            ->limit(1)
+            ->update(['status' => 'siap']);
+
         // Complete the audit log for this loan
         LoanLog::where('id_buku', $circulation->id_buku)
             ->where('id_anggota', $circulation->id_anggota)
@@ -224,5 +253,29 @@ class CirculationController extends Controller
 
         return redirect()->route('circulation.index')
             ->with('success', 'Buku berhasil dikembalikan.');
+    }
+
+    public function extend(Request $request, $id)
+    {
+        if ($deny = $this->ensureCan(['borrow_books'])) return $deny;
+        $circulation = Circulation::findOrFail($id);
+
+        if ($circulation->status !== 'PIN') {
+            return redirect()->back()->withErrors([
+                'msg' => 'Hanya pinjaman aktif yang bisa diperpanjang.',
+            ]);
+        }
+
+        $validated = $request->validate([
+            'hari' => 'required|integer|min:1|max:60',
+        ]);
+
+        $circulation->update([
+            'tgl_kembali' => Carbon::parse($circulation->tgl_kembali)
+                ->addDays($validated['hari'])
+                ->format('Y-m-d'),
+        ]);
+
+        return redirect()->back()->with('success', 'Jatuh tempo diperpanjang.');
     }
 }

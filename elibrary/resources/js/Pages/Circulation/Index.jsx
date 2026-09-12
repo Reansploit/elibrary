@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
-import { Plus, RotateCcw, ArrowLeftRight, Search, AlertCircle } from 'lucide-react';
+import { Plus, RotateCcw, ArrowLeftRight, Search, AlertCircle, CalendarPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
@@ -10,14 +10,18 @@ import { Input } from '@/components/ui/input';
 import PageHeader from '@/components/page-header';
 import EmptyState from '@/components/empty-state';
 import ConfirmDialog from '@/components/confirm-dialog';
+import ExtendLoanDialog from '@/components/extend-loan-dialog';
 import Pagination from '@/components/pagination';
 import { useCan } from '@/hooks/useCan';
 import { usePagination } from '@/hooks/usePagination';
 
-export default function CirculationIndex({ circulations }) {
+export default function CirculationIndex({ circulations, loan_duration = 7 }) {
     const can = useCan();
+    const canBorrow = can('borrow_books');
     const [returnDialogOpen, setReturnDialogOpen] = useState(false);
     const [circToReturn, setCircToReturn] = useState(null);
+    const [extendDialogOpen, setExtendDialogOpen] = useState(false);
+    const [circToExtend, setCircToExtend] = useState(null);
     const [search, setSearch] = useState('');
     const { post, processing } = useForm();
 
@@ -136,7 +140,20 @@ export default function CirculationIndex({ circulations }) {
                                                 </Badge>
                                             </TableCell>
                                             <TableCell>
-                                                <div className="flex justify-end">
+                                                <div className="flex justify-end gap-2">
+                                                    {circ.status === 'PIN' && canBorrow && (
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => {
+                                                                setCircToExtend(circ);
+                                                                setExtendDialogOpen(true);
+                                                            }}
+                                                        >
+                                                            <CalendarPlus className="h-3.5 w-3.5" />
+                                                            Perpanjang
+                                                        </Button>
+                                                    )}
                                                     {circ.status === 'PIN' && can('return_books') && (
                                                         <Button
                                                             variant="outline"
@@ -198,6 +215,13 @@ export default function CirculationIndex({ circulations }) {
                 onConfirm={handleReturn}
                 processing={processing}
                 variant="default"
+            />
+
+            <ExtendLoanDialog
+                loan={circToExtend}
+                open={extendDialogOpen}
+                onOpenChange={setExtendDialogOpen}
+                defaultDays={loan_duration}
             />
         </AuthenticatedLayout>
     );

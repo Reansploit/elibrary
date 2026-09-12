@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Book;
 use App\Models\Circulation;
 use App\Models\Member;
+use App\Models\Reservasi;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -52,6 +53,9 @@ class SearchController extends Controller
                         'location' => $b->lokasiRak ? $b->lokasiRak->id_lokasi . ' — ' . $b->lokasiRak->nama : null,
                         'borrowed' => $activeLoans->isNotEmpty(),
                         'remaining' => $stock - $activeLoans->count(),
+                        'reserved' => Reservasi::where('id_buku', $b->id_buku)
+                            ->whereIn('status', ['antre', 'siap'])
+                            ->count(),
                         'borrower' => $activeLoan?->member?->nama,
                         'due' => $activeLoan && $activeLoan->tgl_kembali
                             ? Carbon::parse($activeLoan->tgl_kembali)->format('d/m/Y')
