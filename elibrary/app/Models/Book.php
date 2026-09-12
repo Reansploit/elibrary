@@ -10,6 +10,7 @@ class Book extends Model
     protected $primaryKey = 'id_buku';
     public $incrementing = false;
     protected $keyType = 'string';
+    public $timestamps = false;
 
     protected $fillable = [
         'id_buku',
@@ -17,6 +18,8 @@ class Book extends Model
         'pengarang',
         'penerbit',
         'th_terbit',
+        'jumlah',
+        'foto',
     ];
 
     public function circulations()

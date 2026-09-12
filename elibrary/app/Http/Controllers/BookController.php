@@ -12,6 +12,7 @@ class BookController extends Controller
 {
     public function index()
     {
+        if ($deny = $this->ensureCan(['view_books', 'manage_books'])) return $deny;
         $books = Book::orderBy('judul_buku')->get()->map(function ($b) {
             return [
                 'id' => $b->id_buku,
@@ -19,6 +20,8 @@ class BookController extends Controller
                 'author' => $b->pengarang,
                 'publisher' => $b->penerbit,
                 'year' => $b->th_terbit,
+                'stock' => $b->jumlah,
+                'photo' => static::photoUrl($b->foto),
             ];
         });
 
@@ -29,6 +32,7 @@ class BookController extends Controller
 
     public function management()
     {
+        if ($deny = $this->ensureCan(['view_books', 'manage_books'])) return $deny;
         $today = Carbon::today();
         $books = Book::with(['circulations' => function ($q) {
             $q->where('status', 'PIN')->with('member');
@@ -50,7 +54,8 @@ class BookController extends Controller
                 
                 if ($activeLoan->tgl_kembali && $activeLoan->tgl_kembali !== '0000-00-00') {
                     $due = Carbon::parse($activeLoan->tgl_kembali);
-                    $daysOverdue = $today->diffInDays($due, false);
+                    // Positif bila sudah lewat jatuh tempo (today - due).
+                    $daysOverdue = $due->diffInDays($today, false);
                     if ($daysOverdue > 0) {
                         $status = "Terlambat {$daysOverdue} hari";
                         $statusClass = 'bg-destructive/15 text-destructive dark:text-destructive/80';
@@ -89,6 +94,7 @@ class BookController extends Controller
 
     public function create()
     {
+        if ($deny = $this->ensureCan(['create_books', 'manage_books'])) return $deny;
         return Inertia::render('Books/Form', [
             'book' => null,
         ]);
@@ -96,15 +102,22 @@ class BookController extends Controller
 
     public function store(Request $request)
     {
+        if ($deny = $this->ensureCan(['create_books', 'manage_books'])) return $deny;
         $validated = $request->validate([
             'id_buku' => 'required|string|max:10|unique:tb_buku,id_buku',
             'judul_buku' => 'required|string|max:30',
-            'pengarang' => 'required|string|max:30',
-            'penerbit' => 'required|string|max:30',
-            'th_terbit' => 'required|integer|min:1900|max:' . (date('Y') + 1),
+            'pengarang' => 'nullable|string|max:30',
+            'jumlah' => 'required|integer|min:0|max:9999',
+            'foto' => 'nullable|image|max:2048',
         ]);
 
-        Book::create($validated);
+        Book::create([
+            'id_buku' => $validated['id_buku'],
+            'judul_buku' => $validated['judul_buku'],
+            'pengarang' => $validated['pengarang'] ?? null,
+            'jumlah' => $validated['jumlah'],
+            'foto' => $this->storePhoto($request, 'foto', 'foto-buku'),
+        ]);
 
         return redirect()->route('books.index')
             ->with('success', 'Buku berhasil ditambahkan.');
@@ -112,6 +125,7 @@ class BookController extends Controller
 
     public function edit($id)
     {
+        if ($deny = $this->ensureCan(['edit_books', 'manage_books'])) return $deny;
         $book = Book::findOrFail($id);
 
         return Inertia::render('Books/Form', [
@@ -121,30 +135,88 @@ class BookController extends Controller
                 'author' => $book->pengarang,
                 'publisher' => $book->penerbit,
                 'year' => $book->th_terbit,
+                'stock' => $book->jumlah,
+                'photo' => static::photoUrl($book->foto),
             ],
         ]);
     }
 
     public function update(Request $request, $id)
     {
+        if ($deny = $this->ensureCan(['edit_books', 'manage_books'])) return $deny;
         $book = Book::findOrFail($id);
 
         $validated = $request->validate([
+            'id_buku' => 'required|string|max:10|unique:tb_buku,id_buku,' . $id . ',id_buku',
             'judul_buku' => 'required|string|max:30',
-            'pengarang' => 'required|string|max:30',
-            'penerbit' => 'required|string|max:30',
-            'th_terbit' => 'required|integer|min:1900|max:' . (date('Y') + 1),
+            'pengarang' => 'nullable|string|max:30',
+            'jumlah' => 'required|integer|min:0|max:9999',
+            'foto' => 'nullable|image|max:2048',
         ]);
 
-        $book->update($validated);
+        // FK sirkulasi & log memakai ON UPDATE CASCADE, jadi ganti ID aman.
+        $book->update([
+            'id_buku' => $validated['id_buku'],
+            'judul_buku' => $validated['judul_buku'],
+            'pengarang' => $validated['pengarang'] ?? null,
+            'jumlah' => $validated['jumlah'],
+            'foto' => $this->storePhoto($request, 'foto', 'foto-buku', $book->foto),
+        ]);
 
         return redirect()->route('books.index')
             ->with('success', 'Buku berhasil diperbarui.');
     }
 
+    public function show($id)
+    {
+        if ($deny = $this->ensureCan(['view_books', 'manage_books'])) return $deny;
+        $book = Book::findOrFail($id);
+
+        $activeLoans = Circulation::with('member')
+            ->where('id_buku', $book->id_buku)
+            ->where('status', 'PIN')
+            ->get();
+        $activeLoan = $activeLoans->first();
+        $stock = max(0, (int) $book->jumlah);
+
+        $history = Circulation::with('member')
+            ->where('id_buku', $book->id_buku)
+            ->orderBy('tgl_pinjam', 'desc')
+            ->limit(10)
+            ->get()
+            ->map(function ($c) {
+                return [
+                    'id' => $c->id_sk,
+                    'member' => $c->member?->nama ?? '-',
+                    'borrow_date' => $c->tgl_pinjam?->format('d/m/Y') ?? '-',
+                    'return_date' => $c->tgl_kembali?->format('d/m/Y') ?? '-',
+                    'status' => $c->status,
+                ];
+            });
+
+        return Inertia::render('Books/Show', [
+            'book' => [
+                'id' => $book->id_buku,
+                'title' => $book->judul_buku,
+                'author' => $book->pengarang,
+                'stock' => $book->jumlah,
+                'photo' => static::photoUrl($book->foto),
+                'borrowed' => $activeLoans->isNotEmpty(),
+                'remaining' => $stock - $activeLoans->count(),
+                'borrower' => $activeLoan?->member?->nama,
+                'due' => $activeLoan && $activeLoan->tgl_kembali
+                    ? Carbon::parse($activeLoan->tgl_kembali)->format('d/m/Y')
+                    : null,
+            ],
+            'history' => $history,
+        ]);
+    }
+
     public function destroy($id)
     {
+        if ($deny = $this->ensureCan(['delete_books', 'manage_books'])) return $deny;
         $book = Book::findOrFail($id);
+        $this->deletePhoto($book->foto);
         $book->delete();
 
         return redirect()->route('books.index')

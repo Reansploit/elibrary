@@ -1,4 +1,7 @@
+import { isValidElement } from "react"
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
+import { useRender } from "@base-ui/react/use-render"
+import { mergeProps } from "@base-ui/react/merge-props"
 import { cva } from "class-variance-authority";
 
 import { cn } from "@/lib/utils"
@@ -44,13 +47,41 @@ function Button({
   className,
   variant = "default",
   size = "default",
+  asChild = false,
+  children,
   ...props
 }) {
+  // Radix-style `asChild`: render a single `<a>` (e.g. Inertia Link) carrying
+  // the button styles instead of nesting `<button><a>`, which breaks layout
+  // (icon drops above text) and is invalid HTML.
+  if (asChild && isValidElement(children)) {
+    // `type`/`disabled` only make sense on a real <button>; don't leak them onto <a>.
+    const { type, disabled, ...restProps } = props;
+    return useRender({
+      defaultTagName: "button",
+      props: mergeProps(
+        {
+          "data-slot": "button",
+          className: cn(buttonVariants({ variant, size, className })),
+        },
+        restProps,
+      ),
+      render: children,
+      state: {
+        slot: "button",
+        variant,
+        size,
+      },
+    });
+  }
+
   return (
     <ButtonPrimitive
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
-      {...props} />
+      {...props}>
+      {children}
+    </ButtonPrimitive>
   );
 }
 

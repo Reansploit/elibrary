@@ -7,13 +7,15 @@ import { createRoot } from 'react-dom/client';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from '@/components/ui/sonner';
 
-const appName = import.meta.env.VITE_APP_NAME || 'E-Library';
+const defaultName = import.meta.env.VITE_APP_NAME || 'E-Library';
+let libraryName = defaultName;
 
 createInertiaApp({
-  title: (title) => `${title} - ${appName}`,
+  title: (title) => `${title} - ${libraryName}`,
   resolve: (name) =>
     resolvePageComponent(`./Pages/${name}.jsx`, import.meta.glob('./Pages/**/*.jsx')),
   setup({ el, App, props }) {
+    libraryName = props.initialPage.props.libraryName || defaultName;
     const root = createRoot(el);
 
     root.render(
@@ -24,6 +26,6 @@ createInertiaApp({
     );
   },
   progress: {
-    color: '#6366f1',
+    color: '#EA580C',
   },
 });

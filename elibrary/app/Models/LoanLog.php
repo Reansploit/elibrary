@@ -14,10 +14,12 @@ class LoanLog extends Model
         'id_buku',
         'id_anggota',
         'tgl_pinjam',
+        'tgl_kembali',
     ];
 
     protected $casts = [
         'tgl_pinjam' => 'date',
+        'tgl_kembali' => 'date',
     ];
 
     public function book()

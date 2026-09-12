@@ -3,7 +3,10 @@
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\CirculationController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\KatalogController;
 use App\Http\Controllers\MemberController;
+use App\Http\Controllers\SanksiController;
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SettingsController;
 use Illuminate\Foundation\Application;
@@ -17,12 +20,25 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
+// Katalog publik (tanpa login)
+Route::get('/katalog', [KatalogController::class, 'index'])->name('katalog');
+Route::get('/katalog/search', [KatalogController::class, 'search'])
+    ->middleware('throttle:60,1')
+    ->name('katalog.search');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::resource('books', BookController::class)->except(['show']);
     Route::get('/books/management', [BookController::class, 'management'])->name('books.management');
+    Route::get('/books/{id}', [BookController::class, 'show'])->name('books.show');
     Route::resource('members', MemberController::class)->except(['show']);
+    Route::get('/members/{id}', [MemberController::class, 'show'])->name('members.show');
+
+    Route::get('/sanksi', [SanksiController::class, 'index'])->name('sanksi.index');
+    Route::put('/sanksi/{id}', [SanksiController::class, 'update'])->name('sanksi.update');
+
+    Route::get('/search', [SearchController::class, 'index'])->name('search.index');
 
     Route::get('/circulation', [CirculationController::class, 'index'])->name('circulation.index');
     Route::get('/circulation/overdue', [CirculationController::class, 'overdue'])->name('circulation.overdue');

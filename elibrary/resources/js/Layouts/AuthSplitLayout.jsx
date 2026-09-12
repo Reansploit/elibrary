@@ -1,109 +1,55 @@
-import { useEffect, useState, useCallback } from 'react';
-import { motion } from 'framer-motion';
-import AnimatedCharacters from '@/Components/AnimatedCharacters';
-import { useTimeOfDay, getTimeTheme } from '@/hooks/useTimeOfDay';
+import { usePage } from '@inertiajs/react';
 
-/**
- * AuthSplitLayout — Two-panel layout for auth pages.
- *
- * Left panel: AnimatedCharacters scene (hidden on mobile)
- * Right panel: Form content (children)
- *
- * Props:
- *  - emotion: 'idle' | 'error' | 'success' — drives character expressions
- *  - characterProps: additional props spread onto AnimatedCharacters.
- *    Use this for pages with custom character interaction (e.g. Login)
- *    that override the built-in blink timers.
- *
- * Built-in:
- *  - Mouse tracking for eye-following
- *  - Random blinking timers (overridable via characterProps)
- *  - Time-of-day themed character filter
- */
-export default function AuthSplitLayout({ children, emotion = 'idle', characterProps = {} }) {
-    const [mouseX, setMouseX] = useState(0);
-    const [mouseY, setMouseY] = useState(0);
-    const [isPurpleBlinking, setIsPurpleBlinking] = useState(false);
-    const [isBlackBlinking, setIsBlackBlinking] = useState(false);
-    const period = useTimeOfDay();
-    const timeTheme = getTimeTheme(period);
-
-    /* ---- Cursor tracking ---- */
-    const handleMouseMove = useCallback((e) => {
-        setMouseX(e.clientX);
-        setMouseY(e.clientY);
-    }, []);
-
-    useEffect(() => {
-        window.addEventListener('mousemove', handleMouseMove);
-        return () => window.removeEventListener('mousemove', handleMouseMove);
-    }, [handleMouseMove]);
-
-    /* ---- Blinking timers (recursive, auto-cleaning) ---- */
-    useEffect(() => {
-        let active = true;
-
-        const scheduleBlink = (setter) => {
-            if (!active) return;
-            const delay = Math.random() * 4000 + 3000;
-            setTimeout(() => {
-                if (!active) return;
-                setter(true);
-                setTimeout(() => {
-                    if (!active) return;
-                    setter(false);
-                    scheduleBlink(setter);
-                }, 150);
-            }, delay);
-        };
-
-        scheduleBlink(setIsPurpleBlinking);
-        scheduleBlink(setIsBlackBlinking);
-
-        return () => {
-            active = false;
-        };
-    }, []);
+export default function AuthSplitLayout({ children }) {
+    const { props } = usePage();
+    const libraryName = props.libraryName || 'E-Library';
 
     return (
-        <div className="flex h-screen overflow-hidden bg-background">
-            {/* ==========================================================
-                 Left panel — Animated Characters (hidden on mobile)
-                 ========================================================== */}
-            <div className="relative hidden flex-1 flex-col items-center justify-between gap-6 bg-muted p-8 lg:flex">
-                <AnimatedCharacters
-                    mouseX={mouseX}
-                    mouseY={mouseY}
-                    isPurpleBlinking={isPurpleBlinking}
-                    isBlackBlinking={isBlackBlinking}
-                    emotion={emotion}
-                    timeFilter={timeTheme.filter}
-                    {...characterProps}
+        <div className="flex min-h-screen bg-background">
+            <div className="relative hidden flex-1 overflow-hidden lg:block">
+                <img
+                    src="/bahan/sb.jpg"
+                    alt="Gedung sekolah"
+                    className="absolute inset-0 h-full w-full object-cover"
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/30" />
+                <div className="relative flex h-full flex-col justify-between p-10 text-white">
+                    <div className="flex items-center gap-3">
+                        <img
+                            src="/images/logo-wbs.png"
+                            alt={libraryName}
+                            className="h-9 w-9 rounded-lg bg-white/95 object-contain p-0.5"
+                        />
+                        <div>
+                            <p className="text-sm font-semibold leading-tight drop-shadow">
+                                {libraryName}
+                            </p>
+                            <p className="text-xs text-white/80">Qism Maktabah</p>
+                        </div>
+                    </div>
+                    <div>
+                        <h2 className="max-w-md text-2xl font-semibold tracking-tight drop-shadow">
+                            Library and Literacy Division Dashboard
+                        </h2>
+                        <p className="mt-2 text-sm text-white/80">
+                            Masuk untuk melanjutkan ke dashboard perpustakaan.
+                        </p>
+                        <p className="mt-6 text-xs text-white/60">© 2026 {libraryName}</p>
+                    </div>
+                </div>
             </div>
 
-            {/* ==========================================================
-                 Right panel — Form content
-                 ========================================================== */}
-            <div className="flex w-full items-center justify-center p-6 sm:p-8 lg:w-[45%]">
-                <motion.div
-                    initial={{ opacity: 0, x: 40 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.55, ease: 'easeOut', delay: 0.1 }}
-                    className="w-full max-w-sm"
-                >
-                    {/* Mobile brand */}
-                    <div className="mb-6 text-center lg:hidden">
-                        <h1 className="text-xl font-semibold tracking-tight">
-                            E-Library
-                        </h1>
-                        <p className="text-sm text-muted-foreground">
-                            Perpustakaan Digital
-                        </p>
+            <div className="flex w-full items-center justify-center p-6 sm:p-10 lg:w-[480px] lg:shrink-0">
+                <div className="w-full max-w-sm">
+                    <div className="mb-6 flex items-center gap-3 lg:hidden">
+                        <img src="/images/logo-wbs.png" alt={libraryName} className="h-8 w-8 object-contain" />
+                        <div>
+                            <p className="text-sm font-semibold leading-tight">{libraryName}</p>
+                            <p className="text-xs text-muted-foreground">Qism Maktabah</p>
+                        </div>
                     </div>
-
                     {children}
-                </motion.div>
+                </div>
             </div>
         </div>
     );

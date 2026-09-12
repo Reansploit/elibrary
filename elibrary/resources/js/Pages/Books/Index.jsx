@@ -1,222 +1,201 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { useState } from 'react';
-import { Plus, Pencil, Trash2, BookOpen, BarChart2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Plus, Pencil, Trash2, BookOpen, Search, BarChart2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from '@/components/ui/card';
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableHead,
-  TableRow,
-  TableCell,
-} from '@/components/ui/table';
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogClose,
-} from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
+import PageHeader from '@/components/page-header';
+import EmptyState from '@/components/empty-state';
+import ConfirmDialog from '@/components/confirm-dialog';
+import Pagination from '@/components/pagination';
+import { useCan } from '@/hooks/useCan';
+import { usePagination } from '@/hooks/usePagination';
 
 export default function BookIndex({ books }) {
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [bookToDelete, setBookToDelete] = useState(null);
-  const { delete: destroy, processing } = useForm();
+    const can = useCan();
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [bookToDelete, setBookToDelete] = useState(null);
+    const [search, setSearch] = useState('');
+    const { delete: destroy, processing } = useForm();
 
-  const confirmDelete = (book) => {
-    setBookToDelete(book);
-    setDeleteDialogOpen(true);
-  };
+    const filteredBooks = useMemo(() => {
+        if (!search.trim()) return books || [];
+        const q = search.toLowerCase();
+        return (books || []).filter(
+            (book) =>
+                book.title?.toLowerCase().includes(q) ||
+                book.author?.toLowerCase().includes(q) ||
+                book.id?.toLowerCase().includes(q)
+        );
+    }, [books, search]);
 
-  const handleDelete = () => {
-    if (!bookToDelete) return;
-    destroy(route('books.destroy', bookToDelete.id), {
-      onSuccess: () => {
-        setDeleteDialogOpen(false);
-        setBookToDelete(null);
-      },
-    });
-  };
+    const paging = usePagination(filteredBooks);
 
-  return (
-    <AuthenticatedLayout>
-      <Head title="Buku" />
+    const confirmDelete = (book) => {
+        setBookToDelete(book);
+        setDeleteDialogOpen(true);
+    };
 
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 shadow-lg shadow-primary/25">
-              <BookOpen className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="font-heading text-2xl font-semibold tracking-tight">Buku</h1>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Kelola data buku perpustakaan
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" asChild className="gap-1.5">
-              <Link href={route('books.management')}>
-                <BarChart2 className="h-4 w-4" />
-                Status Buku
-              </Link>
-            </Button>
-            <Button asChild className="shine-sweep">
-              <Link href={route('books.create')}>
-                <Plus className="h-4 w-4" />
-                Tambah Buku
-              </Link>
-            </Button>
-          </div>
-        </div>
+    const handleDelete = () => {
+        if (!bookToDelete) return;
+        destroy(route('books.destroy', bookToDelete.id), {
+            onSuccess: () => {
+                setDeleteDialogOpen(false);
+                setBookToDelete(null);
+            },
+        });
+    };
 
-        {/* Table */}
-        <Card className="card-lift">
-          <CardHeader className="flex-row items-center justify-between">
-            <div>
-              <CardTitle>Daftar Buku</CardTitle>
-              <CardDescription>
-                Total {books?.length || 0} buku terdaftar
-              </CardDescription>
-            </div>
-            <Badge variant="outline" className="gap-1">
-              <BookOpen className="h-3 w-3" />
-              Koleksi
-            </Badge>
-          </CardHeader>
-          <CardContent>
-            {books && books.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID Buku</TableHead>
-                    <TableHead>Judul</TableHead>
-                    <TableHead>Pengarang</TableHead>
-                    <TableHead>Penerbit</TableHead>
-                    <TableHead>Tahun</TableHead>
-                    <TableHead className="text-right">Aksi</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {books.map((book) => (
-                    <TableRow key={book.id} className="table-row-glow">
-                      <TableCell className="font-mono text-xs font-medium">
-                        {book.id}
-                      </TableCell>
-                      <TableCell className="max-w-[200px] truncate font-medium">
-                        {book.title}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {book.author || '-'}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {book.publisher || '-'}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className="border-primary/20 bg-primary/5 text-primary"
-                        >
-                          {book.year}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            asChild
-                          >
-                            <Link href={route('books.edit', book.id)}>
-                              <Pencil className="h-3.5 w-3.5" />
-                              Edit
-                            </Link>
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => confirmDelete(book)}
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                            Hapus
-                          </Button>
+    return (
+        <AuthenticatedLayout>
+            <Head title="Buku" />
+
+            <div className="space-y-6">
+                <PageHeader
+                    title="Buku"
+                    description="Kelola data buku perpustakaan"
+                    icon={BookOpen}
+                    actions={
+                        <>
+                            <Button variant="outline" asChild>
+                                <Link href={route('books.management')}>
+                                    <BarChart2 className="h-4 w-4" />
+                                    Status buku
+                                </Link>
+                            </Button>
+                            {can(['create_books', 'manage_books']) && (
+                                <Button asChild>
+                                    <Link href={route('books.create')}>
+                                        <Plus className="h-4 w-4" />
+                                        Tambah buku
+                                    </Link>
+                                </Button>
+                            )}
+                        </>
+                    }
+                />
+
+                <Card>
+                    <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <CardTitle>Daftar buku</CardTitle>
+                            <CardDescription>
+                                {filteredBooks.length} dari {books?.length || 0} buku
+                                {search ? ` • hasil untuk "${search}"` : ''}
+                            </CardDescription>
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="relative mb-4">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-primary/15 to-violet-500/15">
-                    <BookOpen className="h-7 w-7 text-primary" />
-                  </div>
-                  <span className="sparkle right-1 top-2" />
-                  <span className="sparkle bottom-2 left-2" style={{ animationDelay: '0.8s' }} />
-                </div>
-                <p className="text-sm font-medium">Belum ada data buku</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Tambah buku baru untuk memulai
-                </p>
-                <Button className="mt-4" size="sm" asChild>
-                  <Link href={route('books.create')}>
-                    <Plus className="h-4 w-4" />
-                    Tambah Buku
-                  </Link>
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+                        <div className="relative w-full sm:w-72">
+                            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input
+                                placeholder="Cari judul, pengarang, ID..."
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                className="pl-9"
+                            />
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        {filteredBooks.length > 0 ? (
+                            <>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>ID</TableHead>
+                                        <TableHead>Judul</TableHead>
+                                        <TableHead>Pengarang</TableHead>
+                                        <TableHead className="text-center">Jumlah</TableHead>
+                                        <TableHead className="text-right">Aksi</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {paging.paged.map((book) => (
+                                        <TableRow key={book.id}>
+                                            <TableCell className="font-mono text-xs">
+                                                {book.id}
+                                            </TableCell>
+                                            <TableCell className="max-w-52 truncate font-medium">
+                                                <Link
+                                                    href={route('books.show', book.id)}
+                                                    className="hover:underline"
+                                                >
+                                                    {book.title}
+                                                </Link>
+                                            </TableCell>
+                                            <TableCell className="max-w-40 truncate text-muted-foreground">
+                                                {book.author || '-'}
+                                            </TableCell>
+                                            <TableCell className="text-center font-medium">
+                                                {book.stock ?? 0}
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex justify-end gap-2">
+                                                    {can(['edit_books', 'manage_books']) && (
+                                                        <Button variant="outline" size="sm" asChild>
+                                                            <Link href={route('books.edit', book.id)}>
+                                                                <Pencil className="h-3.5 w-3.5" />
+                                                                Edit
+                                                            </Link>
+                                                        </Button>
+                                                    )}
+                                                    {can(['delete_books', 'manage_books']) && (
+                                                        <Button
+                                                            variant="destructive"
+                                                            size="sm"
+                                                            onClick={() => confirmDelete(book)}
+                                                        >
+                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                            Hapus
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                            <Pagination pagination={paging} />
+                            </>
+                        ) : (
+                            <EmptyState
+                                icon={BookOpen}
+                                title={search ? 'Tidak ada hasil' : 'Belum ada data buku'}
+                                description={
+                                    search
+                                        ? `Tidak ditemukan buku untuk "${search}".`
+                                        : 'Tambah buku baru untuk memulai.'
+                                }
+                                action={
+                                    !search && can(['create_books', 'manage_books']) && (
+                                        <Button size="sm" asChild>
+                                            <Link href={route('books.create')}>
+                                                <Plus className="h-4 w-4" />
+                                                Tambah buku
+                                            </Link>
+                                        </Button>
+                                    )
+                                }
+                            />
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-destructive/10">
-                <Trash2 className="h-4 w-4 text-destructive" />
-              </span>
-              Hapus Buku
-            </DialogTitle>
-            <DialogDescription>
-              Apakah Anda yakin ingin menghapus buku{' '}
-              <span className="font-medium text-foreground">
-                {bookToDelete?.title}
-              </span>
-              ? Tindakan ini tidak dapat dibatalkan.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="outline">Batal</Button>
-            </DialogClose>
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={processing}
-            >
-              {processing ? 'Menghapus...' : 'Hapus'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </AuthenticatedLayout>
-  );
+            <ConfirmDialog
+                open={deleteDialogOpen}
+                onOpenChange={setDeleteDialogOpen}
+                title="Hapus buku"
+                description={
+                    <>
+                        Hapus buku <span className="font-medium text-foreground">{bookToDelete?.title}</span>?
+                        Tindakan ini tidak dapat dibatalkan.
+                    </>
+                }
+                confirmLabel="Hapus"
+                onConfirm={handleDelete}
+                processing={processing}
+            />
+        </AuthenticatedLayout>
+    );
 }

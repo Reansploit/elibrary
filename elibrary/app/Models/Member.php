@@ -17,7 +17,35 @@ class Member extends Model
         'nama',
         'jekel',
         'kelas',
+        'foto',
+        'sanksi',
+        'sanksi_sampai',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'sanksi' => 'boolean',
+            'sanksi_sampai' => 'date',
+        ];
+    }
+
+    /**
+     * Apakah anggota sedang dalam masa sanksi (peminjaman diblokir).
+     */
+    public function isSanctioned(): bool
+    {
+        if (! $this->sanksi) {
+            return false;
+        }
+
+        // Tanpa tanggal berakhir = berlaku sampai dicabut manual.
+        if (! $this->sanksi_sampai) {
+            return true;
+        }
+
+        return \Carbon\Carbon::today()->lte(\Carbon\Carbon::parse($this->sanksi_sampai));
+    }
 
     public function circulations()
     {
