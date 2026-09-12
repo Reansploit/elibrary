@@ -1,23 +1,15 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
-import { Search, BookOpen, Loader2, LogIn } from 'lucide-react';
+import { Search, BookOpen, Loader2, ArrowRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import PhotoThumb from '@/components/photo-thumb';
+import KatalogHeader from '@/components/katalog-header';
+import KatalogBookCard, { AvailabilityBadge } from '@/components/katalog-book-card';
 
-function Availability({ book }) {
-    if (!book.remaining || book.remaining <= 0) {
-        return <Badge variant="destructive">Habis dipinjam</Badge>;
-    }
-    if (book.remaining < (book.stock ?? 0)) {
-        return <Badge variant="secondary">Tersedia • sisa {book.remaining}</Badge>;
-    }
-    return <Badge variant="outline">Tersedia</Badge>;
-}
-
-export default function KatalogIndex() {
+export default function KatalogIndex({ featured = [], total = 0 }) {
     const { props } = usePage();
     const libraryName = props.libraryName || 'E-Library';
     const [query, setQuery] = useState('');
@@ -63,25 +55,10 @@ export default function KatalogIndex() {
 
     return (
         <div className="min-h-screen bg-background">
-            <Head title={`Katalog - ${libraryName}`} />
+            <Head title="Katalog" />
+            <KatalogHeader libraryName={libraryName} />
 
-            <header className="border-b bg-card">
-                <div className="mx-auto flex h-14 w-full max-w-4xl items-center gap-3 px-4">
-                    <img src="/images/logo-wbs.png" alt={libraryName} className="h-8 w-8 object-contain" />
-                    <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold leading-tight">{libraryName}</p>
-                        <p className="truncate text-xs text-muted-foreground">Katalog Perpustakaan</p>
-                    </div>
-                    <Button variant="outline" size="sm" asChild>
-                        <Link href={route('login')}>
-                            <LogIn className="h-4 w-4" />
-                            Masuk petugas
-                        </Link>
-                    </Button>
-                </div>
-            </header>
-
-            <main className="mx-auto w-full max-w-4xl space-y-4 p-4 lg:p-6">
+            <main className="mx-auto w-full max-w-4xl space-y-6 p-4 lg:p-6">
                 <div>
                     <h1 className="text-xl font-semibold tracking-tight">Cari buku</h1>
                     <p className="mt-0.5 text-sm text-muted-foreground">
@@ -103,7 +80,7 @@ export default function KatalogIndex() {
                     )}
                 </div>
 
-                {showResults && (
+                {showResults ? (
                     <Card>
                         <CardContent className="pt-6">
                             {!books && loading && (
@@ -132,7 +109,7 @@ export default function KatalogIndex() {
                                                     {book.author ? ` • ${book.author}` : ''}
                                                 </p>
                                                 <div className="mt-1">
-                                                    <Availability book={book} />
+                                                    <AvailabilityBadge book={book} />
                                                 </div>
                                             </div>
                                         </div>
@@ -141,6 +118,27 @@ export default function KatalogIndex() {
                             )}
                         </CardContent>
                     </Card>
+                ) : (
+                    featured.length > 0 && (
+                        <div className="space-y-4">
+                            <h2 className="text-base font-semibold tracking-tight">Koleksi terbaru</h2>
+                            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                {featured.map((book) => (
+                                    <KatalogBookCard key={book.id} book={book} />
+                                ))}
+                            </div>
+                            {total > featured.length && (
+                                <div className="flex justify-center pt-2">
+                                    <Button variant="outline" asChild>
+                                        <Link href={route('katalog.all')}>
+                                            Lihat selengkapnya ({total - featured.length} lainnya)
+                                            <ArrowRight className="h-4 w-4" />
+                                        </Link>
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+                    )
                 )}
             </main>
         </div>

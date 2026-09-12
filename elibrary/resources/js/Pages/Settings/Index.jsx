@@ -19,6 +19,7 @@ import {
 import PageHeader from '@/components/page-header';
 import EmptyState from '@/components/empty-state';
 import Pagination from '@/components/pagination';
+import ConfirmDialog from '@/components/confirm-dialog';
 import { useCan } from '@/hooks/useCan';
 import { usePagination } from '@/hooks/usePagination';
 
@@ -61,6 +62,7 @@ export default function SettingsIndex({ settings, users, roles, permissions }) {
     const [roleDialogOpen, setRoleDialogOpen] = useState(false);
     const [editingUser, setEditingUser] = useState(null);
     const [editingRole, setEditingRole] = useState(null);
+    const [deleteTarget, setDeleteTarget] = useState(null);
 
     const safeSettings = settings ?? {
         loan: { max_loans_per_member: 3, loan_duration_days: 7 },
@@ -163,16 +165,21 @@ export default function SettingsIndex({ settings, users, roles, permissions }) {
         });
     };
 
-    const handleDeleteUser = (id) => {
-        if (window.confirm('Yakin ingin menghapus akun ini?')) {
-            destroy(route('settings.users.destroy', id));
-        }
+    const handleDeleteUser = (user) => {
+        setDeleteTarget({ type: 'user', id: user.id, name: user.name });
     };
 
-    const handleDeleteRole = (id) => {
-        if (window.confirm('Yakin ingin menghapus role ini?')) {
-            destroy(route('settings.roles.destroy', id));
-        }
+    const handleDeleteRole = (role) => {
+        setDeleteTarget({ type: 'role', id: role.id, name: role.name });
+    };
+
+    const confirmDelete = () => {
+        if (!deleteTarget) return;
+        const routeName =
+            deleteTarget.type === 'user' ? 'settings.users.destroy' : 'settings.roles.destroy';
+        destroy(route(routeName, deleteTarget.id), {
+            onSuccess: () => setDeleteTarget(null),
+        });
     };
 
     const togglePermission = (permissionName) => {
@@ -332,7 +339,7 @@ export default function SettingsIndex({ settings, users, roles, permissions }) {
                                                     variant="ghost"
                                                     size="icon"
                                                     className="text-destructive hover:text-destructive"
-                                                    onClick={() => handleDeleteUser(user.id)}
+                                                    onClick={() => handleDeleteUser(user)}
                                                 >
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
@@ -385,7 +392,7 @@ export default function SettingsIndex({ settings, users, roles, permissions }) {
                                                         variant="ghost"
                                                         size="icon"
                                                         className="text-destructive hover:text-destructive"
-                                                        onClick={() => handleDeleteRole(role.id)}
+                                                        onClick={() => handleDeleteRole(role)}
                                                     >
                                                         <Trash2 className="h-4 w-4" />
                                                     </Button>
@@ -520,6 +527,24 @@ export default function SettingsIndex({ settings, users, roles, permissions }) {
                     </form>
                 </DialogContent>
             </Dialog>
+
+            <ConfirmDialog
+                open={!!deleteTarget}
+                onOpenChange={(open) => {
+                    if (!open) setDeleteTarget(null);
+                }}
+                title={deleteTarget?.type === 'user' ? 'Hapus akun' : 'Hapus role'}
+                description={
+                    <>
+                        Hapus {deleteTarget?.type === 'user' ? 'akun' : 'role'}{' '}
+                        <span className="font-medium text-foreground">{deleteTarget?.name}</span>?
+                        Tindakan ini tidak dapat dibatalkan.
+                    </>
+                }
+                confirmLabel="Hapus"
+                onConfirm={confirmDelete}
+                processing={processing}
+            />
         </AuthenticatedLayout>
     );
 }

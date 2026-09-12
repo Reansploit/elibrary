@@ -22,6 +22,7 @@ Route::get('/', function () {
 
 // Katalog publik (tanpa login)
 Route::get('/katalog', [KatalogController::class, 'index'])->name('katalog');
+Route::get('/katalog/semua', [KatalogController::class, 'all'])->name('katalog.all');
 Route::get('/katalog/search', [KatalogController::class, 'search'])
     ->middleware('throttle:60,1')
     ->name('katalog.search');

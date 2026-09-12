@@ -14,7 +14,29 @@ class KatalogController extends Controller
      */
     public function index()
     {
-        return Inertia::render('Katalog/Index');
+        $featured = Book::orderByDesc('id_buku')
+            ->limit(20)
+            ->get()
+            ->map(fn ($b) => $this->present($b));
+
+        return Inertia::render('Katalog/Index', [
+            'featured' => $featured,
+            'total' => Book::count(),
+        ]);
+    }
+
+    /**
+     * Semua buku, paginasi server 20/halaman.
+     */
+    public function all()
+    {
+        $books = Book::orderBy('judul_buku')
+            ->paginate(20)
+            ->through(fn ($b) => $this->present($b));
+
+        return Inertia::render('Katalog/All', [
+            'books' => $books,
+        ]);
     }
 
     /**
@@ -36,22 +58,28 @@ class KatalogController extends Controller
             ->orderBy('judul_buku')
             ->limit(12)
             ->get()
-            ->map(function ($b) {
-                $activeCount = Circulation::where('id_buku', $b->id_buku)
-                    ->where('status', 'PIN')
-                    ->count();
-                $stock = max(0, (int) $b->jumlah);
-
-                return [
-                    'id' => $b->id_buku,
-                    'title' => $b->judul_buku,
-                    'author' => $b->pengarang,
-                    'stock' => $b->jumlah,
-                    'photo' => static::photoUrl($b->foto),
-                    'remaining' => $stock - $activeCount,
-                ];
-            });
+            ->map(fn ($b) => $this->present($b));
 
         return response()->json(['books' => $books]);
+    }
+
+    /**
+     * Bentuk tampilan publik sebuah buku (tanpa data peminjam).
+     */
+    private function present(Book $book): array
+    {
+        $activeCount = Circulation::where('id_buku', $book->id_buku)
+            ->where('status', 'PIN')
+            ->count();
+        $stock = max(0, (int) $book->jumlah);
+
+        return [
+            'id' => $book->id_buku,
+            'title' => $book->judul_buku,
+            'author' => $book->pengarang,
+            'stock' => $book->jumlah,
+            'photo' => static::photoUrl($book->foto),
+            'remaining' => $stock - $activeCount,
+        ];
     }
 }
