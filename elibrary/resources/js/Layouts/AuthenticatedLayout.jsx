@@ -85,13 +85,14 @@ const navItems = [
         match: ['settings.index'],
         permission: ['manage_settings'],
     },
-    {
-        label: 'Panduan',
-        icon: BookMarked,
-        href: 'panduan',
-        match: ['panduan'],
-    },
 ];
+
+const panduanItem = {
+    label: 'Panduan',
+    icon: BookMarked,
+    href: 'panduan',
+    match: ['panduan'],
+};
 
 function isNavActive(item) {
     try {
@@ -168,7 +169,7 @@ export default function AuthenticatedLayout({ children }) {
             .toUpperCase()
             .slice(0, 2) || 'U';
 
-    const activeItem = navItems.find((item) => isNavActive(item));
+    const activeItem = [...navItems, panduanItem].find((item) => isNavActive(item));
 
     useEffect(() => {
         if (props.flash?.success) toast.success(props.flash.success);
@@ -224,6 +225,11 @@ export default function AuthenticatedLayout({ children }) {
                         </span>
                     )}
                 </Button>
+                <NavLink
+                    item={panduanItem}
+                    onClick={() => setMobileNavOpen(false)}
+                    collapsed={sidebarCollapsed}
+                />
                 {!sidebarCollapsed && (
                     <div className="flex items-center gap-2 rounded-lg border bg-muted/40 px-2 py-2">
                         <Avatar className="h-7 w-7">
