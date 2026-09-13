@@ -15,7 +15,7 @@ function GuideImage({ src, alt }) {
                     <ImagePlus className="h-5 w-5 text-muted-foreground" />
                 </span>
                 <p className="text-xs text-muted-foreground">
-                    Screenshot menyusul — letakkan file di <span className="font-mono">public/panduan/{src}</span> lalu
+                    Screenshot menyusul — letakkan file di <span className="font-mono">public/images/panduan/{src}</span> lalu
                     refresh halaman ini.
                 </p>
             </div>
@@ -24,7 +24,7 @@ function GuideImage({ src, alt }) {
 
     return (
         <img
-            src={`/panduan/${src}`}
+            src={`/images/panduan/${src}`}
             alt={alt}
             onError={() => setFailed(true)}
             className="w-full rounded-lg border object-cover"
