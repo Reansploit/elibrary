@@ -195,6 +195,25 @@ const guides = [
     },
 ];
 
+const GROUPS = ['Dashboard', 'Data', 'Transaksi', 'Arsip', 'Publik & Admin'];
+
+const GROUP_OF = {
+    mulai: 'Dashboard',
+    buku: 'Data',
+    anggota: 'Data',
+    lokasi: 'Data',
+    opname: 'Data',
+    pinjam: 'Transaksi',
+    kembali: 'Transaksi',
+    terlambat: 'Transaksi',
+    reservasi: 'Transaksi',
+    sanksi: 'Transaksi',
+    log: 'Arsip',
+    laporan: 'Arsip',
+    katalog: 'Publik & Admin',
+    pengaturan: 'Publik & Admin',
+};
+
 export default function PanduanIndex() {
     return (
         <AuthenticatedLayout>
@@ -211,47 +230,72 @@ export default function PanduanIndex() {
                     <CardHeader>
                         <CardTitle>Daftar isi</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                        <div className="flex flex-wrap gap-2">
-                            {guides.map((g) => (
-                                <a
-                                    key={g.id}
-                                    href={`#panduan-${g.id}`}
-                                    className="rounded-lg border bg-card px-3 py-1.5 text-sm transition-colors hover:bg-muted"
-                                >
-                                    {g.title}
-                                </a>
-                            ))}
-                        </div>
+                    <CardContent className="space-y-4">
+                        {GROUPS.map((group) => (
+                            <div key={group}>
+                                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                    {group}
+                                </p>
+                                <div className="flex flex-wrap gap-2">
+                                    {guides
+                                        .filter((g) => (GROUP_OF[g.id] || 'Lainnya') === group)
+                                        .map((g) => (
+                                            <a
+                                                key={g.id}
+                                                href={`#panduan-${g.id}`}
+                                                className="rounded-lg border bg-card px-3 py-1.5 text-sm transition-colors hover:bg-muted"
+                                            >
+                                                {g.title}
+                                            </a>
+                                        ))}
+                                </div>
+                            </div>
+                        ))}
                     </CardContent>
                 </Card>
 
-                {guides.map((guide, i) => (
-                    <Card key={guide.id} id={`panduan-${guide.id}`} className="scroll-mt-20">
-                        <CardHeader>
-                            <CardTitle>
-                                <span className="mr-2 text-muted-foreground">{String(i + 1).padStart(2, '0')}</span>
-                                {guide.title}
-                            </CardTitle>
-                            <CardDescription>{guide.desc}</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <ol className="space-y-2">
-                                {guide.steps.map((step, j) => (
-                                    <li key={j} className="flex gap-3 text-sm">
-                                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium">
-                                            {j + 1}
-                                        </span>
-                                        <span className="text-muted-foreground">
-                                            <span className="text-foreground">{step}</span>
-                                        </span>
-                                    </li>
-                                ))}
-                            </ol>
-                            <GuideImage src={guide.image} alt={`Panduan ${guide.title}`} />
-                        </CardContent>
-                    </Card>
-                ))}
+                {GROUPS.map((group) => {
+                    const items = guides.filter((g) => (GROUP_OF[g.id] || 'Lainnya') === group);
+                    if (items.length === 0) return null;
+                    return (
+                        <section key={group} className="space-y-4">
+                            <h2 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                {group}
+                            </h2>
+                            {items.map((guide) => {
+                                const number = guides.indexOf(guide) + 1;
+                                return (
+                                    <Card key={guide.id} id={`panduan-${guide.id}`} className="scroll-mt-20">
+                                        <CardHeader>
+                                            <CardTitle>
+                                                <span className="mr-2 text-muted-foreground">
+                                                    {String(number).padStart(2, '0')}
+                                                </span>
+                                                {guide.title}
+                                            </CardTitle>
+                                            <CardDescription>{guide.desc}</CardDescription>
+                                        </CardHeader>
+                                        <CardContent className="space-y-4">
+                                            <ol className="space-y-2">
+                                                {guide.steps.map((step, j) => (
+                                                    <li key={j} className="flex gap-3 text-sm">
+                                                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium">
+                                                            {j + 1}
+                                                        </span>
+                                                        <span className="text-muted-foreground">
+                                                            <span className="text-foreground">{step}</span>
+                                                        </span>
+                                                    </li>
+                                                ))}
+                                            </ol>
+                                            <GuideImage src={guide.image} alt={`Panduan ${guide.title}`} />
+                                        </CardContent>
+                                    </Card>
+                                );
+                            })}
+                        </section>
+                    );
+                })}
 
             </div>
         </AuthenticatedLayout>

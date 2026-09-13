@@ -217,18 +217,25 @@ function NavGroup({ group, collapsed, onNavigate, open, onToggle, miniOpen, onMi
                 >
                     <GroupIcon className="h-4 w-4 shrink-0" />
                 </button>
-                {miniOpen && (
-                    <div className="flex flex-col gap-2 rounded-lg border bg-muted/40 p-1.5">
-                        {group.items.map((item) => (
-                            <NavLink
-                                key={item.href}
-                                item={item}
-                                onClick={onNavigate}
-                                collapsed
-                            />
-                        ))}
+                <div
+                    className={cn(
+                        'grid transition-all duration-300 ease-in-out',
+                        miniOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+                    )}
+                >
+                    <div className="overflow-hidden">
+                        <div className="flex flex-col gap-2 rounded-lg border bg-muted/40 p-1.5">
+                            {group.items.map((item) => (
+                                <NavLink
+                                    key={item.href}
+                                    item={item}
+                                    onClick={onNavigate}
+                                    collapsed
+                                />
+                            ))}
+                        </div>
                     </div>
-                )}
+                </div>
             </div>
         );
     }
@@ -243,18 +250,25 @@ function NavGroup({ group, collapsed, onNavigate, open, onToggle, miniOpen, onMi
                 <span>{group.label}</span>
                 <ChevronDown
                     className={cn(
-                        'h-3.5 w-3.5 transition-transform',
+                        'h-3.5 w-3.5 transition-transform duration-300',
                         !open && '-rotate-90'
                     )}
                 />
             </button>
-            {open && (
-                <div className="flex flex-col gap-2">
-                    {group.items.map((item) => (
-                        <NavLink key={item.href} item={item} onClick={onNavigate} collapsed={false} />
-                    ))}
+            <div
+                className={cn(
+                    'grid transition-all duration-300 ease-in-out',
+                    open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+                )}
+            >
+                <div className="overflow-hidden">
+                    <div className="flex flex-col gap-2 pt-1">
+                        {group.items.map((item) => (
+                            <NavLink key={item.href} item={item} onClick={onNavigate} collapsed={false} />
+                        ))}
+                    </div>
                 </div>
-            )}
+            </div>
         </div>
     );
 }
