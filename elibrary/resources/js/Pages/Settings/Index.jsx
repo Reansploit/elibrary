@@ -47,6 +47,7 @@ const PERMISSION_LABELS = {
     return_books: 'Kembalikan buku',
     view_reservations: 'Lihat reservasi',
     manage_reservations: 'Kelola reservasi',
+    view_logs: 'Lihat log aktivitas',
     manage_users: 'Kelola akun pengguna',
     manage_roles: 'Kelola role & izin',
     manage_settings: 'Kelola pengaturan',

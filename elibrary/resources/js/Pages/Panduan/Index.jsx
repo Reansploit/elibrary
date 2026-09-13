@@ -144,6 +144,17 @@ const guides = [
         ],
     },
     {
+        id: 'log',
+        title: 'Log aktivitas',
+        desc: 'Menu Log: jejak peminjaman dan pengembalian.',
+        image: 'log.png',
+        steps: [
+            'Catatan terisi otomatis setiap ada peminjaman dan pengembalian.',
+            'Pakai filter Semua / Dipinjam / Kembali dan kolom cari untuk menelusuri.',
+            'Halaman ini hanya baca — tidak bisa diubah atau dihapus.',
+        ],
+    },
+    {
         id: 'pengaturan',
         title: 'Pengaturan (admin)',
         desc: 'Menu Pengaturan — hanya untuk yang berizin.',

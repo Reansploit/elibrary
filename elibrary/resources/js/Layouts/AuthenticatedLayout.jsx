@@ -17,6 +17,7 @@ import {
     Gavel,
     MapPin,
     Ticket,
+    ScrollText,
     BookMarked,
 } from 'lucide-react';
 import { useTheme } from '@/components/theme-provider';
@@ -77,6 +78,13 @@ const navItems = [
         href: 'reservasi.index',
         match: ['reservasi.index'],
         permission: ['view_reservations', 'manage_reservations'],
+    },
+    {
+        label: 'Log',
+        icon: ScrollText,
+        href: 'log.index',
+        match: ['log.index'],
+        permission: ['view_logs'],
     },
     {
         label: 'Pengaturan',
