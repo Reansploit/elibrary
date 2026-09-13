@@ -37,7 +37,7 @@ const guides = [
         id: 'mulai',
         title: 'Mulai cepat',
         desc: 'Alur kerja harian operator dalam 3 langkah.',
-        image: null,
+        image: 'dashboard.png',
         steps: [
             'Buka Dashboard untuk melihat buku terlambat dan yang akan jatuh tempo.',
             'Untuk transaksi baru, pakai menu Sirkulasi → Pinjam buku.',
