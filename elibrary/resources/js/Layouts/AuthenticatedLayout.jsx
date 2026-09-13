@@ -13,6 +13,7 @@ import {
     LogOut,
     Settings,
     ChevronsUpDown,
+    ChevronDown,
     Lock,
     Gavel,
     MapPin,
@@ -36,72 +37,95 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 
-const navItems = [
-    { label: 'Dashboard', icon: LayoutDashboard, href: 'dashboard', match: ['dashboard'] },
+const dashboardItem = { label: 'Dashboard', icon: LayoutDashboard, href: 'dashboard', match: ['dashboard'] };
+
+const navGroups = [
     {
-        label: 'Buku',
-        icon: BookOpen,
-        href: 'books.index',
-        match: ['books.index', 'books.create', 'books.edit', 'books.management', 'books.show'],
-        permission: ['view_books', 'manage_books'],
+        label: 'Data',
+        items: [
+            {
+                label: 'Buku',
+                icon: BookOpen,
+                href: 'books.index',
+                match: ['books.index', 'books.create', 'books.edit', 'books.management', 'books.show'],
+                permission: ['view_books', 'manage_books'],
+            },
+            {
+                label: 'Anggota',
+                icon: Users,
+                href: 'members.index',
+                match: ['members.index', 'members.create', 'members.edit', 'members.show'],
+                permission: ['view_members', 'manage_members'],
+            },
+            {
+                label: 'Lokasi',
+                icon: MapPin,
+                href: 'lokasi.index',
+                match: ['lokasi.index', 'lokasi.create', 'lokasi.edit'],
+                permission: ['view_books', 'manage_books'],
+            },
+        ],
     },
     {
-        label: 'Anggota',
-        icon: Users,
-        href: 'members.index',
-        match: ['members.index', 'members.create', 'members.edit', 'members.show'],
-        permission: ['view_members', 'manage_members'],
+        label: 'Transaksi',
+        items: [
+            {
+                label: 'Sirkulasi',
+                icon: ArrowLeftRight,
+                href: 'circulation.index',
+                match: ['circulation.index', 'circulation.create', 'circulation.overdue'],
+                permission: ['view_circulation'],
+            },
+            {
+                label: 'Reservasi',
+                icon: Ticket,
+                href: 'reservasi.index',
+                match: ['reservasi.index'],
+                permission: ['view_reservations', 'manage_reservations'],
+            },
+            {
+                label: 'Pembatasan',
+                icon: Gavel,
+                href: 'sanksi.index',
+                match: ['sanksi.index'],
+                permission: ['view_members', 'manage_members'],
+            },
+        ],
     },
     {
-        label: 'Sirkulasi',
-        icon: ArrowLeftRight,
-        href: 'circulation.index',
-        match: ['circulation.index', 'circulation.create', 'circulation.overdue'],
-        permission: ['view_circulation'],
+        label: 'Arsip',
+        items: [
+            {
+                label: 'Log',
+                icon: ScrollText,
+                href: 'log.index',
+                match: ['log.index'],
+                permission: ['view_logs'],
+            },
+            {
+                label: 'Laporan',
+                icon: FileText,
+                href: 'laporan.index',
+                match: ['laporan.index', 'laporan.export'],
+                permission: ['view_reports'],
+            },
+        ],
     },
     {
-        label: 'Pembatasan',
-        icon: Gavel,
-        href: 'sanksi.index',
-        match: ['sanksi.index'],
-        permission: ['view_members', 'manage_members'],
-    },
-    {
-        label: 'Lokasi',
-        icon: MapPin,
-        href: 'lokasi.index',
-        match: ['lokasi.index', 'lokasi.create', 'lokasi.edit'],
-        permission: ['view_books', 'manage_books'],
-    },
-    {
-        label: 'Reservasi',
-        icon: Ticket,
-        href: 'reservasi.index',
-        match: ['reservasi.index'],
-        permission: ['view_reservations', 'manage_reservations'],
-    },
-    {
-        label: 'Log',
-        icon: ScrollText,
-        href: 'log.index',
-        match: ['log.index'],
-        permission: ['view_logs'],
-    },
-    {
-        label: 'Laporan',
-        icon: FileText,
-        href: 'laporan.index',
-        match: ['laporan.index', 'laporan.export'],
-        permission: ['view_reports'],
-    },
-    {
-        label: 'Pengaturan',
-        icon: Settings,
-        href: 'settings.index',
-        match: ['settings.index'],
-        permission: ['manage_settings'],
+        label: 'Lainnya',
+        items: [
+            {
+                label: 'Pengaturan',
+                icon: Settings,
+                href: 'settings.index',
+                match: ['settings.index'],
+                permission: ['manage_settings'],
+            },
+        ],
     },
 ];
+
+const allNavItems = [dashboardItem, ...navGroups.flatMap((g) => g.items)];
 
 const panduanItem = {
     label: 'Panduan',
@@ -158,6 +182,48 @@ function NavLink({ item, onClick, collapsed }) {
     );
 }
 
+function NavGroup({ group, collapsed, onNavigate, open, onToggle }) {
+    if (collapsed) {
+        return (
+            <>
+                {group.items.map((item) => (
+                    <NavLink
+                        key={item.href}
+                        item={item}
+                        onClick={onNavigate}
+                        collapsed={collapsed}
+                    />
+                ))}
+            </>
+        );
+    }
+
+    return (
+        <div>
+            <button
+                type="button"
+                onClick={onToggle}
+                className="flex w-full items-center justify-between px-3 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground outline-none transition-colors hover:text-foreground"
+            >
+                <span>{group.label}</span>
+                <ChevronDown
+                    className={cn(
+                        'h-3.5 w-3.5 transition-transform',
+                        !open && '-rotate-90'
+                    )}
+                />
+            </button>
+            {open && (
+                <div className="flex flex-col gap-2">
+                    {group.items.map((item) => (
+                        <NavLink key={item.href} item={item} onClick={onNavigate} collapsed={false} />
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
 export default function AuthenticatedLayout({ children }) {
     const { url, props } = usePage();
     const user = props.auth.user;
@@ -177,6 +243,39 @@ export default function AuthenticatedLayout({ children }) {
         localStorage.setItem('sidebarCollapsed', String(sidebarCollapsed));
     }, [sidebarCollapsed]);
 
+    // Grup yang terbuka — default: grup berisi halaman aktif.
+    const [openGroups, setOpenGroups] = useState(() => {
+        try {
+            const saved = JSON.parse(localStorage.getItem('sidebarGroups') || '{}');
+            const initial = {};
+            for (const group of navGroups) {
+                initial[group.label] =
+                    typeof saved[group.label] === 'boolean'
+                        ? saved[group.label]
+                        : group.items.some((item) => isNavActive(item));
+            }
+            return initial;
+        } catch {
+            const initial = {};
+            for (const group of navGroups) {
+                initial[group.label] = group.items.some((item) => isNavActive(item));
+            }
+            return initial;
+        }
+    });
+
+    const toggleGroup = (label) => {
+        setOpenGroups((prev) => {
+            const next = { ...prev, [label]: !prev[label] };
+            try {
+                localStorage.setItem('sidebarGroups', JSON.stringify(next));
+            } catch {
+                // abaikan bila storage penuh/diblokir
+            }
+            return next;
+        });
+    };
+
     const initials =
         user?.name
             ?.split(' ')
@@ -185,7 +284,7 @@ export default function AuthenticatedLayout({ children }) {
             .toUpperCase()
             .slice(0, 2) || 'U';
 
-    const activeItem = [...navItems, panduanItem].find((item) => isNavActive(item));
+    const activeItem = [...allNavItems, panduanItem].find((item) => isNavActive(item));
 
     useEffect(() => {
         if (props.flash?.success) toast.success(props.flash.success);
@@ -213,15 +312,19 @@ export default function AuthenticatedLayout({ children }) {
 
             <ScrollArea className="flex-1 px-3 py-4">
                 <nav className="flex flex-col gap-2">
-                    {!sidebarCollapsed && (
-                        <p className="mb-1 px-3 text-xs font-medium text-muted-foreground">Menu</p>
-                    )}
-                    {navItems.map((item) => (
-                        <NavLink
-                            key={item.href}
-                            item={item}
-                            onClick={() => setMobileNavOpen(false)}
+                    <NavLink
+                        item={dashboardItem}
+                        onClick={() => setMobileNavOpen(false)}
+                        collapsed={sidebarCollapsed}
+                    />
+                    {navGroups.map((group) => (
+                        <NavGroup
+                            key={group.label}
+                            group={group}
                             collapsed={sidebarCollapsed}
+                            onNavigate={() => setMobileNavOpen(false)}
+                            open={!!openGroups[group.label]}
+                            onToggle={() => toggleGroup(group.label)}
                         />
                     ))}
                 </nav>
