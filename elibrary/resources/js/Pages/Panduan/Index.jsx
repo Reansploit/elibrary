@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
-import { BookMarked, ImagePlus, ChevronDown } from 'lucide-react';
+import { BookMarked, ImagePlus } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import PageHeader from '@/components/page-header';
 
@@ -157,37 +157,6 @@ const guides = [
     },
 ];
 
-const faqs = [
-    {
-        q: 'Kartu RFID tidak terbaca scanner?',
-        a: 'Pastikan kursor di kolom anggota, lalu ketik manual nomor RFID-nya dan tekan Enter. Scanner pada dasarnya hanya mengetik + Enter otomatis.',
-    },
-    {
-        q: 'Kenapa simpan pinjaman gagal?',
-        a: 'Baca pesan merahnya: stok habis, anggota sedang dibatasi, sudah mencapai batas pinjaman, atau buku direservasi pihak lain. Perbaiki sesuai pesan tersebut.',
-    },
-    {
-        q: 'Upload foto gagal?',
-        a: 'Pakai file JPG/PNG. Foto besar dari HP dikompresi otomatis oleh aplikasi; bila tetap gagal, kecilkan dulu di bawah 2MB.',
-    },
-    {
-        q: 'Lupa password akun?',
-        a: 'Minta admin meresetkan lewat Pengaturan → Pengguna (edit akun). Jaga akun Administrator jangan sampai terkunci.',
-    },
-    {
-        q: 'Menu abu-abu tidak bisa diklik?',
-        a: 'Itu berarti role akunmu tidak punya izin untuk menu tersebut. Minta admin menambah izin di Pengaturan → Role.',
-    },
-    {
-        q: 'Mau mode terang/gelap?',
-        a: 'Saklarnya ada di bawah sidebar. Pilihanmu diingat per perangkat.',
-    },
-    {
-        q: 'Apakah update menghilangkan data?',
-        a: 'Tidak. Update (git pull + migrate) tidak menghapus data buku, anggota, maupun transaksi.',
-    },
-];
-
 export default function PanduanIndex() {
     return (
         <AuthenticatedLayout>
@@ -215,12 +184,6 @@ export default function PanduanIndex() {
                                     {g.title}
                                 </a>
                             ))}
-                            <a
-                                href="#panduan-faq"
-                                className="rounded-lg border bg-card px-3 py-1.5 text-sm transition-colors hover:bg-muted"
-                            >
-                                FAQ
-                            </a>
                         </div>
                     </CardContent>
                 </Card>
@@ -252,25 +215,6 @@ export default function PanduanIndex() {
                     </Card>
                 ))}
 
-                <Card id="panduan-faq" className="scroll-mt-20">
-                    <CardHeader>
-                        <CardTitle>Pertanyaan umum (FAQ)</CardTitle>
-                        <CardDescription>Klik pertanyaan untuk melihat jawaban</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="divide-y rounded-lg border">
-                            {faqs.map((faq, i) => (
-                                <details key={i} className="group px-4 py-3">
-                                    <summary className="flex cursor-pointer list-none items-center justify-between gap-2 text-sm font-medium [&::-webkit-details-marker]:hidden">
-                                        {faq.q}
-                                        <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
-                                    </summary>
-                                    <p className="mt-2 text-sm text-muted-foreground">{faq.a}</p>
-                                </details>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
             </div>
         </AuthenticatedLayout>
     );
