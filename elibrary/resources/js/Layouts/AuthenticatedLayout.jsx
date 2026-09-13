@@ -20,6 +20,9 @@ import {
     Ticket,
     ScrollText,
     FileText,
+    Database,
+    Archive,
+    MoreHorizontal,
     BookMarked,
 } from 'lucide-react';
 import { useTheme } from '@/components/theme-provider';
@@ -42,6 +45,7 @@ const dashboardItem = { label: 'Dashboard', icon: LayoutDashboard, href: 'dashbo
 const navGroups = [
     {
         label: 'Data',
+        icon: Database,
         items: [
             {
                 label: 'Buku',
@@ -68,6 +72,7 @@ const navGroups = [
     },
     {
         label: 'Transaksi',
+        icon: ArrowLeftRight,
         items: [
             {
                 label: 'Sirkulasi',
@@ -94,6 +99,7 @@ const navGroups = [
     },
     {
         label: 'Arsip',
+        icon: Archive,
         items: [
             {
                 label: 'Log',
@@ -113,6 +119,7 @@ const navGroups = [
     },
     {
         label: 'Lainnya',
+        icon: MoreHorizontal,
         items: [
             {
                 label: 'Pengaturan',
@@ -182,19 +189,39 @@ function NavLink({ item, onClick, collapsed }) {
     );
 }
 
-function NavGroup({ group, collapsed, onNavigate, open, onToggle }) {
+function NavGroup({ group, collapsed, onNavigate, open, onToggle, miniOpen, onMiniToggle }) {
     if (collapsed) {
+        const GroupIcon = group.icon;
+        const hasActive = group.items.some((item) => isNavActive(item));
         return (
-            <>
-                {group.items.map((item) => (
-                    <NavLink
-                        key={item.href}
-                        item={item}
-                        onClick={onNavigate}
-                        collapsed={collapsed}
-                    />
-                ))}
-            </>
+            <div className="flex flex-col gap-2">
+                <button
+                    type="button"
+                    onClick={onMiniToggle}
+                    title={group.label}
+                    aria-expanded={miniOpen}
+                    className={cn(
+                        'flex items-center justify-center rounded-lg px-0 py-2.5 text-sm font-medium transition-colors',
+                        hasActive || miniOpen
+                            ? 'bg-primary text-primary-foreground'
+                            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                    )}
+                >
+                    <GroupIcon className="h-4 w-4 shrink-0" />
+                </button>
+                {miniOpen && (
+                    <div className="flex flex-col gap-2 rounded-lg border bg-muted/40 p-1.5">
+                        {group.items.map((item) => (
+                            <NavLink
+                                key={item.href}
+                                item={item}
+                                onClick={onNavigate}
+                                collapsed
+                            />
+                        ))}
+                    </div>
+                )}
+            </div>
         );
     }
 
@@ -276,6 +303,9 @@ export default function AuthenticatedLayout({ children }) {
         });
     };
 
+    // Grup yang dibuka di mode minim (ikon) — cukup satu dalam sekali waktu.
+    const [miniGroup, setMiniGroup] = useState(null);
+
     const initials =
         user?.name
             ?.split(' ')
@@ -325,6 +355,10 @@ export default function AuthenticatedLayout({ children }) {
                             onNavigate={() => setMobileNavOpen(false)}
                             open={!!openGroups[group.label]}
                             onToggle={() => toggleGroup(group.label)}
+                            miniOpen={miniGroup === group.label}
+                            onMiniToggle={() =>
+                                setMiniGroup((prev) => (prev === group.label ? null : group.label))
+                            }
                         />
                     ))}
                 </nav>
