@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Book;
-use App\Models\Circulation;
+use App\Models\Eksemplar;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -68,10 +68,7 @@ class KatalogController extends Controller
      */
     private function present(Book $book): array
     {
-        $activeCount = Circulation::where('id_buku', $book->id_buku)
-            ->where('status', 'PIN')
-            ->count();
-        $stock = max(0, (int) $book->jumlah);
+        $remaining = $book->exemplars()->where('status', Eksemplar::TERSEDIA)->count();
         $book->loadMissing('lokasiRak');
 
         return [
@@ -81,7 +78,7 @@ class KatalogController extends Controller
             'stock' => $book->jumlah,
             'photo' => static::photoUrl($book->foto),
             'location' => $book->lokasiRak ? $book->lokasiRak->id_lokasi . ' — ' . $book->lokasiRak->nama : null,
-            'remaining' => $stock - $activeCount,
+            'remaining' => $remaining,
         ];
     }
 }

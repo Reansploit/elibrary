@@ -53,6 +53,7 @@ const guides = [
             'Tambah buku hanya butuh ID dan judul (harus unik); pengarang, jumlah, foto, dan lokasi opsional.',
             'ID buku bisa diubah di form Edit — data peminjaman ikut menyesuaikan otomatis.',
             'Stok menentukan berapa eksemplar yang bisa dipinjam bersamaan.',
+            'Buka halaman detail buku untuk melihat tiap eksemplar (BK-001-01, BK-001-02, ...) dan menandai yang hilang atau rusak.',
             'Isi lokasi/rak agar santri mudah menemukan buku via katalog.',
         ],
     },

@@ -120,6 +120,11 @@ export default function CirculationIndex({ circulations, loan_duration = 7 }) {
                                             </TableCell>
                                             <TableCell className="max-w-40 truncate font-medium">
                                                 {circ.book}
+                                                {circ.exemplar && (
+                                                    <span className="block font-mono text-xs font-normal text-muted-foreground">
+                                                        {circ.exemplar}
+                                                    </span>
+                                                )}
                                             </TableCell>
                                             <TableCell className="max-w-32 truncate text-muted-foreground">
                                                 {circ.member}

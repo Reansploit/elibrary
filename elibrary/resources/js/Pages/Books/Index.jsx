@@ -107,7 +107,7 @@ export default function BookIndex({ books }) {
                                         <TableHead>Judul</TableHead>
                                         <TableHead>Pengarang</TableHead>
                                         <TableHead>Lokasi</TableHead>
-                                        <TableHead className="text-center">Jumlah</TableHead>
+                                        <TableHead className="text-center">Tersedia</TableHead>
                                         <TableHead className="text-right">Aksi</TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -131,8 +131,11 @@ export default function BookIndex({ books }) {
                                             <TableCell className="max-w-32 truncate text-muted-foreground">
                                                 {book.location || '-'}
                                             </TableCell>
-                                            <TableCell className="text-center font-medium">
-                                                {book.stock ?? 0}
+                                            <TableCell
+                                                className="text-center font-medium"
+                                                title={`Total ${book.stock ?? 0} eksemplar`}
+                                            >
+                                                {book.available ?? 0}/{book.stock ?? 0}
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex justify-end gap-2">

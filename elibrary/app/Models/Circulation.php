@@ -16,6 +16,7 @@ class Circulation extends Model
         'id_sk',
         'id_buku',
         'id_anggota',
+        'id_eksemplar',
         'tgl_pinjam',
         'tgl_kembali',
         'status',
@@ -34,5 +35,10 @@ class Circulation extends Model
     public function member()
     {
         return $this->belongsTo(Member::class, 'id_anggota', 'id_anggota');
+    }
+
+    public function exemplar()
+    {
+        return $this->belongsTo(Eksemplar::class, 'id_eksemplar', 'id');
     }
 }

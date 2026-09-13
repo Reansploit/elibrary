@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Book;
 use App\Models\Circulation;
+use App\Models\Eksemplar;
 use App\Models\Lokasi;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
@@ -35,6 +36,7 @@ class BookController extends Controller
                 'publisher' => $b->penerbit,
                 'year' => $b->th_terbit,
                 'stock' => $b->jumlah,
+                'available' => $b->exemplars()->where('status', Eksemplar::TERSEDIA)->count(),
                 'photo' => static::photoUrl($b->foto),
                 'location' => $b->lokasiRak ? $b->lokasiRak->id_lokasi . ' — ' . $b->lokasiRak->nama : null,
             ];
@@ -137,6 +139,14 @@ class BookController extends Controller
             'lokasi' => $validated['lokasi'] ?? null,
         ]);
 
+        // Buatkan kartu eksemplar sesuai jumlah.
+        for ($i = 1; $i <= (int) $validated['jumlah']; $i++) {
+            Eksemplar::create([
+                'id_buku' => $validated['id_buku'],
+                'kode' => $validated['id_buku'] . '-' . str_pad($i, 2, '0', STR_PAD_LEFT),
+            ]);
+        }
+
         return redirect()->route('books.index')
             ->with('success', 'Buku berhasil ditambahkan.');
     }
@@ -175,15 +185,59 @@ class BookController extends Controller
             'lokasi' => 'nullable|string|max:10|exists:tb_lokasi,id_lokasi',
         ]);
 
+        $oldId = $book->id_buku;
+        $newId = $validated['id_buku'];
+        $newTotal = (int) $validated['jumlah'];
+
+        // Sinkron kartu eksemplar dengan jumlah baru.
+        $currentTotal = $book->exemplars()->count();
+        if ($newTotal > $currentTotal) {
+            $maxSuffix = 0;
+            foreach ($book->exemplars()->pluck('kode') as $kode) {
+                if (preg_match('/-(\d+)$/', $kode, $m)) {
+                    $maxSuffix = max($maxSuffix, (int) $m[1]);
+                }
+            }
+            for ($i = $currentTotal + 1; $i <= $newTotal; $i++) {
+                $maxSuffix++;
+                Eksemplar::create([
+                    'id_buku' => $oldId,
+                    'kode' => $oldId . '-' . str_pad($maxSuffix, 2, '0', STR_PAD_LEFT),
+                ]);
+            }
+        } elseif ($newTotal < $currentTotal) {
+            $removable = $book->exemplars()
+                ->where('status', Eksemplar::TERSEDIA)
+                ->orderBy('kode', 'desc')
+                ->take($currentTotal - $newTotal)
+                ->get();
+            if ($removable->count() < ($currentTotal - $newTotal)) {
+                return redirect()->back()->withErrors([
+                    'jumlah' => 'Tidak bisa dikurangi: sebagian eksemplar sedang dipinjam, hilang, atau rusak.',
+                ]);
+            }
+            foreach ($removable as $copy) {
+                $copy->delete();
+            }
+        }
+
         // FK sirkulasi & log memakai ON UPDATE CASCADE, jadi ganti ID aman.
         $book->update([
-            'id_buku' => $validated['id_buku'],
+            'id_buku' => $newId,
             'judul_buku' => $validated['judul_buku'],
             'pengarang' => $validated['pengarang'] ?? null,
-            'jumlah' => $validated['jumlah'],
+            'jumlah' => $newTotal,
             'foto' => $this->storePhoto($request, 'foto', 'foto-buku', $book->foto),
             'lokasi' => $validated['lokasi'] ?? null,
         ]);
+
+        // Samakan prefix kode eksemplar bila ID buku berubah.
+        if ($newId !== $oldId) {
+            foreach (Eksemplar::where('id_buku', $newId)->get() as $copy) {
+                $suffix = preg_match('/-(\d+)$/', $copy->kode, $m) ? $m[1] : '01';
+                $copy->update(['kode' => $newId . '-' . $suffix]);
+            }
+        }
 
         return redirect()->route('books.index')
             ->with('success', 'Buku berhasil diperbarui.');
@@ -201,7 +255,7 @@ class BookController extends Controller
         $activeLoan = $activeLoans->first();
         $stock = max(0, (int) $book->jumlah);
 
-        $history = Circulation::with('member')
+        $history = Circulation::with(['member', 'exemplar'])
             ->where('id_buku', $book->id_buku)
             ->orderBy('tgl_pinjam', 'desc')
             ->limit(10)
@@ -210,11 +264,27 @@ class BookController extends Controller
                 return [
                     'id' => $c->id_sk,
                     'member' => $c->member?->nama ?? '-',
+                    'exemplar' => $c->exemplar?->kode,
                     'borrow_date' => $c->tgl_pinjam?->format('d/m/Y') ?? '-',
                     'return_date' => $c->tgl_kembali?->format('d/m/Y') ?? '-',
                     'status' => $c->status,
                 ];
             });
+
+        $exemplars = $book->exemplars()->orderBy('kode')->get()->map(function ($e) {
+            $borrower = null;
+            if ($e->status === Eksemplar::DIPINJAM) {
+                $loan = $e->circulations()->where('status', 'PIN')->with('member')->first();
+                $borrower = $loan?->member?->nama;
+            }
+
+            return [
+                'id' => $e->id,
+                'code' => $e->kode,
+                'status' => $e->status,
+                'borrower' => $borrower,
+            ];
+        });
 
         return Inertia::render('Books/Show', [
             'book' => [
@@ -232,6 +302,7 @@ class BookController extends Controller
                     : null,
             ],
             'history' => $history,
+            'exemplars' => $exemplars,
         ]);
     }
 

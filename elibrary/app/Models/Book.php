@@ -32,4 +32,17 @@ class Book extends Model
     {
         return $this->hasMany(Circulation::class, 'id_buku', 'id_buku');
     }
+
+    public function exemplars()
+    {
+        return $this->hasMany(Eksemplar::class, 'id_buku', 'id_buku');
+    }
+
+    /**
+     * Jumlah eksemplar yang siap dipinjam (tidak dipinjam/hilang/rusak).
+     */
+    public function availableCount(): int
+    {
+        return $this->exemplars()->where('status', Eksemplar::TERSEDIA)->count();
+    }
 }

@@ -3,6 +3,7 @@
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\CirculationController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EksemplarController;
 use App\Http\Controllers\KatalogController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\LokasiController;
@@ -37,6 +38,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('books', BookController::class)->except(['show']);
     Route::get('/books/management', [BookController::class, 'management'])->name('books.management');
     Route::get('/books/{id}', [BookController::class, 'show'])->name('books.show');
+    Route::post('/books/{id}/exemplars', [EksemplarController::class, 'store'])->name('exemplars.store');
+    Route::put('/exemplars/{id}', [EksemplarController::class, 'update'])->name('exemplars.update');
+    Route::delete('/exemplars/{id}', [EksemplarController::class, 'destroy'])->name('exemplars.destroy');
     Route::resource('members', MemberController::class)->except(['show']);
     Route::get('/members/{id}', [MemberController::class, 'show'])->name('members.show');
 

@@ -136,6 +136,9 @@ export default function BookForm({ book, locations = [] }) {
                                         aria-invalid={!!errors.jumlah || undefined}
                                     />
                                     <FieldError message={errors.jumlah} />
+                                    <p className="text-xs text-muted-foreground">
+                                        Mengubah jumlah otomatis menambah/mengurangi kartu eksemplar.
+                                    </p>
                                 </div>
                             </div>
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Book;
 use App\Models\Member;
 use App\Models\Circulation;
+use App\Models\Eksemplar;
 use App\Models\LoanLog;
 use App\Models\Reservasi;
 use App\Models\Setting;
@@ -17,7 +18,7 @@ class CirculationController extends Controller
     public function index()
     {
         if ($deny = $this->ensureCan(['view_circulation'])) return $deny;
-        $circulations = Circulation::with(['book', 'member'])
+        $circulations = Circulation::with(['book', 'member', 'exemplar'])
             ->orderBy('tgl_pinjam', 'desc')
             ->get()
             ->map(function ($c) {
@@ -25,6 +26,7 @@ class CirculationController extends Controller
                     'id' => $c->id_sk,
                     'book_id' => $c->id_buku,
                     'book' => $c->book?->judul_buku ?? '-',
+                    'exemplar' => $c->exemplar?->kode,
                     'member_id' => $c->id_anggota,
                     'member' => $c->member?->nama ?? '-',
                     'borrow_date' => $c->tgl_pinjam?->format('Y-m-d'),
@@ -97,6 +99,7 @@ class CirculationController extends Controller
                 'id' => $b->id_buku,
                 'title' => $b->judul_buku,
                 'location' => $b->lokasiRak ? $b->lokasiRak->id_lokasi . ' — ' . $b->lokasiRak->nama : null,
+                'available' => $b->exemplars()->where('status', Eksemplar::TERSEDIA)->count(),
             ];
         });
 
@@ -122,18 +125,19 @@ class CirculationController extends Controller
             'tgl_kembali' => 'nullable|date|after_or_equal:tgl_pinjam',
         ]);
 
-        // Check availability: active loans + others' reservations vs stock
+        // Check availability: free exemplars vs others' reservations
         $book = Book::find($validated['id_buku']);
         $stock = (int) ($book->jumlah ?? 0);
-        $activeCount = Circulation::where('id_buku', $validated['id_buku'])
-            ->where('status', 'PIN')
-            ->count();
+        $freeCopy = Eksemplar::where('id_buku', $validated['id_buku'])
+            ->where('status', Eksemplar::TERSEDIA)
+            ->orderBy('kode')
+            ->first();
         $queueOthers = Reservasi::where('id_buku', $validated['id_buku'])
             ->whereIn('status', ['antre', 'siap'])
             ->where('id_anggota', '!=', $validated['id_anggota'])
             ->count();
 
-        if ($stock <= 0 || ($activeCount + $queueOthers) >= $stock) {
+        if (! $freeCopy || $queueOthers > 0) {
             $holder = Reservasi::with('member')
                 ->where('id_buku', $validated['id_buku'])
                 ->whereIn('status', ['antre', 'siap'])
@@ -198,10 +202,13 @@ class CirculationController extends Controller
             'id_sk' => $id_sk,
             'id_buku' => $validated['id_buku'],
             'id_anggota' => $validated['id_anggota'],
+            'id_eksemplar' => $freeCopy->id,
             'tgl_pinjam' => $fullPinjam,
             'tgl_kembali' => $dueDate,
             'status' => 'PIN',
         ]);
+
+        $freeCopy->update(['status' => Eksemplar::DIPINJAM]);
 
         // Borrower held a reservation: mark it fulfilled
         Reservasi::where('id_buku', $validated['id_buku'])
@@ -235,6 +242,13 @@ class CirculationController extends Controller
             'status' => 'KEM',
             'tgl_kembali' => now()->format('Y-m-d'),
         ]);
+
+        // Bebaskan eksemplarnya (kecuali sudah ditandai hilang/rusak).
+        if ($circulation->id_eksemplar) {
+            Eksemplar::where('id', $circulation->id_eksemplar)
+                ->where('status', Eksemplar::DIPINJAM)
+                ->update(['status' => Eksemplar::TERSEDIA]);
+        }
 
         // Promote oldest waiting reservation to ready
         Reservasi::where('id_buku', $circulation->id_buku)
