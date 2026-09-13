@@ -58,7 +58,7 @@ const navItems = [
         permission: ['view_circulation'],
     },
     {
-        label: 'Sanksi',
+        label: 'Pembatasan',
         icon: Gavel,
         href: 'sanksi.index',
         match: ['sanksi.index'],
