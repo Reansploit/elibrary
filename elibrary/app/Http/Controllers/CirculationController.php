@@ -103,7 +103,7 @@ class CirculationController extends Controller
             ];
         });
 
-        $members = Member::orderBy('nama')->get()->map(function ($m) {
+        $members = Member::where('aktif', true)->orderBy('nama')->get()->map(function ($m) {
             return ['id' => $m->id_anggota, 'name' => $m->nama, 'sanctioned' => $m->isSanctioned()];
         });
 
@@ -156,6 +156,12 @@ class CirculationController extends Controller
 
         // Block sanctioned members
         $member = Member::find($validated['id_anggota']);
+
+        if ($member && ! ($member->aktif ?? true)) {
+            return redirect()->back()->withErrors([
+                'id_anggota' => "Anggota {$member->nama} sudah lulus/nonaktif dan tidak bisa meminjam.",
+            ]);
+        }
 
         if ($member && $member->isSanctioned()) {
             $until = $member->sanksi_sampai

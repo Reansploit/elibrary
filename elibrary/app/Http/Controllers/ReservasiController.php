@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Book;
 use App\Models\Member;
 use App\Models\Reservasi;
+use App\Models\Setting;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -13,6 +15,13 @@ class ReservasiController extends Controller
     public function index()
     {
         if ($deny = $this->ensureCan(['view_reservations', 'manage_reservations'])) return $deny;
+
+        // Antrean "siap diambil" yang lewat batas tahan otomatis batal
+        // agar bukunya tidak ngegantung (tanpa cron, dicek tiap buka halaman).
+        $holdDays = max(1, (int) Setting::get('reservation_hold_days', 3));
+        Reservasi::where('status', 'siap')
+            ->where('updated_at', '<', Carbon::now()->subDays($holdDays))
+            ->update(['status' => 'batal']);
 
         $reservations = Reservasi::with(['book', 'member'])
             ->orderBy('created_at')
@@ -32,7 +41,7 @@ class ReservasiController extends Controller
             return ['id' => $b->id_buku, 'title' => $b->judul_buku];
         });
 
-        $members = Member::orderBy('nama')->get()->map(function ($m) {
+        $members = Member::where('aktif', true)->orderBy('nama')->get()->map(function ($m) {
             return ['id' => $m->id_anggota, 'name' => $m->nama];
         });
 

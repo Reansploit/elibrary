@@ -69,7 +69,7 @@ export default function SettingsIndex({ settings, users, roles, permissions }) {
     const [deleteTarget, setDeleteTarget] = useState(null);
 
     const safeSettings = settings ?? {
-        loan: { max_loans_per_member: 3, loan_duration_days: 7 },
+        loan: { max_loans_per_member: 3, loan_duration_days: 7, reservation_hold_days: 3 },
         penalty: { late_penalty_days: 3, penalty_enabled: true },
         general: { library_name: 'E-Library' },
     };
@@ -83,6 +83,7 @@ export default function SettingsIndex({ settings, users, roles, permissions }) {
     const { data, setData, post, put, delete: destroy, processing, errors } = useForm({
         max_loans_per_member: safeSettings.loan.max_loans_per_member ?? 3,
         loan_duration_days: safeSettings.loan.loan_duration_days ?? 7,
+        reservation_hold_days: safeSettings.loan.reservation_hold_days ?? 3,
         library_name: safeSettings.general.library_name ?? 'E-Library',
         ...emptyUserForm,
         ...emptyRoleForm,
@@ -293,6 +294,23 @@ export default function SettingsIndex({ settings, users, roles, permissions }) {
                                     {errors.loan_duration_days && (
                                         <p className="text-xs text-destructive">{errors.loan_duration_days}</p>
                                     )}
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="reservation_hold_days">Batas ambil reservasi (hari)</Label>
+                                    <Input
+                                        id="reservation_hold_days"
+                                        type="number"
+                                        min="1"
+                                        max="30"
+                                        value={data.reservation_hold_days}
+                                        onChange={(e) => setData('reservation_hold_days', e.target.value)}
+                                    />
+                                    {errors.reservation_hold_days && (
+                                        <p className="text-xs text-destructive">{errors.reservation_hold_days}</p>
+                                    )}
+                                    <p className="text-xs text-muted-foreground">
+                                        Antrean siap diambil yang lewat batas otomatis batal.
+                                    </p>
                                 </div>
                             </CardContent>
                             <CardFooter className="flex justify-end">

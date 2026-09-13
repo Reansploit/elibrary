@@ -20,6 +20,7 @@ class MemberController extends Controller
                 'gender' => $m->jekel,
                 'class' => $m->kelas,
                 'photo' => static::photoUrl($m->foto),
+                'active' => (bool) ($m->aktif ?? true),
             ];
         });
 
@@ -154,5 +155,86 @@ class MemberController extends Controller
 
         return redirect()->route('members.index')
             ->with('success', 'Anggota berhasil dihapus.');
+    }
+
+    /**
+     * Halaman kenaikan kelas & kelulusan massal.
+     */
+    public function promote()
+    {
+        if ($deny = $this->ensureCan(['manage_members'])) return $deny;
+
+        $classes = Member::where('aktif', true)
+            ->whereNotNull('kelas')
+            ->distinct()
+            ->orderBy('kelas')
+            ->pluck('kelas')
+            ->values();
+
+        $members = Member::orderBy('kelas')->orderBy('nama')->get()->map(function ($m) {
+            return [
+                'id' => $m->id_anggota,
+                'name' => $m->nama,
+                'class' => $m->kelas,
+                'active' => (bool) ($m->aktif ?? true),
+                'active_loans' => $m->circulations()->where('status', 'PIN')->count(),
+            ];
+        });
+
+        return Inertia::render('Members/Promote', [
+            'classes' => $classes,
+            'members' => $members,
+        ]);
+    }
+
+    /**
+     * Naikkan kelas massal (ids + kelas tujuan).
+     */
+    public function promoteBatch(Request $request)
+    {
+        if ($deny = $this->ensureCan(['manage_members'])) return $deny;
+
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'string|exists:tb_anggota,id_anggota',
+            'kelas' => 'required|string|max:50',
+        ]);
+
+        Member::whereIn('id_anggota', $validated['ids'])->update(['kelas' => $validated['kelas']]);
+
+        $count = count($validated['ids']);
+
+        return redirect()->back()->with('success', "{$count} anggota dinaikkan ke {$validated['kelas']}.");
+    }
+
+    /**
+     * Luluskan massal = nonaktifkan (tidak bisa pinjam lagi).
+     */
+    public function graduateBatch(Request $request)
+    {
+        if ($deny = $this->ensureCan(['manage_members'])) return $deny;
+
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'string|exists:tb_anggota,id_anggota',
+        ]);
+
+        Member::whereIn('id_anggota', $validated['ids'])->update(['aktif' => false]);
+
+        $count = count($validated['ids']);
+
+        return redirect()->back()->with('success', "{$count} anggota diluluskan (dinonaktifkan).");
+    }
+
+    /**
+     * Aktifkan lagi alumni yang kembali / salah nonaktif.
+     */
+    public function reactivate($id)
+    {
+        if ($deny = $this->ensureCan(['manage_members'])) return $deny;
+        $member = Member::findOrFail($id);
+        $member->update(['aktif' => true]);
+
+        return redirect()->back()->with('success', "{$member->nama} diaktifkan lagi.");
     }
 }

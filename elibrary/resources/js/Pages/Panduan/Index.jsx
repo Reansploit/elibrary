@@ -54,6 +54,7 @@ const guides = [
             'ID buku bisa diubah di form Edit — data peminjaman ikut menyesuaikan otomatis.',
             'Stok menentukan berapa eksemplar yang bisa dipinjam bersamaan.',
             'Buka halaman detail buku untuk melihat tiap eksemplar (BK-001-01, BK-001-02, ...) dan menandai yang hilang atau rusak.',
+            'Buku banyak? Pakai tombol Impor di halaman Buku: unduh template, isi di Excel, Save As CSV, unggah.',
             'Isi lokasi/rak agar santri mudah menemukan buku via katalog.',
         ],
     },
@@ -67,6 +68,8 @@ const guides = [
             'Tempel kartu ke scanner di kolom anggota form pinjam, tekan Enter — anggota langsung terpilih.',
             'Kalau scanner tidak ada, ketik nama/RFID lalu Enter atau klik hasil.',
             'Nomor RFID disembunyikan di tampilan demi keamanan kartu.',
+            'Santri baru banyak? Pakai tombol Impor di halaman Anggota seperti impor buku.',
+            'Awal tahun ajaran: buka tombol Kenaikan kelas di halaman Anggota untuk menaikkan rombel sekaligus atau meluluskan alumni.',
         ],
     },
     {
@@ -119,6 +122,7 @@ const guides = [
         steps: [
             'Tambah reservasi untuk anggota yang menunggu buku tertentu.',
             'Saat buku kembali, antrean tertua otomatis jadi "Siap diambil".',
+            'Yang siap diambil tapi lewat batas hari (atur di Pengaturan → Peminjaman) otomatis batal.',
             'Saat pemegang antrean meminjam, reservasi otomatis selesai. Pihak lain yang menyerobot akan ditolak.',
             'Batalkan antrean yang tidak jadi dari tombol Batal.',
         ],
@@ -132,6 +136,17 @@ const guides = [
             'Buat dulu lokasinya (kode + nama, mis. A1 — Rak Fiksi).',
             'Pilih lokasi di form tambah/edit buku — hanya bisa pilih yang sudah ada.',
             'Lokasi yang masih dipakai buku tidak bisa dihapus.',
+        ],
+    },
+    {
+        id: 'opname',
+        title: 'Opname',
+        desc: 'Menu Opname: cek fisik buku di rak.',
+        image: 'opname.png',
+        steps: [
+            'Pilih rak (atau cari judul) untuk menentukan lingkup opname.',
+            'Keliling rak sambil scan/ketik kode eksemplar lalu Enter, atau centang manual.',
+            'Klik Selesaikan opname: yang tidak dicentang dan tadinya tersedia jadi hilang, yang hilang tapi ketemu jadi tersedia lagi.',
         ],
     },
     {

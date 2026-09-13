@@ -20,6 +20,7 @@ class Member extends Model
         'foto',
         'sanksi',
         'sanksi_sampai',
+        'aktif',
     ];
 
     protected function casts(): array
@@ -27,6 +28,7 @@ class Member extends Model
         return [
             'sanksi' => 'boolean',
             'sanksi_sampai' => 'date',
+            'aktif' => 'boolean',
         ];
     }
 

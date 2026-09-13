@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
-import { Plus, Pencil, Trash2, BookOpen, Search, BarChart2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, BookOpen, Search, BarChart2, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
@@ -66,6 +66,14 @@ export default function BookIndex({ books }) {
                                     Status buku
                                 </Link>
                             </Button>
+                            {can(['create_books', 'manage_books']) && (
+                                <Button variant="outline" asChild>
+                                    <Link href={route('import.index', { type: 'buku' })}>
+                                        <Upload className="h-4 w-4" />
+                                        Impor
+                                    </Link>
+                                </Button>
+                            )}
                             {can(['create_books', 'manage_books']) && (
                                 <Button asChild>
                                     <Link href={route('books.create')}>

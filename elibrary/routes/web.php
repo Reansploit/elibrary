@@ -7,9 +7,11 @@ use App\Http\Controllers\EksemplarController;
 use App\Http\Controllers\KatalogController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\LokasiController;
+use App\Http\Controllers\OpnameController;
 use App\Http\Controllers\ReservasiController;
 use App\Http\Controllers\GuideController;
 use App\Http\Controllers\LogController;
+use App\Http\Controllers\ImportController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SanksiController;
 use App\Http\Controllers\SearchController;
@@ -43,9 +45,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/exemplars/{id}', [EksemplarController::class, 'update'])->name('exemplars.update');
     Route::delete('/exemplars/{id}', [EksemplarController::class, 'destroy'])->name('exemplars.destroy');
     Route::resource('members', MemberController::class)->except(['show']);
+    Route::get('/members/promote', [MemberController::class, 'promote'])->name('members.promote');
+    Route::post('/members/promote', [MemberController::class, 'promoteBatch'])->name('members.promoteBatch');
+    Route::post('/members/graduate', [MemberController::class, 'graduateBatch'])->name('members.graduateBatch');
+    Route::post('/members/{id}/reactivate', [MemberController::class, 'reactivate'])->name('members.reactivate');
     Route::get('/members/{id}', [MemberController::class, 'show'])->name('members.show');
 
     Route::resource('lokasi', LokasiController::class)->except(['show']);
+
+    Route::get('/opname', [OpnameController::class, 'index'])->name('opname.index');
+    Route::post('/opname', [OpnameController::class, 'finish'])->name('opname.finish');
 
     Route::get('/reservasi', [ReservasiController::class, 'index'])->name('reservasi.index');
     Route::post('/reservasi', [ReservasiController::class, 'store'])->name('reservasi.store');
@@ -60,6 +69,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/panduan', [GuideController::class, 'index'])->name('panduan');
 
     Route::get('/log', [LogController::class, 'index'])->name('log.index');
+
+    Route::get('/import', [ImportController::class, 'index'])->name('import.index');
+    Route::get('/import/template/{type}', [ImportController::class, 'template'])->name('import.template');
+    Route::post('/import/preview/{type}', [ImportController::class, 'preview'])->name('import.preview');
+    Route::post('/import/store/{type}', [ImportController::class, 'store'])->name('import.store');
 
     Route::get('/laporan', [ReportController::class, 'index'])->name('laporan.index');
     Route::get('/laporan/export', [ReportController::class, 'export'])->name('laporan.export');

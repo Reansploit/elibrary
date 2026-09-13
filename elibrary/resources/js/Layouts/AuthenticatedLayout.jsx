@@ -22,6 +22,7 @@ import {
     FileText,
     Database,
     Archive,
+    ClipboardCheck,
     MoreHorizontal,
     BookMarked,
 } from 'lucide-react';
@@ -67,6 +68,13 @@ const navGroups = [
                 href: 'lokasi.index',
                 match: ['lokasi.index', 'lokasi.create', 'lokasi.edit'],
                 permission: ['view_books', 'manage_books'],
+            },
+            {
+                label: 'Opname',
+                icon: ClipboardCheck,
+                href: 'opname.index',
+                match: ['opname.index'],
+                permission: ['edit_books', 'manage_books'],
             },
         ],
     },
