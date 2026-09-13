@@ -348,7 +348,7 @@ export default function AuthenticatedLayout({ children }) {
                 )}
             </div>
 
-            <ScrollArea className="flex-1 px-3 py-4">
+            <ScrollArea className="min-h-0 flex-1 px-3 py-4">
                 <nav className="flex flex-col gap-2">
                     <NavLink
                         item={dashboardItem}
