@@ -150,6 +150,14 @@ class MemberController extends Controller
         if ($deny = $this->ensureCan(['delete_members', 'manage_members'])) return $deny;
         $member = Member::findOrFail($id);
 
+        $active = $member->circulations()->where('status', 'PIN')->count();
+        if ($active > 0) {
+            return redirect()->back()->with(
+                'error',
+                "{$member->nama} masih meminjam {$active} buku. Kembalikan dulu sebelum dihapus."
+            );
+        }
+
         $this->deletePhoto($member->foto);
         $member->delete();
 

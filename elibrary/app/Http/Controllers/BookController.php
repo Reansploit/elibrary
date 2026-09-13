@@ -305,11 +305,19 @@ class BookController extends Controller
             'exemplars' => $exemplars,
         ]);
     }
-
     public function destroy($id)
     {
         if ($deny = $this->ensureCan(['delete_books', 'manage_books'])) return $deny;
         $book = Book::findOrFail($id);
+
+        $active = $book->circulations()->where('status', 'PIN')->count();
+        if ($active > 0) {
+            return redirect()->back()->with(
+                'error',
+                "Buku {$book->judul_buku} masih dipinjam {$active} eksemplar. Tunggu kembali dulu sebelum dihapus."
+            );
+        }
+
         $this->deletePhoto($book->foto);
         $book->delete();
 

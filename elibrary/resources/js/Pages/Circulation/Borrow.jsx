@@ -154,10 +154,18 @@ export default function Borrow({ books, members, loan_duration = 7 }) {
                                     <Input
                                         id="tgl_pinjam"
                                         type="date"
+                                        max={today}
                                         value={data.tgl_pinjam}
-                                        onChange={(e) => setData('tgl_pinjam', e.target.value)}
-                                        readOnly
-                                        className="bg-muted"
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            setData({
+                                                ...data,
+                                                tgl_pinjam: val,
+                                                tgl_kembali: val
+                                                    ? addDays(val, Number(loan_duration) || 7)
+                                                    : data.tgl_kembali,
+                                            });
+                                        }}
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -167,13 +175,11 @@ export default function Borrow({ books, members, loan_duration = 7 }) {
                                         type="time"
                                         value={data.jam_pinjam}
                                         onChange={(e) => setData('jam_pinjam', e.target.value)}
-                                        readOnly
-                                        className="bg-muted"
                                     />
                                 </div>
                             </div>
                             <p className="text-xs text-muted-foreground">
-                                Tanggal dan jam terisi otomatis mengikuti waktu saat ini.
+                                Boleh diisi mundur bila baru sempat mencatat (tanggal kembali ikut menyesuaikan).
                             </p>
                         </CardContent>
                         <CardFooter className="flex justify-between">
