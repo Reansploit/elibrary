@@ -29,8 +29,8 @@ class CirculationController extends Controller
                     'exemplar' => $c->exemplar?->kode,
                     'member_id' => $c->id_anggota,
                     'member' => $c->member?->nama ?? '-',
-                    'borrow_date' => $c->tgl_pinjam?->format('Y-m-d'),
-                    'return_date' => $c->tgl_kembali?->format('Y-m-d') ?? null,
+                    'borrow_date' => $c->tgl_pinjam?->format('d/m/Y'),
+                    'return_date' => $c->tgl_kembali?->format('d/m/Y') ?? null,
                     'status' => $c->status,
                 ];
             });
