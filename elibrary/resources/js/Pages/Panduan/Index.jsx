@@ -1,9 +1,36 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
-import { BookMarked, ImagePlus } from 'lucide-react';
+import {
+    BookMarked,
+    ImagePlus,
+    Search,
+    Zap,
+    BookOpen,
+    Users,
+    ArrowLeftRight,
+    RotateCcw,
+    AlertCircle,
+    Gavel,
+    Ticket,
+    MapPin,
+    ClipboardCheck,
+    Library,
+    ScrollText,
+    Settings,
+    FileText,
+} from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+} from '@/components/ui/dialog';
 import PageHeader from '@/components/page-header';
+import EmptyState from '@/components/empty-state';
 
 function GuideImage({ src, alt }) {
     const [failed, setFailed] = useState(false);
@@ -31,6 +58,23 @@ function GuideImage({ src, alt }) {
         />
     );
 }
+
+const GUIDE_ICON = {
+    mulai: Zap,
+    buku: BookOpen,
+    anggota: Users,
+    pinjam: ArrowLeftRight,
+    kembali: RotateCcw,
+    terlambat: AlertCircle,
+    sanksi: Gavel,
+    reservasi: Ticket,
+    lokasi: MapPin,
+    opname: ClipboardCheck,
+    katalog: Library,
+    log: ScrollText,
+    pengaturan: Settings,
+    laporan: FileText,
+};
 
 const guides = [
     {
@@ -214,7 +258,56 @@ const GROUP_OF = {
     pengaturan: 'Publik & Admin',
 };
 
+function GuideCard({ guide, onOpen }) {
+    const Icon = GUIDE_ICON[guide.id] || BookMarked;
+    return (
+        <button
+            type="button"
+            onClick={() => onOpen(guide)}
+            className="flex flex-col rounded-xl border bg-card p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-md"
+        >
+            <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                <Icon className="h-5 w-5 text-primary" />
+            </span>
+            <span className="text-sm font-semibold">{guide.title}</span>
+            <span className="mt-1 line-clamp-2 text-xs text-muted-foreground">{guide.desc}</span>
+            <span className="mt-3 text-xs font-medium text-primary">
+                {guide.steps.length} langkah →
+            </span>
+        </button>
+    );
+}
+
 export default function PanduanIndex() {
+    const [query, setQuery] = useState('');
+    const [activeGroup, setActiveGroup] = useState('Semua');
+    const [openGuide, setOpenGuide] = useState(null);
+
+    const filtered = useMemo(() => {
+        let rows = guides;
+        if (activeGroup !== 'Semua') {
+            rows = rows.filter((g) => (GROUP_OF[g.id] || 'Lainnya') === activeGroup);
+        }
+        if (query.trim()) {
+            const q = query.toLowerCase();
+            rows = rows.filter(
+                (g) =>
+                    g.title.toLowerCase().includes(q) ||
+                    g.desc.toLowerCase().includes(q) ||
+                    g.steps.some((s) => s.toLowerCase().includes(q))
+            );
+        }
+        return rows;
+    }, [query, activeGroup]);
+
+    const visibleGroups =
+        activeGroup === 'Semua'
+            ? GROUPS.map((name) => ({
+                  name,
+                  items: filtered.filter((g) => (GROUP_OF[g.id] || 'Lainnya') === name),
+              })).filter((g) => g.items.length > 0)
+            : [{ name: activeGroup, items: filtered }];
+
     return (
         <AuthenticatedLayout>
             <Head title="Panduan" />
@@ -222,82 +315,86 @@ export default function PanduanIndex() {
             <div className="space-y-6">
                 <PageHeader
                     title="Panduan"
-                    description="Cara memakai setiap fitur, langkah per langkah"
+                    description="Pilih kartu untuk melihat langkah-langkahnya"
                     icon={BookMarked}
                 />
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Daftar isi</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        {GROUPS.map((group) => (
-                            <div key={group}>
-                                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                                    {group}
-                                </p>
-                                <div className="flex flex-wrap gap-2">
-                                    {guides
-                                        .filter((g) => (GROUP_OF[g.id] || 'Lainnya') === group)
-                                        .map((g) => (
-                                            <a
-                                                key={g.id}
-                                                href={`#panduan-${g.id}`}
-                                                className="rounded-lg border bg-card px-3 py-1.5 text-sm transition-colors hover:bg-muted"
-                                            >
-                                                {g.title}
-                                            </a>
-                                        ))}
-                                </div>
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                        placeholder="Cari panduan… mis. RFID, terlambat, rak"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        className="h-11 bg-card pl-10"
+                    />
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                    {['Semua', ...GROUPS].map((name) => (
+                        <button
+                            key={name}
+                            type="button"
+                            onClick={() => setActiveGroup(name)}
+                            className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${
+                                activeGroup === name
+                                    ? 'border-primary bg-primary text-primary-foreground'
+                                    : 'bg-card hover:bg-muted'
+                            }`}
+                        >
+                            {name}
+                        </button>
+                    ))}
+                </div>
+
+                {filtered.length === 0 ? (
+                    <EmptyState
+                        icon={BookMarked}
+                        title="Tidak ketemu"
+                        description={`Tidak ada panduan untuk "${query}".`}
+                    />
+                ) : (
+                    visibleGroups.map((group) => (
+                        <section key={group.name} className="space-y-3">
+                            {activeGroup === 'Semua' && (
+                                <h2 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                    {group.name}
+                                </h2>
+                            )}
+                            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                {group.items.map((guide) => (
+                                    <GuideCard key={guide.id} guide={guide} onOpen={setOpenGuide} />
+                                ))}
                             </div>
-                        ))}
-                    </CardContent>
-                </Card>
-
-                {GROUPS.map((group) => {
-                    const items = guides.filter((g) => (GROUP_OF[g.id] || 'Lainnya') === group);
-                    if (items.length === 0) return null;
-                    return (
-                        <section key={group} className="space-y-4">
-                            <h2 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                                {group}
-                            </h2>
-                            {items.map((guide) => {
-                                const number = guides.indexOf(guide) + 1;
-                                return (
-                                    <Card key={guide.id} id={`panduan-${guide.id}`} className="scroll-mt-20">
-                                        <CardHeader>
-                                            <CardTitle>
-                                                <span className="mr-2 text-muted-foreground">
-                                                    {String(number).padStart(2, '0')}
-                                                </span>
-                                                {guide.title}
-                                            </CardTitle>
-                                            <CardDescription>{guide.desc}</CardDescription>
-                                        </CardHeader>
-                                        <CardContent className="space-y-4">
-                                            <ol className="space-y-2">
-                                                {guide.steps.map((step, j) => (
-                                                    <li key={j} className="flex gap-3 text-sm">
-                                                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium">
-                                                            {j + 1}
-                                                        </span>
-                                                        <span className="text-muted-foreground">
-                                                            <span className="text-foreground">{step}</span>
-                                                        </span>
-                                                    </li>
-                                                ))}
-                                            </ol>
-                                            <GuideImage src={guide.image} alt={`Panduan ${guide.title}`} />
-                                        </CardContent>
-                                    </Card>
-                                );
-                            })}
                         </section>
-                    );
-                })}
-
+                    ))
+                )}
             </div>
+
+            <Dialog open={!!openGuide} onOpenChange={(open) => !open && setOpenGuide(null)}>
+                <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
+                    {openGuide && (
+                        <>
+                            <DialogHeader>
+                                <DialogTitle>{openGuide.title}</DialogTitle>
+                                <DialogDescription>{openGuide.desc}</DialogDescription>
+                            </DialogHeader>
+                            <ol className="space-y-2 py-2">
+                                {openGuide.steps.map((step, j) => (
+                                    <li key={j} className="flex gap-3 text-sm">
+                                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium">
+                                            {j + 1}
+                                        </span>
+                                        <span className="text-muted-foreground">
+                                            <span className="text-foreground">{step}</span>
+                                        </span>
+                                    </li>
+                                ))}
+                            </ol>
+                            <GuideImage src={openGuide.image} alt={`Panduan ${openGuide.title}`} />
+                        </>
+                    )}
+                </DialogContent>
+            </Dialog>
         </AuthenticatedLayout>
     );
 }
