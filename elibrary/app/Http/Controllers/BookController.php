@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Book;
 use App\Models\Circulation;
 use App\Models\Eksemplar;
+use App\Models\Kategori;
 use App\Models\Lokasi;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
@@ -25,10 +26,23 @@ class BookController extends Controller
         });
     }
 
+    /**
+     * Daftar kategori untuk dropdown form (opsional).
+     */
+    private function categoryOptions()
+    {
+        return Kategori::orderBy('id_kategori')->get()->map(function ($k) {
+            return [
+                'id' => $k->id_kategori,
+                'label' => $k->id_kategori . ' — ' . $k->nama,
+            ];
+        });
+    }
+
     public function index()
     {
         if ($deny = $this->ensureCan(['view_books', 'manage_books'])) return $deny;
-        $books = Book::with('lokasiRak')->orderBy('judul_buku')->get()->map(function ($b) {
+        $books = Book::with(['lokasiRak', 'kategoriRef'])->orderBy('judul_buku')->get()->map(function ($b) {
             return [
                 'id' => $b->id_buku,
                 'title' => $b->judul_buku,
@@ -39,6 +53,7 @@ class BookController extends Controller
                 'available' => $b->exemplars()->where('status', Eksemplar::TERSEDIA)->count(),
                 'photo' => static::photoUrl($b->foto),
                 'location' => $b->lokasiRak ? $b->lokasiRak->id_lokasi . ' — ' . $b->lokasiRak->nama : null,
+                'category' => $b->kategoriRef ? $b->kategoriRef->id_kategori . ' — ' . $b->kategoriRef->nama : null,
             ];
         });
 
@@ -115,6 +130,7 @@ class BookController extends Controller
         return Inertia::render('Books/Form', [
             'book' => null,
             'locations' => $this->locationOptions(),
+            'categories' => $this->categoryOptions(),
         ]);
     }
 
@@ -128,6 +144,7 @@ class BookController extends Controller
             'jumlah' => 'required|integer|min:0|max:9999',
             'foto' => 'nullable|image|max:2048',
             'lokasi' => 'nullable|string|max:10|exists:tb_lokasi,id_lokasi',
+            'kategori' => 'nullable|string|max:10|exists:tb_kategori,id_kategori',
         ]);
 
         Book::create([
@@ -137,6 +154,7 @@ class BookController extends Controller
             'jumlah' => $validated['jumlah'],
             'foto' => $this->storePhoto($request, 'foto', 'foto-buku'),
             'lokasi' => $validated['lokasi'] ?? null,
+            'kategori' => $validated['kategori'] ?? null,
         ]);
 
         // Buatkan kartu eksemplar sesuai jumlah.
@@ -166,8 +184,10 @@ class BookController extends Controller
                 'stock' => $book->jumlah,
                 'photo' => static::photoUrl($book->foto),
                 'location' => $book->lokasi,
+                'category' => $book->kategori,
             ],
             'locations' => $this->locationOptions(),
+            'categories' => $this->categoryOptions(),
         ]);
     }
 
@@ -183,6 +203,7 @@ class BookController extends Controller
             'jumlah' => 'required|integer|min:0|max:9999',
             'foto' => 'nullable|image|max:2048',
             'lokasi' => 'nullable|string|max:10|exists:tb_lokasi,id_lokasi',
+            'kategori' => 'nullable|string|max:10|exists:tb_kategori,id_kategori',
         ]);
 
         $oldId = $book->id_buku;
@@ -229,6 +250,7 @@ class BookController extends Controller
             'jumlah' => $newTotal,
             'foto' => $this->storePhoto($request, 'foto', 'foto-buku', $book->foto),
             'lokasi' => $validated['lokasi'] ?? null,
+            'kategori' => $validated['kategori'] ?? null,
         ]);
 
         // Samakan prefix kode eksemplar bila ID buku berubah.
@@ -294,6 +316,7 @@ class BookController extends Controller
                 'stock' => $book->jumlah,
                 'photo' => static::photoUrl($book->foto),
                 'location' => $book->lokasiRak ? $book->lokasiRak->id_lokasi . ' — ' . $book->lokasiRak->nama : null,
+                'category' => $book->kategoriRef ? $book->kategoriRef->id_kategori . ' — ' . $book->kategoriRef->nama : null,
                 'borrowed' => $activeLoans->isNotEmpty(),
                 'remaining' => $stock - $activeLoans->count(),
                 'borrower' => $activeLoan?->member?->nama,

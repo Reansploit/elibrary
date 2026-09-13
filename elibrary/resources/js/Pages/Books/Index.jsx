@@ -28,7 +28,8 @@ export default function BookIndex({ books }) {
                 book.title?.toLowerCase().includes(q) ||
                 book.author?.toLowerCase().includes(q) ||
                 book.id?.toLowerCase().includes(q) ||
-                book.location?.toLowerCase().includes(q)
+                book.location?.toLowerCase().includes(q) ||
+                book.category?.toLowerCase().includes(q)
         );
     }, [books, search]);
 
@@ -115,6 +116,7 @@ export default function BookIndex({ books }) {
                                         <TableHead>Judul</TableHead>
                                         <TableHead>Pengarang</TableHead>
                                         <TableHead>Lokasi</TableHead>
+                                        <TableHead>Kategori</TableHead>
                                         <TableHead className="text-center">Tersedia</TableHead>
                                         <TableHead className="text-right">Aksi</TableHead>
                                     </TableRow>
@@ -138,6 +140,9 @@ export default function BookIndex({ books }) {
                                             </TableCell>
                                             <TableCell className="max-w-32 truncate text-muted-foreground">
                                                 {book.location || '-'}
+                                            </TableCell>
+                                            <TableCell className="max-w-32 truncate text-muted-foreground">
+                                                {book.category || '-'}
                                             </TableCell>
                                             <TableCell
                                                 className="text-center font-medium"

@@ -7,6 +7,7 @@ use App\Http\Controllers\EksemplarController;
 use App\Http\Controllers\KatalogController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\LokasiController;
+use App\Http\Controllers\KategoriController;
 use App\Http\Controllers\OpnameController;
 use App\Http\Controllers\ReservasiController;
 use App\Http\Controllers\GuideController;
@@ -52,6 +53,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/members/{id}', [MemberController::class, 'show'])->name('members.show');
 
     Route::resource('lokasi', LokasiController::class)->except(['show']);
+
+    Route::resource('kategori', KategoriController::class)->except(['show']);
 
     Route::get('/opname', [OpnameController::class, 'index'])->name('opname.index');
     Route::post('/opname', [OpnameController::class, 'finish'])->name('opname.finish');

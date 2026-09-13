@@ -115,6 +115,7 @@ export default function BookShow({ book, history, exemplars }) {
                             <InfoRow label="Judul">{book.title}</InfoRow>
                             <InfoRow label="Pengarang">{book.author || '-'}</InfoRow>
                             <InfoRow label="Lokasi">{book.location || '-'}</InfoRow>
+                            <InfoRow label="Kategori">{book.category || '-'}</InfoRow>
                             <InfoRow label="Jumlah">{book.stock ?? 0}</InfoRow>
                         </CardContent>
                     </Card>

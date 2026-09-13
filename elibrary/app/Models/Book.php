@@ -21,11 +21,17 @@ class Book extends Model
         'jumlah',
         'foto',
         'lokasi',
+        'kategori',
     ];
 
     public function lokasiRak()
     {
         return $this->belongsTo(Lokasi::class, 'lokasi', 'id_lokasi');
+    }
+
+    public function kategoriRef()
+    {
+        return $this->belongsTo(Kategori::class, 'kategori', 'id_kategori');
     }
 
     public function circulations()

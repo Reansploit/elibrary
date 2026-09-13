@@ -28,7 +28,7 @@ function FieldError({ message }) {
     return <p className="text-xs text-destructive">{message}</p>;
 }
 
-export default function BookForm({ book, locations = [] }) {
+export default function BookForm({ book, locations = [], categories = [] }) {
     const isEdit = !!book;
     const [preview, setPreview] = useState(null);
     const [compressing, setCompressing] = useState(false);
@@ -39,6 +39,7 @@ export default function BookForm({ book, locations = [] }) {
         pengarang: book?.author || '',
         jumlah: book?.stock ?? 1,
         lokasi: book?.location || '',
+        kategori: book?.category || '',
         foto: null,
         hapus_foto: false,
         ...(isEdit ? { _method: 'PUT' } : {}),
@@ -191,6 +192,31 @@ export default function BookForm({ book, locations = [] }) {
                                     </SelectContent>
                                 </Select>
                                 <FieldError message={errors.lokasi} />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="kategori">Kategori (opsional)</Label>
+                                <Select
+                                    value={data.kategori || '__none__'}
+                                    onValueChange={(val) => setData('kategori', val === '__none__' ? '' : val)}
+                                >
+                                    <SelectTrigger
+                                        id="kategori"
+                                        className="w-full"
+                                        aria-invalid={!!errors.kategori || undefined}
+                                    >
+                                        <SelectValue placeholder="Pilih kategori" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="__none__">Tanpa kategori</SelectItem>
+                                        {categories.map((cat) => (
+                                            <SelectItem key={cat.id} value={cat.id}>
+                                                {cat.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <FieldError message={errors.kategori} />
                             </div>
 
                             <div className="space-y-2">

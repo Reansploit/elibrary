@@ -22,6 +22,7 @@ import {
     FileText,
     Database,
     Archive,
+    Tags,
     ClipboardCheck,
     MoreHorizontal,
     BookMarked,
@@ -67,6 +68,13 @@ const navGroups = [
                 icon: MapPin,
                 href: 'lokasi.index',
                 match: ['lokasi.index', 'lokasi.create', 'lokasi.edit'],
+                permission: ['view_books', 'manage_books'],
+            },
+            {
+                label: 'Kategori',
+                icon: Tags,
+                href: 'kategori.index',
+                match: ['kategori.index', 'kategori.create', 'kategori.edit'],
                 permission: ['view_books', 'manage_books'],
             },
             {
