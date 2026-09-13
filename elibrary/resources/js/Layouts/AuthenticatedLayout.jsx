@@ -17,6 +17,7 @@ import {
     Gavel,
     MapPin,
     Ticket,
+    BookMarked,
 } from 'lucide-react';
 import { useTheme } from '@/components/theme-provider';
 import { useCan } from '@/hooks/useCan';
@@ -83,6 +84,12 @@ const navItems = [
         href: 'settings.index',
         match: ['settings.index'],
         permission: ['manage_settings'],
+    },
+    {
+        label: 'Panduan',
+        icon: BookMarked,
+        href: 'panduan',
+        match: ['panduan'],
     },
 ];
 

@@ -7,6 +7,7 @@ use App\Http\Controllers\KatalogController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\LokasiController;
 use App\Http\Controllers\ReservasiController;
+use App\Http\Controllers\GuideController;
 use App\Http\Controllers\SanksiController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\ProfileController;
@@ -49,6 +50,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/sanksi/{id}', [SanksiController::class, 'update'])->name('sanksi.update');
 
     Route::get('/search', [SearchController::class, 'index'])->name('search.index');
+
+    Route::get('/panduan', [GuideController::class, 'index'])->name('panduan');
 
     Route::get('/circulation', [CirculationController::class, 'index'])->name('circulation.index');
     Route::get('/circulation/overdue', [CirculationController::class, 'overdue'])->name('circulation.overdue');
