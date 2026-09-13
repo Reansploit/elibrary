@@ -49,7 +49,7 @@ class SanksiController extends Controller
         $member->update([
             'sanksi' => $sanksi,
             'sanksi_sampai' => $sanksi
-                ? Carbon::today()->addDays($validated['lama_sanksi'] ?? 7)->toDateString()
+                ? Carbon::today()->addDays((int) ($validated['lama_sanksi'] ?? 7))->toDateString()
                 : null,
         ]);
 

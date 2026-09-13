@@ -194,7 +194,14 @@ export default function SanksiIndex({ members }) {
                                         min={1}
                                         max={365}
                                         value={data.lama_sanksi}
-                                        onChange={(e) => setData('lama_sanksi', e.target.value)}
+                                        onChange={(e) =>
+                                            setData(
+                                                'lama_sanksi',
+                                                e.target.value === ''
+                                                    ? ''
+                                                    : parseInt(e.target.value, 10)
+                                            )
+                                        }
                                         aria-invalid={!!errors.lama_sanksi || undefined}
                                     />
                                     {errors.lama_sanksi && (

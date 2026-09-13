@@ -272,7 +272,7 @@ class CirculationController extends Controller
 
         $circulation->update([
             'tgl_kembali' => Carbon::parse($circulation->tgl_kembali)
-                ->addDays($validated['hari'])
+                ->addDays((int) $validated['hari'])
                 ->format('Y-m-d'),
         ]);
 
