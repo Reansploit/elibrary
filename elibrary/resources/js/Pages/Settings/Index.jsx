@@ -48,6 +48,7 @@ const PERMISSION_LABELS = {
     view_reservations: 'Lihat reservasi',
     manage_reservations: 'Kelola reservasi',
     view_logs: 'Lihat log aktivitas',
+    view_reports: 'Lihat laporan',
     manage_users: 'Kelola akun pengguna',
     manage_roles: 'Kelola role & izin',
     manage_settings: 'Kelola pengaturan',

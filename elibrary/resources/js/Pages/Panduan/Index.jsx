@@ -167,6 +167,17 @@ const guides = [
             'Role: atur izin per role — menu yang tak berizin otomatis abu dan URL-nya ditolak.',
         ],
     },
+    {
+        id: 'laporan',
+        title: 'Laporan',
+        desc: 'Menu Laporan: rekap sirkulasi, koleksi, dan anggota.',
+        image: 'laporan.png',
+        steps: [
+            'Pilih jenis laporan Sirkulasi, Koleksi, atau Anggota.',
+            'Untuk sirkulasi, atur rentang tanggal lalu klik Tampilkan.',
+            'Klik Cetak untuk arsip kertas, atau Unduh CSV untuk dibuka di Excel.',
+        ],
+    },
 ];
 
 export default function PanduanIndex() {

@@ -10,6 +10,7 @@ use App\Http\Controllers\LokasiController;
 use App\Http\Controllers\ReservasiController;
 use App\Http\Controllers\GuideController;
 use App\Http\Controllers\LogController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SanksiController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\ProfileController;
@@ -59,6 +60,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/panduan', [GuideController::class, 'index'])->name('panduan');
 
     Route::get('/log', [LogController::class, 'index'])->name('log.index');
+
+    Route::get('/laporan', [ReportController::class, 'index'])->name('laporan.index');
+    Route::get('/laporan/export', [ReportController::class, 'export'])->name('laporan.export');
 
     Route::get('/circulation', [CirculationController::class, 'index'])->name('circulation.index');
     Route::get('/circulation/overdue', [CirculationController::class, 'overdue'])->name('circulation.overdue');

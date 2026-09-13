@@ -18,6 +18,7 @@ import {
     MapPin,
     Ticket,
     ScrollText,
+    FileText,
     BookMarked,
 } from 'lucide-react';
 import { useTheme } from '@/components/theme-provider';
@@ -85,6 +86,13 @@ const navItems = [
         href: 'log.index',
         match: ['log.index'],
         permission: ['view_logs'],
+    },
+    {
+        label: 'Laporan',
+        icon: FileText,
+        href: 'laporan.index',
+        match: ['laporan.index', 'laporan.export'],
+        permission: ['view_reports'],
     },
     {
         label: 'Pengaturan',
