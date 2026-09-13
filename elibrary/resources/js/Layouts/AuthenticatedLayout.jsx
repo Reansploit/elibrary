@@ -412,7 +412,7 @@ export default function AuthenticatedLayout({ children }) {
         <div className="flex h-screen overflow-hidden bg-background">
             <aside
                 className={cn(
-                    'hidden border-r bg-card lg:flex lg:flex-col',
+                    'hidden overflow-hidden border-r bg-card transition-[width] duration-300 ease-in-out lg:flex lg:flex-col',
                     sidebarCollapsed ? 'w-16' : 'w-64'
                 )}
             >
