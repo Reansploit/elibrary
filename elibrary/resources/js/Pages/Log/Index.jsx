@@ -34,11 +34,11 @@ export default function LogIndex({ logs }) {
 
     return (
         <AuthenticatedLayout>
-            <Head title="Log Aktivitas" />
+            <Head title="Riwayat" />
 
             <div className="space-y-6">
                 <PageHeader
-                    title="Log Aktivitas"
+                    title="Riwayat"
                     description="Jejak peminjaman dan pengembalian — siapa meminjam apa dan kapan"
                     icon={ScrollText}
                 />

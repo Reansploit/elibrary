@@ -146,8 +146,8 @@ const guides = [
     },
     {
         id: 'log',
-        title: 'Log aktivitas',
-        desc: 'Menu Log: jejak peminjaman dan pengembalian.',
+        title: 'Riwayat',
+        desc: 'Menu Riwayat: jejak peminjaman dan pengembalian.',
         image: 'log.png',
         steps: [
             'Catatan terisi otomatis setiap ada peminjaman dan pengembalian.',

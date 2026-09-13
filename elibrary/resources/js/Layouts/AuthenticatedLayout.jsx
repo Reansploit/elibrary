@@ -102,7 +102,7 @@ const navGroups = [
         icon: Archive,
         items: [
             {
-                label: 'Log',
+                label: 'Riwayat',
                 icon: ScrollText,
                 href: 'log.index',
                 match: ['log.index'],
