@@ -171,9 +171,9 @@ class ImportController extends Controller
         // Alias header Indonesia (mis. template pondok) ke kolom sistem.
         $aliases = [
             'nama' => ['nama', 'nama siswa', 'nama santri'],
-            'jekel' => ['jekel', 'jk', 'jenis kelamin', 'kelamin', 'l/p'],
+            'jekel' => ['jekel', 'jk', 'jenis kelamin', 'kelamin', 'gender', 'l/p'],
             'kelas' => ['kelas', 'rombel'],
-            'id_anggota' => ['id_anggota', 'id', 'id anggota', 'rfid', 'no kartu', 'nomor kartu'],
+            'id_anggota' => ['id_anggota', 'id', 'id anggota', 'rfid', 'rfid anggota', 'no kartu', 'nomor kartu'],
             'id_buku' => ['id_buku', 'id', 'kode', 'kode buku'],
             'judul_buku' => ['judul_buku', 'judul', 'nama buku'],
             'pengarang' => ['pengarang', 'penulis', 'pengarang/penulis'],
