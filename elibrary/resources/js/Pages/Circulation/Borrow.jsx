@@ -21,6 +21,67 @@ function FieldError({ message }) {
     return <p className="text-xs text-destructive">{message}</p>;
 }
 
+function toDisplay(iso) {
+    if (!iso) return '';
+    const parts = String(iso).split('-');
+    if (parts.length !== 3) return String(iso);
+    const [y, m, d] = parts;
+    return `${d}/${m}/${y}`;
+}
+
+function toISO(display) {
+    const m = String(display).trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (!m) return null;
+    const d = Number(m[1]);
+    const mo = Number(m[2]);
+    const y = Number(m[3]);
+    const dt = new Date(y, mo - 1, d);
+    if (dt.getFullYear() !== y || dt.getMonth() !== mo - 1 || dt.getDate() !== d) return null;
+    return `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+}
+
+function maskDate(digits) {
+    const d = digits.slice(0, 8);
+    if (d.length <= 2) return d;
+    if (d.length <= 4) return `${d.slice(0, 2)}/${d.slice(2)}`;
+    return `${d.slice(0, 2)}/${d.slice(2, 4)}/${d.slice(4)}`;
+}
+
+// Input tanggal tampil dd/mm/yyyy, nilai ke server yyyy-mm-dd.
+function DateTextInput({ id, value, onChange, ...props }) {
+    const [text, setText] = useState(toDisplay(value));
+    const [invalid, setInvalid] = useState(false);
+
+    useEffect(() => {
+        setText(toDisplay(value));
+        setInvalid(false);
+    }, [value]);
+
+    return (
+        <>
+            <Input
+                id={id}
+                inputMode="numeric"
+                placeholder="hh/bb/tttt"
+                value={text}
+                onChange={(e) => {
+                    const masked = maskDate(e.target.value.replace(/\D/g, ''));
+                    setText(masked);
+                    if (masked.length === 10) {
+                        const iso = toISO(masked);
+                        setInvalid(!iso);
+                        if (iso) onChange(iso);
+                    } else {
+                        setInvalid(false);
+                    }
+                }}
+                {...props}
+            />
+            {invalid && <p className="text-xs text-destructive">Tanggal tidak valid (hh/bb/tttt).</p>}
+        </>
+    );
+}
+
 function addDays(dateStr, days) {
     const [y, m, d] = dateStr.split('-').map(Number);
     const date = new Date(y, m - 1, d);
@@ -134,12 +195,10 @@ export default function Borrow({ books, members, loan_duration = 7 }) {
                                 <Label htmlFor="tgl_kembali">
                                     Harus dikembalikan pada <span className="text-destructive">*</span>
                                 </Label>
-                                <Input
+                                <DateTextInput
                                     id="tgl_kembali"
-                                    type="date"
-                                    min={data.tgl_pinjam}
                                     value={data.tgl_kembali}
-                                    onChange={(e) => setData('tgl_kembali', e.target.value)}
+                                    onChange={(iso) => setData('tgl_kembali', iso)}
                                     aria-invalid={!!errors.tgl_kembali || undefined}
                                 />
                                 <FieldError message={errors.tgl_kembali} />
@@ -151,19 +210,14 @@ export default function Borrow({ books, members, loan_duration = 7 }) {
                             <div className="grid gap-4 sm:grid-cols-2">
                                 <div className="space-y-2">
                                     <Label htmlFor="tgl_pinjam">Tanggal pinjam</Label>
-                                    <Input
+                                    <DateTextInput
                                         id="tgl_pinjam"
-                                        type="date"
-                                        max={today}
                                         value={data.tgl_pinjam}
-                                        onChange={(e) => {
-                                            const val = e.target.value;
+                                        onChange={(iso) => {
                                             setData({
                                                 ...data,
-                                                tgl_pinjam: val,
-                                                tgl_kembali: val
-                                                    ? addDays(val, Number(loan_duration) || 7)
-                                                    : data.tgl_kembali,
+                                                tgl_pinjam: iso,
+                                                tgl_kembali: addDays(iso, Number(loan_duration) || 7),
                                             });
                                         }}
                                     />
