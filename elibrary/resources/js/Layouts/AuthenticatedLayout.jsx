@@ -133,7 +133,7 @@ function NavLink({ item, onClick, collapsed }) {
                     collapsed && 'justify-center px-0'
                 )}
             >
-                <Lock className="h-5 w-5 shrink-0" />
+                <Lock className="h-4 w-4 shrink-0" />
                 {!collapsed && <span className="truncate">{item.label}</span>}
             </div>
         );
@@ -152,7 +152,7 @@ function NavLink({ item, onClick, collapsed }) {
                     : 'text-muted-foreground hover:bg-muted hover:text-foreground'
             )}
         >
-            <Icon className="h-5 w-5 shrink-0" />
+            <Icon className="h-4 w-4 shrink-0" />
             {!collapsed && <span className="truncate">{item.label}</span>}
         </Link>
     );
