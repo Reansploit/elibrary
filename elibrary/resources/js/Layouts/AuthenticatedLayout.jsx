@@ -300,6 +300,10 @@ export default function AuthenticatedLayout({ children }) {
         localStorage.setItem('sidebarCollapsed', String(sidebarCollapsed));
     }, [sidebarCollapsed]);
 
+    // Hover membuka sidebar yang diminimkan sementara; klik logo mengunci.
+    const [hoverExpand, setHoverExpand] = useState(false);
+    const mini = sidebarCollapsed && !hoverExpand;
+
     // Grup yang terbuka — default: grup berisi halaman aktif.
     const [openGroups, setOpenGroups] = useState(() => {
         try {
@@ -362,7 +366,7 @@ export default function AuthenticatedLayout({ children }) {
                 >
                     <img src="/images/logo-wbs.png" alt="Logo" className="h-6 w-6 object-contain" />
                 </button>
-                {!sidebarCollapsed && (
+                {!mini && (
                     <div className="min-w-0">
                         <p className="truncate text-sm font-semibold leading-tight">{libraryName}</p>
                         <p className="truncate text-xs text-muted-foreground">Qism Maktabah</p>
@@ -375,13 +379,13 @@ export default function AuthenticatedLayout({ children }) {
                     <NavLink
                         item={dashboardItem}
                         onClick={() => setMobileNavOpen(false)}
-                        collapsed={sidebarCollapsed}
+                        collapsed={mini}
                     />
                     {navGroups.map((group) => (
                         <NavGroup
                             key={group.label}
                             group={group}
-                            collapsed={sidebarCollapsed}
+                            collapsed={mini}
                             onNavigate={() => setMobileNavOpen(false)}
                             open={!!openGroups[group.label]}
                             onToggle={() => toggleGroup(group.label)}
@@ -399,10 +403,10 @@ export default function AuthenticatedLayout({ children }) {
                     variant="ghost"
                     size="sm"
                     onClick={toggleTheme}
-                    className={cn('w-full justify-start gap-2', sidebarCollapsed && 'justify-center px-0')}
+                    className={cn('w-full justify-start gap-2', mini && 'justify-center px-0')}
                 >
                     {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                    {!sidebarCollapsed && (
+                    {!mini && (
                         <span className="text-sm">
                             {theme === 'dark' ? 'Mode terang' : 'Mode gelap'}
                         </span>
@@ -411,9 +415,9 @@ export default function AuthenticatedLayout({ children }) {
                 <NavLink
                     item={panduanItem}
                     onClick={() => setMobileNavOpen(false)}
-                    collapsed={sidebarCollapsed}
+                    collapsed={mini}
                 />
-                {!sidebarCollapsed && (
+                {!mini && (
                     <div className="flex items-center gap-2 rounded-lg border bg-muted/40 px-2 py-2">
                         <Avatar className="h-7 w-7">
                             <AvatarFallback className="text-xs">{initials}</AvatarFallback>
@@ -433,9 +437,11 @@ export default function AuthenticatedLayout({ children }) {
     return (
         <div className="flex h-screen overflow-hidden bg-background">
             <aside
+                onMouseEnter={() => sidebarCollapsed && setHoverExpand(true)}
+                onMouseLeave={() => setHoverExpand(false)}
                 className={cn(
                     'hidden overflow-hidden border-r bg-card transition-[width] duration-300 ease-in-out lg:flex lg:flex-col',
-                    sidebarCollapsed ? 'w-16' : 'w-64'
+                    mini ? 'w-16' : 'w-64'
                 )}
             >
                 {sidebarContent}
