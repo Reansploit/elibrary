@@ -166,13 +166,41 @@ class ImportController extends Controller
         }
 
         $delimiter = substr_count($lines[0], ';') > substr_count($lines[0], ',') ? ';' : ',';
-        $header = array_map(fn ($h) => strtolower(trim($h)), str_getcsv($lines[0], $delimiter));
+        $rawHeader = array_map(fn ($h) => strtolower(trim($h)), str_getcsv($lines[0], $delimiter));
+
+        // Alias header Indonesia (mis. template pondok) ke kolom sistem.
+        $aliases = [
+            'nama' => ['nama', 'nama siswa', 'nama santri'],
+            'jekel' => ['jekel', 'jk', 'jenis kelamin', 'kelamin', 'l/p'],
+            'kelas' => ['kelas', 'rombel'],
+            'id_anggota' => ['id_anggota', 'id', 'id anggota', 'rfid', 'no kartu', 'nomor kartu'],
+            'id_buku' => ['id_buku', 'id', 'kode', 'kode buku'],
+            'judul_buku' => ['judul_buku', 'judul', 'nama buku'],
+            'pengarang' => ['pengarang', 'penulis', 'pengarang/penulis'],
+            'jumlah' => ['jumlah', 'stok', 'qty'],
+            'lokasi' => ['lokasi', 'rak', 'kode rak'],
+        ];
+
+        $pos = [];
+        $canonical = ['nama', 'jekel', 'kelas', 'id_anggota', 'id_buku', 'judul_buku', 'pengarang', 'jumlah', 'lokasi'];
+        foreach ($rawHeader as $i => $h) {
+            if (in_array($h, $canonical, true)) {
+                $pos[$h] = $i;
+                continue;
+            }
+            foreach ($aliases as $col => $names) {
+                if (in_array($h, $names, true)) {
+                    $pos[$col] = $i;
+                    break;
+                }
+            }
+        }
 
         // Header boleh subset selama kolom wajib ada (urutan bebas).
         $wanted = null;
         foreach (self::TYPES as $config) {
             $cols = $config['columns'];
-            if (count(array_intersect($config['required'], $header)) === count($config['required'])) {
+            if (count(array_intersect($config['required'], array_keys($pos))) === count($config['required'])) {
                 $wanted = $cols;
                 break;
             }
@@ -185,8 +213,17 @@ class ImportController extends Controller
         for ($i = 1; $i < count($lines); $i++) {
             $cells = str_getcsv($lines[$i], $delimiter);
             $row = [];
-            foreach ($wanted as $j => $col) {
-                $row[$col] = isset($cells[$j]) ? trim($cells[$j]) : '';
+            $allEmpty = true;
+            foreach ($wanted as $col) {
+                $val = isset($pos[$col], $cells[$pos[$col]]) ? trim($cells[$pos[$col]]) : '';
+                $row[$col] = $val;
+                if ($val !== '') {
+                    $allEmpty = false;
+                }
+            }
+            // Lewati baris yang sepenuhnya kosong (sisa template).
+            if ($allEmpty) {
+                continue;
             }
             $rows[] = ['line' => $i + 1, 'data' => $row];
         }
@@ -201,6 +238,9 @@ class ImportController extends Controller
         $existingMembers = Member::pluck('id_anggota')->flip()->toArray();
 
         foreach ($rows as &$row) {
+            if ($type === 'anggota') {
+                $row['data']['jekel'] = $this->normalizeJekel($row['data']['jekel'] ?? '');
+            }
             $errors = $this->validateRow($type, $row['data'], $seen, $existingBooks, $existingMembers);
             $row['valid'] = empty($errors);
             $row['errors'] = $errors;
@@ -213,8 +253,7 @@ class ImportController extends Controller
     {
         $errors = [];
 
-        if ($type === 'buku') {
-            if ($d['id_buku'] === '') {
+        if ($type === 'buku') {            if ($d['id_buku'] === '') {
                 $errors[] = 'ID kosong.';
             } elseif (strlen($d['id_buku']) > 10) {
                 $errors[] = 'ID maksimal 10 karakter.';
@@ -238,7 +277,7 @@ class ImportController extends Controller
             $seen['buku'][$d['id_buku']] = true;
         } else {
             if ($d['id_anggota'] === '') {
-                $errors[] = 'ID/RFID kosong.';
+                $errors[] = 'RFID kosong — lengkapi dulu.';
             } elseif (strlen($d['id_anggota']) > 50) {
                 $errors[] = 'ID maksimal 50 karakter.';
             } elseif (isset($existingMembers[$d['id_anggota']]) || isset($seen['anggota'][$d['id_anggota']])) {
@@ -247,8 +286,9 @@ class ImportController extends Controller
             if ($d['nama'] === '') {
                 $errors[] = 'Nama kosong.';
             }
+            $d['jekel'] = $this->normalizeJekel($d['jekel']);
             if (! in_array($d['jekel'], ['Laki-laki', 'Perempuan'], true)) {
-                $errors[] = 'Jekel harus Laki-laki/Perempuan.';
+                $errors[] = 'Jekel harus Laki-laki/Perempuan (boleh L/P).';
             }
             if ($d['kelas'] === '') {
                 $errors[] = 'Kelas kosong.';
@@ -259,6 +299,22 @@ class ImportController extends Controller
         }
 
         return $errors;
+    }
+
+    /**
+     * Normalisasi L/P/laki/perempuan → Laki-laki/Perempuan.
+     */
+    private function normalizeJekel(string $value): string
+    {
+        $v = strtolower(trim($value));
+        if (in_array($v, ['l', 'laki', 'laki-laki', 'lakilaki'], true)) {
+            return 'Laki-laki';
+        }
+        if (in_array($v, ['p', 'perempuan'], true)) {
+            return 'Perempuan';
+        }
+
+        return trim($value);
     }
 
     /**
