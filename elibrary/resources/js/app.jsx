@@ -44,10 +44,7 @@ function PageLoader() {
         visible ? 'opacity-100' : 'pointer-events-none opacity-0'
       )}
     >
-      <div className="flex flex-col items-center gap-3 rounded-2xl border bg-card px-8 py-6 shadow-xl">
-        <Swirling className="h-10 w-10 text-primary" />
-        <span className="text-sm text-muted-foreground">Memuat…</span>
-      </div>
+      <Swirling className="h-20 w-20 text-primary" style={{ '--duration': '1.2s' }} />
     </div>
   );
 }
