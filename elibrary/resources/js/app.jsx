@@ -1,11 +1,56 @@
 import '../css/app.css';
 import './bootstrap';
 
-import { createInertiaApp } from '@inertiajs/react';
+import { createInertiaApp, router } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
+import { useEffect, useState } from 'react';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from '@/components/ui/sonner';
+import { Swirling } from '@/components/ui/loading';
+import { cn } from '@/lib/utils';
+
+// Pil loading global: muncul tiap pindah halaman / login / submit,
+// dengan jeda biar tidak kedip di navigasi yang cepat.
+function PageLoader() {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    let timer = null;
+    const show = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => setVisible(true), 200);
+    };
+    const hide = () => {
+      clearTimeout(timer);
+      setVisible(false);
+    };
+    const offStart = router.on('start', show);
+    const offFinish = router.on('finish', hide);
+    const offNavigate = router.on('navigate', hide);
+    return () => {
+      clearTimeout(timer);
+      offStart();
+      offFinish();
+      offNavigate();
+    };
+  }, []);
+
+  return (
+    <div
+      aria-hidden={!visible}
+      className={cn(
+        'pointer-events-none fixed inset-x-0 top-3 z-[100] flex justify-center transition-opacity duration-200',
+        visible ? 'opacity-100' : 'opacity-0'
+      )}
+    >
+      <div className="flex items-center gap-2 rounded-full border bg-card px-4 py-2 text-sm shadow-lg">
+        <Swirling className="h-4 w-4 text-primary" />
+        <span className="text-muted-foreground">Memuat…</span>
+      </div>
+    </div>
+  );
+}
 
 const defaultName = import.meta.env.VITE_APP_NAME || 'E-Library';
 let libraryName = defaultName;
@@ -21,6 +66,7 @@ createInertiaApp({
     root.render(
       <ThemeProvider>
         <App {...props} />
+        <PageLoader />
         <Toaster richColors position="top-right" />
       </ThemeProvider>
     );
