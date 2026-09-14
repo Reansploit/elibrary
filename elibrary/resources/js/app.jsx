@@ -40,13 +40,13 @@ function PageLoader() {
     <div
       aria-hidden={!visible}
       className={cn(
-        'pointer-events-none fixed inset-x-0 top-3 z-[100] flex justify-center transition-opacity duration-200',
-        visible ? 'opacity-100' : 'opacity-0'
+        'fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-[2px] transition-opacity duration-200',
+        visible ? 'opacity-100' : 'pointer-events-none opacity-0'
       )}
     >
-      <div className="flex items-center gap-2 rounded-full border bg-card px-4 py-2 text-sm shadow-lg">
-        <Swirling className="h-4 w-4 text-primary" />
-        <span className="text-muted-foreground">Memuat…</span>
+      <div className="flex flex-col items-center gap-3 rounded-2xl border bg-card px-8 py-6 shadow-xl">
+        <Swirling className="h-10 w-10 text-primary" />
+        <span className="text-sm text-muted-foreground">Memuat…</span>
       </div>
     </div>
   );
