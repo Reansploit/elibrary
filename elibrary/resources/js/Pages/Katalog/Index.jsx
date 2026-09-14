@@ -1,11 +1,12 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
-import { Search, BookOpen, Loader2, ArrowRight } from 'lucide-react';
+import { Search, BookOpen, ArrowRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import PhotoThumb from '@/components/photo-thumb';
+import { Swirling } from '@/components/ui/loading';
 import KatalogHeader from '@/components/katalog-header';
 import KatalogBookCard, { AvailabilityBadge } from '@/components/katalog-book-card';
 
@@ -76,7 +77,7 @@ export default function KatalogIndex({ featured = [], total = 0 }) {
                         autoFocus
                     />
                     {loading && (
-                        <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+                        <Swirling className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     )}
                 </div>
 

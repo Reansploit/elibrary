@@ -21,6 +21,7 @@ import {
     SelectItem,
 } from '@/components/ui/select';
 import PageHeader from '@/components/page-header';
+import { Swirling } from '@/components/ui/loading';
 import { compressImage } from '@/lib/compress-image';
 
 function FieldError({ message }) {
@@ -259,7 +260,11 @@ export default function BookForm({ book, locations = [], categories = [] }) {
                                 <Link href={route('books.index')}>Batal</Link>
                             </Button>
                             <Button type="submit" disabled={processing || compressing}>
-                                <Save className="h-4 w-4" />
+                                {processing ? (
+                                    <Swirling className="h-4 w-4" />
+                                ) : (
+                                    <Save className="h-4 w-4" />
+                                )}
                                 {processing ? 'Menyimpan...' : isEdit ? 'Perbarui' : 'Simpan'}
                             </Button>
                         </CardFooter>

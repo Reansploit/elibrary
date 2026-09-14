@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import PageHeader from '@/components/page-header';
 import SearchSelect from '@/components/search-select';
+import { Swirling } from '@/components/ui/loading';
 
 function FieldError({ message }) {
     if (!message) return null;
@@ -241,7 +242,11 @@ export default function Borrow({ books, members, loan_duration = 7 }) {
                                 <Link href={route('circulation.index')}>Batal</Link>
                             </Button>
                             <Button type="submit" disabled={processing}>
-                                <Save className="h-4 w-4" />
+                                {processing ? (
+                                    <Swirling className="h-4 w-4" />
+                                ) : (
+                                    <Save className="h-4 w-4" />
+                                )}
                                 {processing ? 'Menyimpan...' : 'Simpan'}
                             </Button>
                         </CardFooter>

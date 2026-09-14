@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from '@inertiajs/react';
-import { Search, BookOpen, Users, User, Loader2 } from 'lucide-react';
+import { Search, BookOpen, Users, User } from 'lucide-react';
+import { Swirling } from '@/components/ui/loading';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -72,7 +73,7 @@ export default function GlobalSearch() {
                     className="h-11 bg-card pl-10"
                 />
                 {loading && (
-                    <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+                    <Swirling className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 )}
             </div>
 
