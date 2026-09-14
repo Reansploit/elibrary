@@ -5,7 +5,7 @@ import KatalogHeader from '@/components/katalog-header';
 import KatalogBookCard from '@/components/katalog-book-card';
 import EmptyState from '@/components/empty-state';
 
-export default function KatalogAll({ books }) {
+export default function KatalogAll({ books, categories = [], activeCategory = '' }) {
     const { props } = usePage();
     const libraryName = props.libraryName || 'E-Library';
 
@@ -13,7 +13,15 @@ export default function KatalogAll({ books }) {
 
     const goTo = (page) => {
         if (page < 1 || page > last_page || page === current_page) return;
-        router.get(route('katalog.all'), { page }, { preserveState: true });
+        router.get(
+            route('katalog.all'),
+            { page, kategori: activeCategory || undefined },
+            { preserveState: true }
+        );
+    };
+
+    const pickCategory = (id) => {
+        router.get(route('katalog.all'), { kategori: id || undefined });
     };
 
     const pages = (() => {
@@ -44,6 +52,36 @@ export default function KatalogAll({ books }) {
                         {total} koleksi terdaftar
                     </p>
                 </div>
+
+                {categories.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                        <button
+                            type="button"
+                            onClick={() => pickCategory('')}
+                            className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${
+                                !activeCategory
+                                    ? 'border-primary bg-primary text-primary-foreground'
+                                    : 'bg-card hover:bg-muted'
+                            }`}
+                        >
+                            Semua
+                        </button>
+                        {categories.map((cat) => (
+                            <button
+                                key={cat.id}
+                                type="button"
+                                onClick={() => pickCategory(cat.id)}
+                                className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${
+                                    activeCategory === cat.id
+                                        ? 'border-primary bg-primary text-primary-foreground'
+                                        : 'bg-card hover:bg-muted'
+                                }`}
+                            >
+                                {cat.name}
+                            </button>
+                        ))}
+                    </div>
+                )}
 
                 {data.length > 0 ? (
                     <>

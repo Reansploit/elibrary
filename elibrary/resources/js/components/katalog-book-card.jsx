@@ -34,6 +34,11 @@ export default function KatalogBookCard({ book }) {
                         Lokasi: {book.location}
                     </p>
                 )}
+                {book.category && (
+                    <p className="truncate text-xs text-muted-foreground">
+                        Kategori: {book.category}
+                    </p>
+                )}
                 <div className="pt-1">
                     <AvailabilityBadge book={book} />
                 </div>

@@ -10,7 +10,7 @@ import { Swirling } from '@/components/ui/loading';
 import KatalogHeader from '@/components/katalog-header';
 import KatalogBookCard, { AvailabilityBadge } from '@/components/katalog-book-card';
 
-export default function KatalogIndex({ featured = [], total = 0 }) {
+export default function KatalogIndex({ featured = [], total = 0, categories = [] }) {
     const { props } = usePage();
     const libraryName = props.libraryName || 'E-Library';
     const [query, setQuery] = useState('');
@@ -81,8 +81,21 @@ export default function KatalogIndex({ featured = [], total = 0 }) {
                     )}
                 </div>
 
-                {showResults ? (
-                    <Card>
+                {categories.length > 0 && !showResults && (
+                    <div className="flex flex-wrap gap-2">
+                        {categories.map((cat) => (
+                            <Link
+                                key={cat.id}
+                                href={route('katalog.all', { kategori: cat.id })}
+                                className="rounded-lg border bg-card px-3 py-1.5 text-sm transition-colors hover:bg-muted"
+                            >
+                                {cat.name}
+                            </Link>
+                        ))}
+                    </div>
+                )}
+
+                {showResults ? (                    <Card>
                         <CardContent className="pt-6">
                             {!books && loading && (
                                 <p className="text-sm text-muted-foreground">Mencari…</p>
