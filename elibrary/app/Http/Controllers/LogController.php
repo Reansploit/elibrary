@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Audit;
 use App\Models\LoanLog;
 use Inertia\Inertia;
 
@@ -26,8 +27,25 @@ class LogController extends Controller
                 ];
             });
 
+        $audits = Audit::with('user')
+            ->orderBy('id', 'desc')
+            ->limit(500)
+            ->get()
+            ->map(function ($a) {
+                return [
+                    'id' => $a->id,
+                    'actor' => $a->user?->name ?? 'Sistem',
+                    'action' => $a->aksi,
+                    'table' => $a->tabel === 'tb_buku' ? 'Buku' : ($a->tabel === 'tb_anggota' ? 'Anggota' : $a->tabel),
+                    'record' => $a->record_id,
+                    'note' => $a->keterangan,
+                    'at' => $a->created_at?->format('d/m/Y H:i'),
+                ];
+            });
+
         return Inertia::render('Log/Index', [
             'logs' => $logs,
+            'audits' => $audits,
         ]);
     }
 }

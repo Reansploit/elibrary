@@ -50,7 +50,9 @@ class MemberController extends Controller
 
         $validated['foto'] = $this->storePhoto($request, 'foto', 'foto-anggota');
 
-        Member::create($validated);
+        $member = Member::create($validated);
+
+        $this->audit('tambah', 'tb_anggota', $member->id_anggota, "Tambah anggota {$member->nama}");
 
         return redirect()->route('members.index')
             ->with('success', 'Anggota berhasil ditambahkan.');
@@ -87,6 +89,8 @@ class MemberController extends Controller
         $validated['foto'] = $this->storePhoto($request, 'foto', 'foto-anggota', $member->foto);
 
         $member->update($validated);
+
+        $this->audit('ubah', 'tb_anggota', $member->id_anggota, "Ubah anggota {$member->nama}");
 
         return redirect()->route('members.index')
             ->with('success', 'Anggota berhasil diperbarui.');
@@ -161,6 +165,8 @@ class MemberController extends Controller
         $this->deletePhoto($member->foto);
         $member->delete();
 
+        $this->audit('hapus', 'tb_anggota', $id, "Hapus anggota {$member->nama}");
+
         return redirect()->route('members.index')
             ->with('success', 'Anggota berhasil dihapus.');
     }
@@ -212,6 +218,8 @@ class MemberController extends Controller
 
         $count = count($validated['ids']);
 
+        $this->audit('ubah', 'tb_anggota', null, "Naikkan {$count} anggota ke {$validated['kelas']}");
+
         return redirect()->back()->with('success', "{$count} anggota dinaikkan ke {$validated['kelas']}.");
     }
 
@@ -231,6 +239,8 @@ class MemberController extends Controller
 
         $count = count($validated['ids']);
 
+        $this->audit('ubah', 'tb_anggota', null, "Luluskan {$count} anggota");
+
         return redirect()->back()->with('success', "{$count} anggota diluluskan (dinonaktifkan).");
     }
 
@@ -242,6 +252,8 @@ class MemberController extends Controller
         if ($deny = $this->ensureCan(['manage_members'])) return $deny;
         $member = Member::findOrFail($id);
         $member->update(['aktif' => true]);
+
+        $this->audit('ubah', 'tb_anggota', $member->id_anggota, "Aktifkan lagi {$member->nama}");
 
         return redirect()->back()->with('success', "{$member->nama} diaktifkan lagi.");
     }

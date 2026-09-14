@@ -224,6 +224,7 @@ const guides = [
         steps: [
             'Catatan terisi otomatis setiap ada peminjaman dan pengembalian.',
             'Pakai filter Semua / Dipinjam / Kembali dan kolom cari untuk menelusuri.',
+            'Tab Perubahan data mencatat siapa menambah, mengubah, atau menghapus data buku dan anggota.',
             'Halaman ini hanya baca — tidak bisa diubah atau dihapus.',
         ],
     },

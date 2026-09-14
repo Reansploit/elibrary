@@ -34,6 +34,23 @@ abstract class Controller
     }
 
     /**
+     * Catat jejak perubahan data (tambah/ubah/hapus) beserta pelakunya.
+     */
+    protected function audit(string $aksi, string $tabel, ?string $recordId, ?string $keterangan = null): void
+    {
+        try {
+            \App\Models\Audit::create([
+                'user_id' => auth()->id(),
+                'aksi' => $aksi,
+                'tabel' => $tabel,
+                'record_id' => $recordId,
+                'keterangan' => $keterangan ? mb_substr($keterangan, 0, 255) : null,
+            ]);
+        } catch (\Throwable) {
+            // Audit tidak boleh menggagalkan aksi utama.
+        }
+    }
+    /**
      * URL publik untuk file foto (atau null bila tidak ada).
      * Upload baru tinggal di public/, file lama (era symlink storage)
      * tetap dilayani lewat /storage/ bila masih ada di sana.

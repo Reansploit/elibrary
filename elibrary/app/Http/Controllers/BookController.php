@@ -165,6 +165,8 @@ class BookController extends Controller
             ]);
         }
 
+        $this->audit('tambah', 'tb_buku', $validated['id_buku'], "Tambah buku {$validated['judul_buku']}");
+
         return redirect()->route('books.index')
             ->with('success', 'Buku berhasil ditambahkan.');
     }
@@ -261,6 +263,8 @@ class BookController extends Controller
             }
         }
 
+        $this->audit('ubah', 'tb_buku', $newId, "Ubah buku {$validated['judul_buku']}");
+
         return redirect()->route('books.index')
             ->with('success', 'Buku berhasil diperbarui.');
     }
@@ -343,6 +347,8 @@ class BookController extends Controller
 
         $this->deletePhoto($book->foto);
         $book->delete();
+
+        $this->audit('hapus', 'tb_buku', $id, "Hapus buku {$book->judul_buku}");
 
         return redirect()->route('books.index')
             ->with('success', 'Buku berhasil dihapus.');
