@@ -9,6 +9,7 @@ use App\Models\Reservasi;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class SearchController extends Controller
 {
@@ -25,7 +26,7 @@ class SearchController extends Controller
             return response()->json($this->search($request->user(), $q, 8));
         }
 
-        return Inertia\Inertia::render('Search/Index', [
+        return Inertia::render('Search/Index', [
             'q' => $q,
             'results' => $this->search($request->user(), $q, 50),
         ]);
