@@ -59,7 +59,6 @@ export default function SearchIndex({ q = '', results }) {
                             className="h-48 w-48 object-contain"
                             aria-label="Tidak ditemukan"
                         />
-                        <p className="mt-2 text-sm font-medium">Tidak ditemukan</p>
                         <p className="mt-1 text-sm text-muted-foreground">
                             Tidak ada hasil untuk “{q}”. Coba kata kunci lain.
                         </p>
