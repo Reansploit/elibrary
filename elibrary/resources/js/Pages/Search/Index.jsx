@@ -2,6 +2,8 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { Search, BookOpen, Users, User } from 'lucide-react';
+import { Lottie } from 'lottie-react';
+import noDataAnimation from '@/animations/no-data.json';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -50,13 +52,11 @@ export default function SearchIndex({ q = '', results }) {
 
                 {q && total === 0 && (
                     <div className="flex flex-col items-center py-8 text-center">
-                        <video
-                            src="/animasi/404.webm"
-                            autoPlay
+                        <Lottie
+                            animationData={noDataAnimation}
                             loop
-                            muted
-                            playsInline
-                            className="h-48 w-48 object-contain dark:mix-blend-screen"
+                            autoplay
+                            className="h-48 w-48"
                             aria-label="Tidak ditemukan"
                         />
                         <p className="mt-1 text-sm text-muted-foreground">
