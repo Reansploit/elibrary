@@ -76,7 +76,7 @@ export default function KatalogIndex({ featured = [], total = 0, categories = []
                 >
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
-                        placeholder="Ketik judul, pengarang, atau ID buku… (Enter = semua hasil)"
+                        placeholder="Ketik judul, pengarang, atau ID buku… ( )"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         className="h-11 bg-card pl-10"
