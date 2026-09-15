@@ -1,4 +1,4 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import { Search, BookOpen, ArrowRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -67,10 +67,16 @@ export default function KatalogIndex({ featured = [], total = 0, categories = []
                     </p>
                 </div>
 
-                <div className="relative">
+                <form
+                    className="relative"
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        if (query.trim()) router.get(route('katalog.all'), { q: query.trim() });
+                    }}
+                >
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
-                        placeholder="Ketik judul, pengarang, atau ID buku…"
+                        placeholder="Ketik judul, pengarang, atau ID buku… (Enter = semua hasil)"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         className="h-11 bg-card pl-10"
@@ -79,7 +85,7 @@ export default function KatalogIndex({ featured = [], total = 0, categories = []
                     {loading && (
                         <Swirling className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     )}
-                </div>
+                </form>
 
                 {categories.length > 0 && !showResults && (
                     <div className="flex flex-wrap gap-2">

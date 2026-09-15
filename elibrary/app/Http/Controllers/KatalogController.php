@@ -33,8 +33,17 @@ class KatalogController extends Controller
     public function all(Request $request)
     {
         $kategori = trim($request->query('kategori', ''));
+        $q = trim($request->query('q', ''));
 
-        $books = Book::when($kategori !== '', fn ($q) => $q->where('kategori', $kategori))
+        $books = Book::when($kategori !== '', fn ($query) => $query->where('kategori', $kategori))
+            ->when(mb_strlen($q) >= 1, function ($query) use ($q) {
+                $like = "%{$q}%";
+                $query->where(function ($w) use ($like) {
+                    $w->where('judul_buku', 'like', $like)
+                        ->orWhere('id_buku', 'like', $like)
+                        ->orWhere('pengarang', 'like', $like);
+                });
+            })
             ->orderBy('judul_buku')
             ->paginate(20)
             ->through(fn ($b) => $this->present($b));
@@ -43,6 +52,7 @@ class KatalogController extends Controller
             'books' => $books,
             'categories' => $this->categoryOptions(),
             'activeCategory' => $kategori,
+            'q' => $q,
         ]);
     }
 

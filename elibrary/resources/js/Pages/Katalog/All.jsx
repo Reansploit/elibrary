@@ -1,13 +1,16 @@
 import { Head, router, usePage } from '@inertiajs/react';
-import { ChevronLeft, ChevronRight, BookOpen } from 'lucide-react';
+import { useState } from 'react';
+import { ChevronLeft, ChevronRight, BookOpen, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import KatalogHeader from '@/components/katalog-header';
 import KatalogBookCard from '@/components/katalog-book-card';
 import EmptyState from '@/components/empty-state';
 
-export default function KatalogAll({ books, categories = [], activeCategory = '' }) {
+export default function KatalogAll({ books, categories = [], activeCategory = '', q = '' }) {
     const { props } = usePage();
     const libraryName = props.libraryName || 'E-Library';
+    const [query, setQuery] = useState(q);
 
     const { data = [], current_page = 1, last_page = 1, total = 0 } = books || {};
 
@@ -15,7 +18,7 @@ export default function KatalogAll({ books, categories = [], activeCategory = ''
         if (page < 1 || page > last_page || page === current_page) return;
         router.get(
             route('katalog.all'),
-            { page, kategori: activeCategory || undefined },
+            { page, kategori: activeCategory || undefined, q: q || undefined },
             { preserveState: true }
         );
     };
@@ -52,6 +55,25 @@ export default function KatalogAll({ books, categories = [], activeCategory = ''
                         {total} koleksi terdaftar
                     </p>
                 </div>
+
+                <form
+                    className="relative"
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        router.get(route('katalog.all'), {
+                            q: query.trim() || undefined,
+                            kategori: activeCategory || undefined,
+                        });
+                    }}
+                >
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                        placeholder="Cari judul, pengarang, atau ID…"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        className="h-11 bg-card pl-10"
+                    />
+                </form>
 
                 {categories.length > 0 && (
                     <div className="flex flex-wrap gap-2">

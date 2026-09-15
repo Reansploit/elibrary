@@ -13,20 +13,32 @@ use Illuminate\Http\Request;
 class SearchController extends Controller
 {
     /**
-     * Pencarian global (JSON): buku, anggota, dan akun pengguna.
+     * Pencarian global: JSON untuk dropdown live, halaman penuh (/cari)
+     * bila dibuka langsung (mis. Enter di kolom cari).
      * Tiap kelompok hanya dikembalikan bila user punya izin lihatnya.
      */
     public function index(Request $request)
     {
         $q = trim($request->query('q', ''));
 
+        if ($request->expectsJson()) {
+            return response()->json($this->search($request->user(), $q, 8));
+        }
+
+        return Inertia\Inertia::render('Search/Index', [
+            'q' => $q,
+            'results' => $this->search($request->user(), $q, 50),
+        ]);
+    }
+
+    private function search($user, string $q, int $limit): array
+    {
         $empty = ['books' => [], 'members' => [], 'users' => []];
 
         if (mb_strlen($q) < 1) {
-            return response()->json($empty);
+            return $empty;
         }
 
-        $user = $request->user();
         $like = "%{$q}%";
 
         if ($user && $user->hasAnyPermission(['view_books', 'manage_books'])) {
@@ -34,7 +46,7 @@ class SearchController extends Controller
                 ->orWhere('id_buku', 'like', $like)
                 ->orWhere('pengarang', 'like', $like)
                 ->orderBy('judul_buku')
-                ->limit(8)
+                ->limit($limit)
                 ->get()
                 ->map(function ($b) {
                     $activeLoans = Circulation::with('member')
@@ -69,7 +81,7 @@ class SearchController extends Controller
                 ->orWhere('id_anggota', 'like', $like)
                 ->orWhere('kelas', 'like', $like)
                 ->orderBy('nama')
-                ->limit(8)
+                ->limit($limit)
                 ->get()
                 ->map(function ($m) {
                     $loans = Circulation::with('book')
@@ -101,7 +113,7 @@ class SearchController extends Controller
                 ->where('name', 'like', $like)
                 ->orWhere('username', 'like', $like)
                 ->orderBy('name')
-                ->limit(8)
+                ->limit($limit)
                 ->get()
                 ->map(function ($u) {
                     return [
@@ -113,6 +125,6 @@ class SearchController extends Controller
                 });
         }
 
-        return response()->json($empty);
+        return $empty;
     }
 }

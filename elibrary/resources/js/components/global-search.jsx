@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { Search, BookOpen, Users, User } from 'lucide-react';
 import { Swirling } from '@/components/ui/loading';
 import { Card, CardContent } from '@/components/ui/card';
@@ -64,10 +64,16 @@ export default function GlobalSearch() {
 
     return (
         <div className="space-y-3">
-            <div className="relative">
+            <form
+                className="relative"
+                onSubmit={(e) => {
+                    e.preventDefault();
+                    if (query.trim()) router.get(route('search.index'), { q: query.trim() });
+                }}
+            >
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                    placeholder="Cari buku, anggota, atau pengguna…"
+                    placeholder="Cari buku, anggota, atau pengguna… (Enter = semua hasil)"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     className="h-11 bg-card pl-10"
@@ -75,7 +81,7 @@ export default function GlobalSearch() {
                 {loading && (
                     <Swirling className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 )}
-            </div>
+            </form>
 
             {showResults && (
                 <Card>
