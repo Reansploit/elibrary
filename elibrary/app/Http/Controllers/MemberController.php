@@ -46,6 +46,8 @@ class MemberController extends Controller
             'jekel' => 'required|in:Laki-laki,Perempuan',
             'kelas' => 'required|string|max:50',
             'foto' => 'nullable|image|max:2048',
+        ], [
+            'id_anggota.unique' => 'RFID ini sudah terdaftar untuk santri lain.',
         ]);
 
         $validated['foto'] = $this->storePhoto($request, 'foto', 'foto-anggota');
