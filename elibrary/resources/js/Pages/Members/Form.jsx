@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { useState } from 'react';
-import { ArrowLeft, Save, Users, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Save, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -33,7 +33,6 @@ export default function MemberForm({ member }) {
     const isEdit = !!member;
     const [preview, setPreview] = useState(null);
     const [compressing, setCompressing] = useState(false);
-    const [showRfid, setShowRfid] = useState(false);
 
     const { data, setData, post, errors, processing } = useForm({
         id_anggota: member?.id || '',
@@ -190,34 +189,19 @@ export default function MemberForm({ member }) {
                                     <Label htmlFor="id_anggota">
                                         ID RFID <span className="text-destructive">*</span>
                                     </Label>
-                                    <div className="relative">
-                                        <Input
-                                            id="id_anggota"
-                                            type={showRfid ? 'text' : 'password'}
-                                            placeholder="Tempel kartu / ketik RFID"
-                                            maxLength={50}
-                                            value={data.id_anggota}
-                                            onChange={(e) => setData('id_anggota', e.target.value)}
-                                            aria-invalid={!!errors.id_anggota || undefined}
-                                            className="pr-10 font-mono"
-                                            autoComplete="off"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowRfid((v) => !v)}
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
-                                            title={showRfid ? 'Sembunyikan' : 'Tampilkan'}
-                                            aria-label={showRfid ? 'Sembunyikan RFID' : 'Tampilkan RFID'}
-                                        >
-                                            {showRfid ? (
-                                                <EyeOff className="h-4 w-4" />
-                                            ) : (
-                                                <Eye className="h-4 w-4" />
-                                            )}
-                                        </button>
-                                    </div>
+                                    <Input
+                                        id="id_anggota"
+                                        type="password"
+                                        placeholder="Tempel kartu / ketik RFID"
+                                        maxLength={50}
+                                        value={data.id_anggota}
+                                        onChange={(e) => setData('id_anggota', e.target.value)}
+                                        aria-invalid={!!errors.id_anggota || undefined}
+                                        className="font-mono"
+                                        autoComplete="off"
+                                    />
                                     <p className="text-xs text-muted-foreground">
-                                        Disensor agar tidak diintip — klik ikon mata untuk memeriksa.
+                                        Selalu disensor demi keamanan kartu.
                                     </p>
                                     <FieldError message={errors.id_anggota} />
                                 </div>
