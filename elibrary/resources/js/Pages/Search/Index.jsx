@@ -56,7 +56,7 @@ export default function SearchIndex({ q = '', results }) {
                             loop
                             muted
                             playsInline
-                            className="h-48 w-48 object-contain"
+                            className="h-48 w-48 object-contain dark:mix-blend-screen"
                             aria-label="Tidak ditemukan"
                         />
                         <p className="mt-1 text-sm text-muted-foreground">
