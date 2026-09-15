@@ -73,7 +73,7 @@ export default function GlobalSearch() {
             >
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                    placeholder="Cari buku, anggota, atau pengguna… ( )"
+                    placeholder="Cari buku, anggota, atau pengguna…"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     className="h-11 bg-card pl-10"
