@@ -70,6 +70,13 @@ class DeviceController extends Controller
         $alerts = $device->alerts()->orderBy('id', 'desc')->limit(50)->get();
         $pending = $device->commands()->where('status', 'pending')->orderBy('id')->get();
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'html' => view('devices.partials.timeline', compact('logs'))->render(),
+                'total' => $logs->total() . ' kejadian',
+            ]);
+        }
+
         return view('devices.show', compact('device', 'alerts', 'pending', 'tab', 'logs', 'kinds', 'kind'));
     }
 
