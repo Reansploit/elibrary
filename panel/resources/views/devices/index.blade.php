@@ -72,7 +72,7 @@
                         <p class="text-sm text-stone-500">{{ $devices->count() }} tampil • klik baris untuk detail</p>
                     </div>
                     <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-                        <div class="flex gap-1 rounded-lg border border-stone-200 bg-stone-50 p-1">
+                        <div class="flex h-9 items-center gap-1 rounded-lg border border-stone-200 bg-stone-50 p-1">
                             @foreach (['semua' => 'Semua', 'online' => 'Online', 'perhatian' => 'Perhatian'] as $value => $label)
                                 <a href="{{ route('devices.index', ['tab' => $value, 'q' => $q]) }}"
                                     class="rounded-md px-3 py-1 text-xs font-medium transition-colors {{ $tab === $value ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-900' }}">

@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-center gap-3">
-                <a href="{{ route('devices.index') }}" class="rounded-lg border border-stone-200 bg-white p-2 text-stone-500 hover:text-stone-900" aria-label="Kembali">
+                <a href="{{ route('devices.index') }}" class="flex h-9 w-9 items-center justify-center rounded-lg border border-stone-200 bg-white text-stone-500 hover:text-stone-900" aria-label="Kembali">
                     <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" /></svg>
                 </a>
                 <div>
@@ -14,24 +14,24 @@
             </div>
             <div class="flex items-center gap-2">
                 @if ($device->isOnline())
-                    <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700">
+                    <span class="inline-flex h-9 items-center gap-1.5 rounded-full bg-emerald-50 px-3 text-xs font-medium text-emerald-700">
                         <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>Online
                     </span>
                 @else
-                    <span class="inline-flex items-center gap-1.5 rounded-full bg-stone-100 px-3 py-1.5 text-xs font-medium text-stone-500">
+                    <span class="inline-flex h-9 items-center gap-1.5 rounded-full bg-stone-100 px-3 text-xs font-medium text-stone-500">
                         <span class="h-1.5 w-1.5 rounded-full bg-stone-400"></span>Offline
                     </span>
                 @endif
                 @if ($device->app_open)
-                    <span class="inline-flex rounded-full bg-sky-50 px-3 py-1.5 text-xs font-medium text-sky-700">App terbuka</span>
+                    <span class="inline-flex h-9 items-center rounded-full bg-sky-50 px-3 text-xs font-medium text-sky-700">App terbuka</span>
                 @else
-                    <span class="inline-flex rounded-full bg-stone-100 px-3 py-1.5 text-xs font-medium text-stone-500">App tertutup</span>
+                    <span class="inline-flex h-9 items-center rounded-full bg-stone-100 px-3 text-xs font-medium text-stone-500">App tertutup</span>
                 @endif
                 <form method="POST" action="{{ route('devices.destroy', $device) }}"
                     onsubmit="return confirm('Hapus {{ $device->displayName() }} dari panel? Riwayat ikut terhapus.')">
                     @csrf
                     @method('DELETE')
-                    <button class="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700">Hapus</button>
+                    <button class="inline-flex h-9 items-center rounded-lg bg-red-600 px-3 text-xs font-medium text-white hover:bg-red-700">Hapus</button>
                 </form>
             </div>
         </div>
@@ -165,15 +165,15 @@
                     </div>
                     <div class="p-5">
                         @forelse ($logs as $l)
-                            <div class="relative pl-6 pb-5 last:pb-0">
-                                <span class="absolute left-0 top-1.5 h-2.5 w-2.5 rounded-full
+                            <div class="relative pl-7 pb-5 last:pb-0">
+                                <span class="absolute left-1 top-1.5 h-2.5 w-2.5 rounded-full
                                     @if ($l->kind === 'app_opened') bg-emerald-500
                                     @elseif ($l->kind === 'app_closed') bg-stone-300
                                     @elseif ($l->kind === 'foreign_window') bg-amber-500
                                     @elseif ($l->kind === 'command') bg-sky-500
                                     @else bg-stone-300 @endif"></span>
                                 @if (! $loop->last)
-                                    <span class="absolute left-[4px] top-5 bottom-0 w-px bg-stone-200"></span>
+                                    <span class="absolute left-[8px] top-6 bottom-0 w-px bg-stone-200"></span>
                                 @endif
                                 <p class="text-sm font-medium text-stone-900">{{ $l->label() }}</p>
                                 <p class="text-xs text-stone-500">{{ $l->detail ?? '' }} {{ $l->detail ? '•' : '' }} {{ $l->created_at->format('d/m/Y H:i') }}</p>
