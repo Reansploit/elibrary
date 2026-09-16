@@ -8,6 +8,8 @@
 //! Murni Rust std + tool bawaan Windows (getmac, tasklist, taskkill,
 //! powershell, reg) — tanpa runtime tambahan.
 
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
 use std::fs;
 use std::io::Write;
 use std::path::PathBuf;
