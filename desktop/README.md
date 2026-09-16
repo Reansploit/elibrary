@@ -38,6 +38,13 @@ notepad "C:\Program Files\E-Library\agent.json"   # isi panel_url + app_path
 Cek di Panel → menu Perangkat: PC muncul otomatis. Setelah itu agen
 jalan sendiri tiap booting via autostart.
 
+## Pasang otomatis (v0.3.0+)
+
+Sejak v0.3.0 tidak perlu pasang manual: saat mengisi alamat server di
+splash pertama kali, app otomatis menyalin `agent.exe`, menulis
+`agent.json` (panel = host yang sama port 3003), mendaftarkan autostart,
+dan menjalankan agen. Cara manual di atas tetap bisa dipakai cadangan.
+
 ## Bangun installer (di Windows)
 
 ```powershell
