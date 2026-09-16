@@ -62,6 +62,19 @@
             </div>
 
             @if ($tab === 'ringkasan')
+                <div class="bg-white shadow-sm rounded-xl border border-stone-100 p-5">
+                    <h3 class="font-semibold tracking-tight">Aplikasi terbuka di PC ({{ count($device->open_apps ?? []) }})</h3>
+                    <p class="text-xs text-stone-500 mb-3">Diperbarui tiap lapor (±10 detik) • window depan: {{ $device->active_title ?? '-' }}</p>
+                    @if (count($device->open_apps ?? []) > 0)
+                        <div class="flex flex-wrap gap-2">
+                            @foreach ($device->open_apps as $app)
+                                <span class="inline-flex max-w-64 truncate rounded-lg bg-stone-100 px-2.5 py-1.5 text-xs text-stone-700" title="{{ $app }}">{{ $app }}</span>
+                            @endforeach
+                        </div>
+                    @else
+                        <p class="text-sm text-stone-500">Belum ada data — menunggu lapor agen berikutnya.</p>
+                    @endif
+                </div>
                 <div class="grid gap-4 lg:grid-cols-3">
                     <div class="bg-white shadow-sm rounded-xl border border-stone-100 p-5 text-sm">
                         <h3 class="font-semibold tracking-tight mb-3">Info perangkat</h3>

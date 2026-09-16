@@ -66,6 +66,8 @@ class AgentController extends Controller
             'mac' => 'required|string|max:17',
             'app_open' => 'required|boolean',
             'active_title' => 'nullable|string|max:255',
+            'apps' => 'nullable|array|max:30',
+            'apps.*' => 'string|max:255',
             'agent_version' => 'nullable|string|max:20',
         ]);
 
@@ -126,6 +128,7 @@ class AgentController extends Controller
             'ip' => $request->ip(),
             'app_open' => $isOpen,
             'active_title' => $title,
+            'open_apps' => array_values(array_slice($validated['apps'] ?? [], 0, 25)),
             'agent_version' => $validated['agent_version'] ?? $device->agent_version,
             'last_seen_at' => now(),
         ]);

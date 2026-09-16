@@ -19,7 +19,7 @@ use std::thread;
 use std::time::Duration;
 
 const HEARTBEAT_SECS: u64 = 10;
-const AGENT_VERSION: &str = "0.1.3";
+const AGENT_VERSION: &str = "0.1.4";
 // Anak proses tanpa jendela (tanpa ini tiap denyut nongol terminal).
 const NO_WINDOW: u32 = 0x08000000;
 
@@ -212,6 +212,28 @@ fn active_title() -> Option<String> {
     }
 }
 
+// Daftar judul window yang terbuka (maks 25) untuk panel.
+fn open_apps() -> Vec<String> {
+    let out = run(
+        "powershell",
+        &[
+            "-NoProfile",
+            "-Command",
+            "Get-Process | Where-Object { $_.MainWindowTitle } | Select-Object -ExpandProperty MainWindowTitle",
+        ],
+    );
+    let mut seen = std::collections::HashSet::new();
+    out.lines()
+        .map(|l| l.trim().chars().take(200).collect::<String>())
+        .filter(|t| !t.is_empty() && seen.insert(t.clone()))
+        .take(25)
+        .collect()
+}
+
+fn json_escape(s: &str) -> String {
+    s.replace('\\', "\\\\").replace('"', "\\\"")
+}
+
 fn ensure_autostart() {
     // Bersihkan sisa nama lama bila ada.
     let _ = silent_cmd("reg")
@@ -312,12 +334,18 @@ fn heartbeat(cfg: &Config) -> bool {
         None => return false,
     };
     let open = app_running();
-    let title = active_title().unwrap_or_default().replace('"', "");
+    let title = json_escape(&active_title().unwrap_or_default());
+    let apps = open_apps()
+        .iter()
+        .map(|t| format!("\"{}\"", json_escape(t)))
+        .collect::<Vec<_>>()
+        .join(",");
     let body = format!(
-        "{{\"mac\":\"{}\",\"app_open\":{},\"active_title\":\"{}\",\"agent_version\":\"{}\"}}",
+        "{{\"mac\":\"{}\",\"app_open\":{},\"active_title\":\"{}\",\"apps\":[{}],\"agent_version\":\"{}\"}}",
         mac_address(),
         if open { "true" } else { "false" },
         title,
+        apps,
         AGENT_VERSION
     );
     let url = format!("{}/api/v1/heartbeat", cfg.panel_url);

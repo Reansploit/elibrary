@@ -9,7 +9,7 @@ class Device extends Model
 {
     protected $fillable = [
         'mac', 'hostname', 'custom_name', 'ip', 'token_hash',
-        'agent_version', 'app_open', 'active_title', 'last_foreign_title',
+        'agent_version', 'app_open', 'active_title', 'open_apps', 'last_foreign_title',
         'closed_beats', 'foreign_beats', 'last_seen_at',
     ];
 
@@ -18,6 +18,7 @@ class Device extends Model
         return [
             'app_open' => 'boolean',
             'last_seen_at' => 'datetime',
+            'open_apps' => 'array',
         ];
     }
 
