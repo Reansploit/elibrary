@@ -1,133 +1,192 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-center justify-between">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ $device->displayName() }}
-            </h2>
-            <a href="{{ route('devices.index') }}" class="text-sm text-orange-700 hover:underline">← Kembali</a>
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <a href="{{ route('devices.index') }}" class="rounded-lg border border-stone-200 bg-white p-2 text-stone-500 hover:text-stone-900" aria-label="Kembali">
+                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" /></svg>
+                </a>
+                <div>
+                    <h2 class="font-semibold text-xl text-stone-900 leading-tight tracking-tight">
+                        {{ $device->displayName() }}
+                    </h2>
+                    <p class="text-sm text-stone-500 font-mono">{{ $device->hostname }} • {{ $device->mac }}</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                @if ($device->isOnline())
+                    <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700">
+                        <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>Online
+                    </span>
+                @else
+                    <span class="inline-flex items-center gap-1.5 rounded-full bg-stone-100 px-3 py-1.5 text-xs font-medium text-stone-500">
+                        <span class="h-1.5 w-1.5 rounded-full bg-stone-400"></span>Offline
+                    </span>
+                @endif
+                @if ($device->app_open)
+                    <span class="inline-flex rounded-full bg-sky-50 px-3 py-1.5 text-xs font-medium text-sky-700">App terbuka</span>
+                @else
+                    <span class="inline-flex rounded-full bg-stone-100 px-3 py-1.5 text-xs font-medium text-stone-500">App tertutup</span>
+                @endif
+                <form method="POST" action="{{ route('devices.destroy', $device) }}"
+                    onsubmit="return confirm('Hapus {{ $device->displayName() }} dari panel? Riwayat ikut terhapus.')">
+                    @csrf
+                    @method('DELETE')
+                    <button class="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700">Hapus</button>
+                </form>
+            </div>
         </div>
     </x-slot>
 
     <div class="py-6">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            <div class="flex justify-end">
-                <form method="POST" action="{{ route('devices.destroy', $device) }}"
-                    onsubmit="return confirm('Hapus {{ $device->displayName() }} dari panel? Riwayat ikut terhapus.')">
-                    @csrf
-                    @method('DELETE')
-                    <button class="rounded-md bg-red-600 text-white px-3 py-2 text-sm">Hapus perangkat</button>
-                </form>
-            </div>
             @if (session('success'))
-                <div class="bg-green-50 border border-green-200 text-green-800 rounded-lg px-4 py-3 text-sm">
+                <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl px-4 py-3 text-sm">
                     {{ session('success') }}
                 </div>
             @endif
             @if ($errors->any())
-                <div class="bg-red-50 border border-red-200 text-red-800 rounded-lg px-4 py-3 text-sm">
+                <div class="bg-red-50 border border-red-200 text-red-800 rounded-xl px-4 py-3 text-sm">
                     {{ $errors->first() }}
                 </div>
             @endif
 
-            <div class="grid gap-4 lg:grid-cols-3">
-                <div class="bg-white shadow-sm rounded-lg p-5 space-y-2 text-sm">
-                    <h3 class="font-semibold mb-2">Info perangkat</h3>
-                    <p><span class="text-gray-500">Hostname:</span> <span class="font-mono">{{ $device->hostname }}</span></p>
-                    <p><span class="text-gray-500">MAC:</span> <span class="font-mono">{{ $device->mac }}</span></p>
-                    <p><span class="text-gray-500">IP:</span> <span class="font-mono">{{ $device->ip ?? '-' }}</span></p>
-                    <p><span class="text-gray-500">Agen:</span> v{{ $device->agent_version ?? '-' }}</p>
-                    <p><span class="text-gray-500">Window aktif:</span> {{ $device->active_title ?? '-' }}</p>
-                    <form method="POST" action="{{ route('devices.rename', $device) }}" class="flex gap-2 pt-2">
-                        @csrf
-                        @method('PATCH')
-                        <input type="text" name="custom_name" value="{{ $device->custom_name }}" placeholder="Nama baru (kosongkan = hostname)"
-                            class="flex-1 rounded-md border-gray-300 shadow-sm text-sm focus:border-orange-500 focus:ring-orange-500">
-                        <button class="rounded-md bg-gray-800 text-white px-3 py-2 text-sm">Rename</button>
-                    </form>
-                </div>
+            <div class="flex gap-1 self-start rounded-lg border border-stone-200 bg-white p-1 w-fit">
+                <a href="{{ route('devices.show', ['device' => $device->id, 'tab' => 'ringkasan']) }}"
+                    class="rounded-md px-4 py-1.5 text-sm font-medium transition-colors {{ $tab === 'ringkasan' ? 'bg-stone-900 text-white' : 'text-stone-500 hover:text-stone-900' }}">
+                    Ringkasan
+                </a>
+                <a href="{{ route('devices.show', ['device' => $device->id, 'tab' => 'aktivitas']) }}"
+                    class="rounded-md px-4 py-1.5 text-sm font-medium transition-colors {{ $tab === 'aktivitas' ? 'bg-stone-900 text-white' : 'text-stone-500 hover:text-stone-900' }}">
+                    Aktivitas
+                </a>
+            </div>
 
-                <div class="bg-white shadow-sm rounded-lg p-5 space-y-2 text-sm">
-                    <h3 class="font-semibold mb-2">Perintah remote</h3>
-                    <p class="text-gray-500 text-xs">Dijalankan agen saat lapor berikutnya (tanpa hotkey).</p>
-                    <div class="flex flex-wrap gap-2">
-                        <form method="POST" action="{{ route('devices.command', $device) }}">
+            @if ($tab === 'ringkasan')
+                <div class="grid gap-4 lg:grid-cols-3">
+                    <div class="bg-white shadow-sm rounded-xl border border-stone-100 p-5 text-sm">
+                        <h3 class="font-semibold tracking-tight mb-3">Info perangkat</h3>
+                        <dl class="space-y-2">
+                            <div class="flex justify-between gap-4">
+                                <dt class="text-stone-500">IP terakhir</dt>
+                                <dd class="font-mono">{{ $device->ip ?? '-' }}</dd>
+                            </div>
+                            <div class="flex justify-between gap-4">
+                                <dt class="text-stone-500">Versi agen</dt>
+                                <dd class="font-mono">v{{ $device->agent_version ?? '-' }}</dd>
+                            </div>
+                            <div class="flex justify-between gap-4">
+                                <dt class="text-stone-500">Window aktif</dt>
+                                <dd class="text-right truncate max-w-48">{{ $device->active_title ?? '-' }}</dd>
+                            </div>
+                            <div class="flex justify-between gap-4">
+                                <dt class="text-stone-500">Terakhir lapor</dt>
+                                <dd>{{ $device->last_seen_at ? $device->last_seen_at->diffForHumans() : 'Belum pernah' }}</dd>
+                            </div>
+                        </dl>
+                        <form method="POST" action="{{ route('devices.rename', $device) }}" class="flex gap-2 pt-3">
                             @csrf
-                            <input type="hidden" name="action" value="open_app">
-                            <button class="rounded-md bg-emerald-600 text-white px-3 py-2 text-sm">Buka app</button>
-                        </form>
-                        <form method="POST" action="{{ route('devices.command', $device) }}">
-                            @csrf
-                            <input type="hidden" name="action" value="close_app">
-                            <button class="rounded-md bg-red-600 text-white px-3 py-2 text-sm">Tutup app</button>
-                        </form>
-                        <form method="POST" action="{{ route('devices.command', $device) }}">
-                            @csrf
-                            <input type="hidden" name="action" value="restart_agent">
-                            <button class="rounded-md bg-gray-600 text-white px-3 py-2 text-sm">Restart agen</button>
+                            @method('PATCH')
+                            <input type="text" name="custom_name" value="{{ $device->custom_name }}" placeholder="Nama baru (kosongkan = hostname)"
+                                class="flex-1 h-9 rounded-lg border-stone-200 text-sm shadow-sm focus:border-brand-600 focus:ring-brand-600">
+                            <button class="h-9 rounded-lg bg-stone-900 text-white px-3 text-sm font-medium">Rename</button>
                         </form>
                     </div>
-                    @if ($pending->count())
-                        <div class="pt-1 space-y-1">
-                            <p class="text-xs text-amber-700">Menunggu dijalankan:</p>
-                            @foreach ($pending as $cmd)
-                                <form method="POST" action="{{ route('commands.cancel', $cmd) }}" class="flex items-center gap-2 text-xs">
-                                    @csrf
-                                    <span>{{ $cmd->label() }} ({{ $cmd->created_at->diffForHumans() }})</span>
-                                    <button class="text-red-700 hover:underline">Batalkan</button>
-                                </form>
+
+                    <div class="bg-white shadow-sm rounded-xl border border-stone-100 p-5 text-sm">
+                        <h3 class="font-semibold tracking-tight mb-1">Perintah remote</h3>
+                        <p class="text-stone-500 text-xs mb-3">Dijalankan agen saat lapor berikutnya (±10 detik).</p>
+                        <div class="flex flex-wrap gap-2">
+                            <form method="POST" action="{{ route('devices.command', $device) }}">
+                                @csrf
+                                <input type="hidden" name="action" value="open_app">
+                                <button class="h-9 rounded-lg bg-emerald-600 text-white px-4 text-sm font-medium hover:bg-emerald-700">Buka app</button>
+                            </form>
+                            <form method="POST" action="{{ route('devices.command', $device) }}">
+                                @csrf
+                                <input type="hidden" name="action" value="close_app">
+                                <button class="h-9 rounded-lg bg-red-600 text-white px-4 text-sm font-medium hover:bg-red-700">Tutup app</button>
+                            </form>
+                            <form method="POST" action="{{ route('devices.command', $device) }}">
+                                @csrf
+                                <input type="hidden" name="action" value="restart_agent">
+                                <button class="h-9 rounded-lg bg-white border border-stone-200 px-4 text-sm font-medium hover:bg-stone-50">Restart agen</button>
+                            </form>
+                        </div>
+                        @if ($pending->count())
+                            <div class="pt-3 space-y-1.5">
+                                <p class="text-xs font-medium text-amber-700">Menunggu dijalankan:</p>
+                                @foreach ($pending as $cmd)
+                                    <form method="POST" action="{{ route('commands.cancel', $cmd) }}" class="flex items-center gap-2 text-xs text-stone-600">
+                                        @csrf
+                                        <span>{{ $cmd->label() }} ({{ $cmd->created_at->diffForHumans() }})</span>
+                                        <button class="text-red-700 hover:underline">Batalkan</button>
+                                    </form>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="bg-white shadow-sm rounded-xl border border-stone-100 p-5 text-sm">
+                        <h3 class="font-semibold tracking-tight mb-1">Alert</h3>
+                        <p class="text-stone-500 text-xs mb-3">{{ $alerts->where('handled', false)->count() }} aktif</p>
+                        <div class="space-y-2 max-h-64 overflow-y-auto">
+                            @forelse ($alerts as $a)
+                                <div class="rounded-lg border px-3 py-2 {{ $a->handled ? 'opacity-50 border-stone-100' : 'border-red-200 bg-red-50/50' }}">
+                                    <p class="font-medium text-[13px]">{{ $a->label() }}</p>
+                                    <p class="text-stone-500 text-xs">{{ $a->message }} • {{ $a->created_at->diffForHumans() }}</p>
+                                    @if (! $a->handled)
+                                        <form method="POST" action="{{ route('alerts.handle', $a) }}" class="mt-1">
+                                            @csrf
+                                            <button class="text-xs font-medium text-brand-700 hover:underline">Tandai selesai</button>
+                                        </form>
+                                    @endif
+                                </div>
+                            @empty
+                                <p class="text-stone-500 text-[13px]">Tidak ada alert. Bagus.</p>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
+            @else
+                <div class="bg-white shadow-sm rounded-xl border border-stone-100">
+                    <div class="p-5 border-b border-stone-100 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <h3 class="font-semibold tracking-tight">Linimasa aktivitas</h3>
+                            <p class="text-sm text-stone-500">{{ $logs->total() }} kejadian</p>
+                        </div>
+                        <div class="flex gap-1 rounded-lg border border-stone-200 bg-stone-50 p-1 self-start">
+                            <a href="{{ route('devices.show', ['device' => $device->id, 'tab' => 'aktivitas']) }}"
+                                class="rounded-md px-3 py-1 text-xs font-medium {{ $kind === 'semua' ? 'bg-white shadow-sm text-stone-900' : 'text-stone-500' }}">Semua</a>
+                            @foreach (['app_opened' => 'App', 'foreign_window' => 'Window lain', 'command' => 'Perintah', 'online' => 'Online'] as $value => $label)
+                                <a href="{{ route('devices.show', ['device' => $device->id, 'tab' => 'aktivitas', 'jenis' => $value]) }}"
+                                    class="rounded-md px-3 py-1 text-xs font-medium {{ $kind === $value ? 'bg-white shadow-sm text-stone-900' : 'text-stone-500' }}">{{ $label }}</a>
                             @endforeach
                         </div>
-                    @endif
-                </div>
-
-                <div class="bg-white shadow-sm rounded-lg p-5 text-sm">
-                    <h3 class="font-semibold mb-2">Alert ({{ $alerts->where('handled', false)->count() }} aktif)</h3>
-                    <div class="space-y-2 max-h-64 overflow-y-auto">
-                        @forelse ($alerts as $a)
-                            <div class="rounded-lg border px-3 py-2 {{ $a->handled ? 'opacity-50' : 'border-red-200 bg-red-50' }}">
-                                <p class="font-medium">{{ $a->label() }}</p>
-                                <p class="text-gray-600 text-xs">{{ $a->message }} • {{ $a->created_at->diffForHumans() }}</p>
-                                @if (! $a->handled)
-                                    <form method="POST" action="{{ route('alerts.handle', $a) }}" class="mt-1">
-                                        @csrf
-                                        <button class="text-xs text-orange-700 hover:underline">Tandai selesai</button>
-                                    </form>
+                    </div>
+                    <div class="p-5">
+                        @forelse ($logs as $l)
+                            <div class="relative pl-6 pb-5 last:pb-0">
+                                <span class="absolute left-0 top-1.5 h-2.5 w-2.5 rounded-full
+                                    @if ($l->kind === 'app_opened') bg-emerald-500
+                                    @elseif ($l->kind === 'app_closed') bg-stone-300
+                                    @elseif ($l->kind === 'foreign_window') bg-amber-500
+                                    @elseif ($l->kind === 'command') bg-sky-500
+                                    @else bg-stone-300 @endif"></span>
+                                @if (! $loop->last)
+                                    <span class="absolute left-[4px] top-5 bottom-0 w-px bg-stone-200"></span>
                                 @endif
+                                <p class="text-sm font-medium text-stone-900">{{ $l->label() }}</p>
+                                <p class="text-xs text-stone-500">{{ $l->detail ?? '' }} {{ $l->detail ? '•' : '' }} {{ $l->created_at->format('d/m/Y H:i') }}</p>
                             </div>
                         @empty
-                            <p class="text-gray-500">Tidak ada alert.</p>
+                            <p class="text-sm text-stone-500 text-center py-6">Belum ada aktivitas pada filter ini.</p>
                         @endforelse
+                        <div class="pt-4">
+                            {{ $logs->links() }}
+                        </div>
                     </div>
                 </div>
-            </div>
-
-            <div class="bg-white shadow-sm rounded-lg">
-                <div class="p-5 border-b">
-                    <h3 class="font-semibold">Activity log</h3>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 text-sm">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-4 py-2 text-left font-medium text-gray-500">Waktu</th>
-                                <th class="px-4 py-2 text-left font-medium text-gray-500">Kejadian</th>
-                                <th class="px-4 py-2 text-left font-medium text-gray-500">Detail</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-200">
-                            @forelse ($device->logs as $l)
-                                <tr>
-                                    <td class="px-4 py-2 text-gray-500 whitespace-nowrap">{{ $l->created_at->format('d/m/Y H:i') }}</td>
-                                    <td class="px-4 py-2 font-medium">{{ $l->label() }}</td>
-                                    <td class="px-4 py-2 text-gray-600">{{ $l->detail ?? '-' }}</td>
-                                </tr>
-                            @empty
-                                <tr><td colspan="3" class="px-4 py-6 text-center text-gray-500">Belum ada aktivitas.</td></tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            @endif
         </div>
     </div>
 </x-app-layout>

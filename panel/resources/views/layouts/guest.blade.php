@@ -20,7 +20,7 @@
                 <p class="font-semibold text-gray-800">Panel Perpus</p>
             </div>
 
-            <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg">
+            <div class="w-full sm:max-w-3xl mt-6 px-6 py-8 bg-white shadow-md overflow-hidden sm:rounded-2xl">
                 {{ $slot }}
             </div>
         </div>

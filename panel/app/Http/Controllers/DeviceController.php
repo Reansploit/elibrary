@@ -9,29 +9,68 @@ use Illuminate\Http\Request;
 
 class DeviceController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $devices = Device::withCount(['alerts as unhandled_alerts' => fn ($q) => $q->where('handled', false)])
+        $q = trim($request->query('q', ''));
+        $tab = $request->query('tab', 'semua');
+        if (! in_array($tab, ['semua', 'online', 'perhatian'], true)) {
+            $tab = 'semua';
+        }
+
+        $devices = Device::withCount(['alerts as unhandled_alerts' => fn ($query) => $query->where('handled', false)])
+            ->when($q !== '', function ($query) use ($q) {
+                $like = "%{$q}%";
+                $query->where(function ($w) use ($like) {
+                    $w->where('hostname', 'like', $like)
+                        ->orWhere('custom_name', 'like', $like)
+                        ->orWhere('mac', 'like', $like)
+                        ->orWhere('ip', 'like', $like);
+                });
+            })
             ->orderBy('hostname')
             ->get();
 
+        if ($tab === 'online') {
+            $devices = $devices->filter->isOnline()->values();
+        } elseif ($tab === 'perhatian') {
+            $devices = $devices->filter(fn ($d) => $d->unhandled_alerts > 0 || ! $d->isOnline())->values();
+        }
+
+        $all = Device::withCount(['alerts as unhandled_alerts' => fn ($query) => $query->where('handled', false)])->get();
+
         $stats = [
-            'total' => $devices->count(),
-            'online' => $devices->filter->isOnline()->count(),
-            'app_open' => $devices->where('app_open', true)->count(),
+            'total' => $all->count(),
+            'online' => $all->filter->isOnline()->count(),
+            'app_open' => $all->where('app_open', true)->count(),
             'alerts' => Alert::where('handled', false)->count(),
         ];
 
-        return view('devices.index', compact('devices', 'stats'));
+        return view('devices.index', compact('devices', 'stats', 'q', 'tab'));
     }
 
-    public function show(Device $device)
+    public function show(Request $request, Device $device)
     {
-        $device->load(['logs' => fn ($q) => $q->orderBy('id', 'desc')->limit(100)]);
+        $tab = $request->query('tab', 'ringkasan');
+        if (! in_array($tab, ['ringkasan', 'aktivitas'], true)) {
+            $tab = 'ringkasan';
+        }
+        $kind = $request->query('jenis', 'semua');
+
+        $logs = $device->logs()
+            ->when($kind !== 'semua', fn ($query) => $query->where('kind', $kind))
+            ->orderBy('id', 'desc')
+            ->paginate(20)
+            ->withQueryString();
+
+        $kinds = $device->logs()
+            ->selectRaw('kind, COUNT(*) as jml')
+            ->groupBy('kind')
+            ->pluck('jml', 'kind');
+
         $alerts = $device->alerts()->orderBy('id', 'desc')->limit(50)->get();
         $pending = $device->commands()->where('status', 'pending')->orderBy('id')->get();
 
-        return view('devices.show', compact('device', 'alerts', 'pending'));
+        return view('devices.show', compact('device', 'alerts', 'pending', 'tab', 'logs', 'kinds', 'kind'));
     }
 
     public function rename(Request $request, Device $device)
