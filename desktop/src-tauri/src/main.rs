@@ -61,6 +61,21 @@ fn setup_agent(app: tauri::AppHandle, panel_url: String) -> Result<(), String> {
 struct ComboState(Mutex<Option<Instant>>);
 
 fn main() {
+    // Log diagnosis (release tanpa console): %TEMP%\elibrary-debug.log
+    std::panic::set_hook(Box::new(|info| {
+        let msg = format!("[PANIC] {}\n", info);
+        let mut p = std::env::temp_dir();
+        p.push("elibrary-debug.log");
+        let _ = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(p)
+            .and_then(|mut f| {
+                use std::io::Write;
+                f.write_all(msg.as_bytes())
+            });
+    }));
+
     let mods = Modifiers::CONTROL | Modifiers::SHIFT | Modifiers::ALT;
     let key_q = Shortcut::new(Some(mods), Code::KeyQ);
     let key_h = Shortcut::new(Some(mods), Code::KeyH);
