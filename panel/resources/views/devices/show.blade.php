@@ -177,7 +177,7 @@
                         </div>
                     </div>
                     <div class="p-5" id="logwrap">
-                        @include('devices.partials.timeline', ['logs' => $logs])
+                        @include('devices.partials.timeline', ['logs' => $logs, 'kind' => $kind, 'device' => $device])
                     </div>
                 </div>
             @endif

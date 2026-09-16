@@ -15,6 +15,17 @@
 @empty
     <p class="text-sm text-stone-500 text-center py-6">Belum ada aktivitas pada filter ini.</p>
 @endforelse
-<div class="pt-4 log-pages">
-    {{ $logs->links() }}
+<div class="pt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div class="[&>nav]:inline-block">
+        {{ $logs->links() }}
+    </div>
+    @if ($logs->lastPage() > 1)
+        <form data-logjump data-base="{{ route('devices.show', $device->id) }}" data-kind="{{ $kind ?? 'semua' }}" class="flex items-center gap-2 text-xs text-stone-500">
+            <label for="logpage">Ke halaman</label>
+            <input id="logpage" name="page" type="number" min="1" max="{{ $logs->lastPage() }}" value="{{ $logs->currentPage() }}"
+                class="h-8 w-16 rounded-lg border-stone-200 text-xs shadow-sm focus:border-brand-600 focus:ring-brand-600">
+            <span>/ {{ $logs->lastPage() }}</span>
+            <button class="h-8 rounded-lg bg-stone-900 px-3 text-xs font-medium text-white">Loncat</button>
+        </form>
+    @endif
 </div>

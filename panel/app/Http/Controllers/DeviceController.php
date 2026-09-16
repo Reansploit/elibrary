@@ -72,7 +72,7 @@ class DeviceController extends Controller
 
         if ($request->expectsJson()) {
             return response()->json([
-                'html' => view('devices.partials.timeline', compact('logs'))->render(),
+                'html' => view('devices.partials.timeline', ['logs' => $logs, 'kind' => $kind, 'device' => $device])->render(),
                 'total' => $logs->total() . ' kejadian',
             ]);
         }

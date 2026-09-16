@@ -108,8 +108,14 @@ class AgentController extends Controller
         }
 
         // Window lain di depan saat app tertutup.
+        $apps = array_values(array_slice($validated['apps'] ?? [], 0, 25));
         if (! $isOpen && $title && $title !== $device->last_foreign_title) {
-            $device->log('foreign_window', $title);
+            $others = array_values(array_filter($apps, fn ($a) => mb_strtolower($a) !== mb_strtolower($title)));
+            $detail = $title;
+            if (count($others) > 0) {
+                $detail .= ' | juga terbuka: ' . mb_substr(implode(', ', array_slice($others, 0, 5)), 0, 150);
+            }
+            $device->log('foreign_window', $detail);
             $device->last_foreign_title = $title;
             $device->foreign_beats = 1;
         } elseif (! $isOpen && $title && $title === $device->last_foreign_title) {

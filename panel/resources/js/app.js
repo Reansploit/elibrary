@@ -42,8 +42,23 @@ window.logPager = () => ({
     },
 });
 
-document.addEventListener('click', (e) => {
-    const filterLink = e.target.closest('[data-loglink]');
+document.addEventListener('submit', (e) => {
+    const form = e.target.closest('[data-logjump]');
+    if (!form) return;
+    e.preventDefault();
+    const page = Math.max(1, parseInt(form.page.value || '1', 10));
+    const max = parseInt(form.page.max || '1', 10);
+    const kind = form.dataset.kind || 'semua';
+    const url = `${form.dataset.base}?tab=aktivitas${kind !== 'semua' ? `&jenis=${kind}` : ''}&page=${Math.min(page, max)}`;
+    const root = form.closest('[x-data]');
+    if (root && root._x_dataStack && typeof root._x_dataStack[0]?.go === 'function') {
+        root._x_dataStack[0].go(url);
+    } else {
+        location.href = url;
+    }
+});
+
+document.addEventListener('click', (e) => {    const filterLink = e.target.closest('[data-loglink]');
     const pageLink = e.target.closest('#logwrap .log-pages a');
     const link = filterLink || pageLink;
     if (!link) return;
