@@ -87,8 +87,8 @@
                             @csrf
                             @method('PATCH')
                             <input type="text" name="custom_name" value="{{ $device->custom_name }}" placeholder="Nama baru (kosongkan = hostname)"
-                                class="flex-1 h-9 rounded-lg border-stone-200 text-sm shadow-sm focus:border-brand-600 focus:ring-brand-600">
-                            <button class="h-9 rounded-lg bg-stone-900 text-white px-3 text-sm font-medium">Rename</button>
+                                class="flex-1 min-w-0 h-9 rounded-lg border-stone-200 text-sm shadow-sm focus:border-brand-600 focus:ring-brand-600">
+                            <button class="h-9 shrink-0 rounded-lg bg-stone-900 text-white px-3 text-sm font-medium">Rename</button>
                         </form>
                     </div>
 
@@ -129,7 +129,7 @@
                     <div class="bg-white shadow-sm rounded-xl border border-stone-100 p-5 text-sm">
                         <h3 class="font-semibold tracking-tight mb-1">Alert</h3>
                         <p class="text-stone-500 text-xs mb-3">{{ $alerts->where('handled', false)->count() }} aktif</p>
-                        <div class="space-y-2 max-h-64 overflow-y-auto">
+                        <div class="space-y-2">
                             @forelse ($alerts as $a)
                                 <div class="rounded-lg border px-3 py-2 {{ $a->handled ? 'opacity-50 border-stone-100' : 'border-red-200 bg-red-50/50' }}">
                                     <p class="font-medium text-[13px]">{{ $a->label() }}</p>
