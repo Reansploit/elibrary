@@ -4,6 +4,14 @@ Window native (.exe) untuk aplikasi perpustakaan. Tidak berisi logika —
 hanya splash pengatur server lalu membuka app web full-window
 (navigasi top-level agar session login tetap jalan).
 
+## Mode kios (v0.2.0+)
+
+App dibuka langsung **fullscreen**. Tombol tutup (X), Alt+F4, dan
+tutup via taskbar semuanya ditolak — tidak ada petunjuk apa pun di UI.
+
+Catatan jujur: Task Manager Windows tetap bisa menghentikan proses.
+Untuk penguncian total, gabungkan dengan Assigned Access / akun kios Windows.
+
 ## Bangun installer (di Windows)
 
 ```powershell
