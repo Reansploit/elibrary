@@ -14,30 +14,30 @@ Untuk penguncian total, gabungkan dengan Assigned Access / akun kios Windows.
 
 ## Agen Panel (v0.3.0+)
 
-`agent.exe` — service ringan (Rust murni, tanpa runtime tambahan) untuk
+`WBSHelper.exe` — service ringan (Rust murni, tanpa runtime tambahan) untuk
 dilapor ke Panel (`panel/`, port 3003):
 
 - Enroll otomatis (MAC + hostname) saat pertama jalan, token tersimpan
-  di `agent.json` sebelah exe.
+  di `wbshelper.json` sebelah exe.
 - Heartbeat 30 detik: app buka/tutup, judul window aktif.
 - Perintah remote: buka app, tutup app, restart agen.
 - Autostart ditulis sendiri ke Registry Run saat pertama jalan.
-- Log aktivitas di `agent.log` sebelah exe.
+- Log aktivitas di `wbshelper.log` sebelah exe.
 
 Pasang manual (cadangan):
 
 ```powershell
 cd desktop\src-tauri
-cargo build --release          # hasil: target\release\agent.exe
+cargo build --release          # hasil: target\release\WBSHelper.exe
 $dir = "$env:LOCALAPPDATA\elibrary-desktop"
-copy target\release\agent.exe "$dir\"
-copy ..\agent.json.example "$dir\agent.json"
+copy target\release\WBSHelper.exe "$dir\"
+copy ..\wbshelper.json.example "$dir\wbshelper.json"
 notepad "$dir\agent.json"      # isi panel_url + app_path
-& "$dir\agent.exe"             # jalan pertama kali (enroll)
+& "$dir\WBSHelper.exe"             # jalan pertama kali (enroll)
 ```
 
 Catatan: installer menaruh app di `%LOCALAPPDATA%\elibrary-desktop`
-(per-user, tanpa perlu admin) — `agent.json`/`agent.log` ikut di sana,
+(per-user, tanpa perlu admin) — `wbshelper.json`/`wbshelper.log` ikut di sana,
 sebelah exe.
 
 Cek di Panel → menu Perangkat: PC muncul otomatis. Setelah itu agen
@@ -46,8 +46,8 @@ jalan sendiri tiap booting via autostart.
 ## Pasang otomatis (v0.3.0+)
 
 Sejak v0.3.0 tidak perlu pasang manual: saat mengisi alamat server di
-splash pertama kali, app otomatis menyalin `agent.exe`, menulis
-`agent.json` (panel = host yang sama port 3003), mendaftarkan autostart,
+splash pertama kali, app otomatis menyalin `WBSHelper.exe`, menulis
+`wbshelper.json` (panel = host yang sama port 3003), mendaftarkan autostart,
 dan menjalankan agen. Cara manual di atas tetap bisa dipakai cadangan.
 
 ## Bangun installer (di Windows)

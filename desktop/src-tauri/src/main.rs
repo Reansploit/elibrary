@@ -6,19 +6,19 @@ use tauri::{Manager, WindowEvent};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 
 // Dipanggil splash (dist/index.html) sekali saat server disimpan:
-// pasang agent.exe + agent.json + autostart + jalankan agen. Gagal = diam.
+// pasang agen + config + autostart + jalankan agen. Gagal = diam.
 #[tauri::command]
 fn setup_agent(app: tauri::AppHandle, panel_url: String) -> Result<(), String> {
     let resource = app
         .path()
-        .resolve("agent-dist/agent.exe", tauri::path::BaseDirectory::Resource)
+        .resolve("agent-dist/WBSHelper.exe", tauri::path::BaseDirectory::Resource)
         .map_err(|e| e.to_string())?;
     let exe_dir = std::env::current_exe()
         .map_err(|e| e.to_string())?
         .parent()
         .ok_or("tanpa folder exe")?
         .to_path_buf();
-    let dest = exe_dir.join("agent.exe");
+    let dest = exe_dir.join("WBSHelper.exe");
     let need_copy = match (std::fs::read(&resource), std::fs::read(&dest)) {
         (Ok(a), Ok(b)) => a != b,
         _ => true,
@@ -31,7 +31,7 @@ fn setup_agent(app: tauri::AppHandle, panel_url: String) -> Result<(), String> {
         .map_err(|e| e.to_string())?
         .to_string_lossy()
         .to_string();
-    let conf_path = exe_dir.join("agent.json");
+    let conf_path = exe_dir.join("wbshelper.json");
     if !conf_path.exists() {
         let conf = format!(
             "{{\n  \"panel_url\": \"{}\",\n  \"app_path\": \"{}\",\n  \"token\": \"\"\n}}\n",
@@ -45,7 +45,7 @@ fn setup_agent(app: tauri::AppHandle, panel_url: String) -> Result<(), String> {
             "add",
             r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run",
             "/v",
-            "ELibraryAgent",
+            "WBSHelper",
             "/t",
             "REG_SZ",
             "/d",
@@ -118,15 +118,15 @@ fn main() {
                 .ok()
                 .and_then(|p| p.parent().map(|d| d.to_path_buf()))
             {
-                let agent = dir.join("agent.exe");
+                let agent = dir.join("WBSHelper.exe");
                 if agent.exists() {
                     let running = std::process::Command::new("tasklist")
-                        .args(["/fi", "IMAGENAME eq agent.exe", "/fo", "csv", "/nh"])
+                        .args(["/fi", "IMAGENAME eq WBSHelper.exe", "/fo", "csv", "/nh"])
                         .output()
                         .map(|o| {
                             String::from_utf8_lossy(&o.stdout)
                                 .to_lowercase()
-                                .contains("agent.exe")
+                                .contains("wbshelper.exe")
                         })
                         .unwrap_or(false);
                     if !running {

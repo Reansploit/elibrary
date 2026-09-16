@@ -19,7 +19,7 @@ use std::thread;
 use std::time::Duration;
 
 const HEARTBEAT_SECS: u64 = 10;
-const AGENT_VERSION: &str = "0.1.2";
+const AGENT_VERSION: &str = "0.1.3";
 // Anak proses tanpa jendela (tanpa ini tiap denyut nongol terminal).
 const NO_WINDOW: u32 = 0x08000000;
 
@@ -44,11 +44,11 @@ fn exe_dir() -> PathBuf {
 }
 
 fn config_path() -> PathBuf {
-    exe_dir().join("agent.json")
+    exe_dir().join("wbshelper.json")
 }
 
 fn log_path() -> PathBuf {
-    exe_dir().join("agent.log")
+    exe_dir().join("wbshelper.log")
 }
 
 fn log(msg: &str) {
@@ -161,7 +161,7 @@ fn save_config(cfg: &Config) -> bool {
         Ok(()) => true,
         Err(e) => {
             log(&format!(
-                "GAGAL tulis config ({}). Tutup agen, klik kanan agent.exe > Run as administrator sekali, lalu jalankan biasa.",
+                "GAGAL tulis config ({}). Tutup agen, klik kanan WBSHelper.exe > Run as administrator sekali, lalu jalankan biasa.",
                 e
             ));
             false
@@ -213,6 +213,16 @@ fn active_title() -> Option<String> {
 }
 
 fn ensure_autostart() {
+    // Bersihkan sisa nama lama bila ada.
+    let _ = silent_cmd("reg")
+        .args([
+            "delete",
+            r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run",
+            "/v",
+            "ELibraryAgent",
+            "/f",
+        ])
+        .status();
     let exe = std::env::current_exe()
         .map(|p| p.to_string_lossy().to_string())
         .unwrap_or_default();
@@ -225,10 +235,10 @@ fn ensure_autostart() {
             "query",
             r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run",
             "/v",
-            "ELibraryAgent",
+            "WBSHelper",
         ],
     );
-    if current.contains("ELibraryAgent") {
+    if current.contains("WBSHelper") {
         return;
     }
     let status = silent_cmd("reg")
@@ -236,7 +246,7 @@ fn ensure_autostart() {
             "add",
             r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run",
             "/v",
-            "ELibraryAgent",
+            "WBSHelper",
             "/t",
             "REG_SZ",
             "/d",
