@@ -18,8 +18,8 @@ use std::process::Command;
 use std::thread;
 use std::time::Duration;
 
-const HEARTBEAT_SECS: u64 = 30;
-const AGENT_VERSION: &str = "0.1.1";
+const HEARTBEAT_SECS: u64 = 10;
+const AGENT_VERSION: &str = "0.1.2";
 // Anak proses tanpa jendela (tanpa ini tiap denyut nongol terminal).
 const NO_WINDOW: u32 = 0x08000000;
 
