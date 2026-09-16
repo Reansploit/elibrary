@@ -98,7 +98,7 @@ fn load_config() -> Config {
             "panel_url" => cfg.panel_url = v.trim_end_matches('/').to_string(),
             "app_path" => cfg.app_path = v.to_string(),
             "token" => {
-                if (!v.is_empty()) {
+                if !v.is_empty() {
                     cfg.token = Some(v.to_string());
                 }
             }
@@ -297,8 +297,10 @@ fn execute_command(cfg: &Config, token: &str, id: &str, action: &str) {
             .map(|s| s.success())
             .unwrap_or(false),
         "restart_agent" => {
-            let exe = std::env::current_exe().map(|p| p.to_string_lossy().to_string());
-            if let Some(path) = exe {
+            if let Some(path) = std::env::current_exe()
+                .ok()
+                .map(|p| p.to_string_lossy().to_string())
+            {
                 let _ = Command::new(&path).spawn();
             }
             // Keluar; proses baru melanjutkan. Jangan ack (tetap pending).
