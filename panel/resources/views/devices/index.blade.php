@@ -14,25 +14,25 @@
             @endif
 
             <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <div class="bg-white overflow-hidden shadow-sm rounded-lg p-5">
+                <div class="bg-white overflow-hidden shadow-sm rounded-xl p-5 border-l-4 border-stone-300">
                     <p class="text-xs text-gray-500">Total PC</p>
                     <p class="text-2xl font-bold">{{ $stats['total'] }}</p>
                 </div>
-                <div class="bg-white overflow-hidden shadow-sm rounded-lg p-5">
+                <div class="bg-white overflow-hidden shadow-sm rounded-xl p-5 border-l-4 border-emerald-500">
                     <p class="text-xs text-gray-500">Online</p>
                     <p class="text-2xl font-bold text-emerald-600">{{ $stats['online'] }}</p>
                 </div>
-                <div class="bg-white overflow-hidden shadow-sm rounded-lg p-5">
+                <div class="bg-white overflow-hidden shadow-sm rounded-xl p-5 border-l-4 border-sky-500">
                     <p class="text-xs text-gray-500">App terbuka</p>
                     <p class="text-2xl font-bold text-sky-600">{{ $stats['app_open'] }}</p>
                 </div>
-                <div class="bg-white overflow-hidden shadow-sm rounded-lg p-5">
+                <div class="bg-white overflow-hidden shadow-sm rounded-xl p-5 border-l-4 {{ $stats['alerts'] > 0 ? 'border-red-500' : 'border-stone-300' }}">
                     <p class="text-xs text-gray-500">Perlu perhatian</p>
                     <p class="text-2xl font-bold {{ $stats['alerts'] > 0 ? 'text-red-600' : '' }}">{{ $stats['alerts'] }}</p>
                 </div>
             </div>
 
-            <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+            <div class="bg-white overflow-hidden shadow-sm rounded-xl">
                 <div class="p-5 border-b">
                     <h3 class="font-semibold">Daftar PC</h3>
                     <p class="text-sm text-gray-500">Klik nama untuk detail, log, dan perintah remote</p>
