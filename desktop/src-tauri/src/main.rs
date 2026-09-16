@@ -32,7 +32,7 @@ fn main() {
                             .map(|t| t.elapsed() < Duration::from_secs(3))
                             .unwrap_or(false);
                         *state.0.lock().unwrap() = None;
-                        if (armed) {
+                        if armed {
                             std::process::exit(0);
                         }
                     }
