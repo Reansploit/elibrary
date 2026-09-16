@@ -20,6 +20,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/perangkat', [DeviceController::class, 'index'])->name('devices.index');
     Route::get('/perangkat/{device}', [DeviceController::class, 'show'])->name('devices.show');
     Route::patch('/perangkat/{device}', [DeviceController::class, 'rename'])->name('devices.rename');
+    Route::delete('/perangkat/{device}', [DeviceController::class, 'destroy'])->name('devices.destroy');
     Route::post('/perangkat/{device}/perintah', [DeviceController::class, 'command'])->name('devices.command');
     Route::post('/perintah/{command}/batal', [DeviceController::class, 'cancelCommand'])->name('commands.cancel');
     Route::post('/alert/{alert}/selesai', [DeviceController::class, 'handleAlert'])->name('alerts.handle');

@@ -81,4 +81,13 @@ class DeviceController extends Controller
 
         return back()->with('success', 'Perintah pending dibatalkan.');
     }
+
+    public function destroy(Device $device)
+    {
+        $name = $device->displayName();
+        $device->delete();
+
+        return redirect()->route('devices.index')
+            ->with('success', "{$name} dihapus dari panel. Agen di PC akan daftar ulang otomatis bila masih jalan.");
+    }
 }

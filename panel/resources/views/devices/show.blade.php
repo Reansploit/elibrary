@@ -10,6 +10,14 @@
 
     <div class="py-6">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+            <div class="flex justify-end">
+                <form method="POST" action="{{ route('devices.destroy', $device) }}"
+                    onsubmit="return confirm('Hapus {{ $device->displayName() }} dari panel? Riwayat ikut terhapus.')">
+                    @csrf
+                    @method('DELETE')
+                    <button class="rounded-md bg-red-600 text-white px-3 py-2 text-sm">Hapus perangkat</button>
+                </form>
+            </div>
             @if (session('success'))
                 <div class="bg-green-50 border border-green-200 text-green-800 rounded-lg px-4 py-3 text-sm">
                     {{ session('success') }}
