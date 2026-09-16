@@ -24,16 +24,21 @@ dilapor ke Panel (`panel/`, port 3003):
 - Autostart ditulis sendiri ke Registry Run saat pertama jalan.
 - Log aktivitas di `agent.log` sebelah exe.
 
-Pasang:
+Pasang manual (cadangan):
 
 ```powershell
 cd desktop\src-tauri
 cargo build --release          # hasil: target\release\agent.exe
-copy target\release\agent.exe "C:\Program Files\E-Library\"
-copy ..\agent.json.example "C:\Program Files\E-Library\agent.json"
-notepad "C:\Program Files\E-Library\agent.json"   # isi panel_url + app_path
-"C:\Program Files\E-Library\agent.exe"            # jalan pertama kali (enroll)
+$dir = "$env:LOCALAPPDATA\elibrary-desktop"
+copy target\release\agent.exe "$dir\"
+copy ..\agent.json.example "$dir\agent.json"
+notepad "$dir\agent.json"      # isi panel_url + app_path
+& "$dir\agent.exe"             # jalan pertama kali (enroll)
 ```
+
+Catatan: installer menaruh app di `%LOCALAPPDATA%\elibrary-desktop`
+(per-user, tanpa perlu admin) — `agent.json`/`agent.log` ikut di sana,
+sebelah exe.
 
 Cek di Panel → menu Perangkat: PC muncul otomatis. Setelah itu agen
 jalan sendiri tiap booting via autostart.

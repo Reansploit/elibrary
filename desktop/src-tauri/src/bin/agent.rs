@@ -12,6 +12,7 @@
 
 use std::fs;
 use std::io::Write;
+use std::os::windows::process::CommandExt;
 use std::path::PathBuf;
 use std::process::Command;
 use std::thread;
@@ -19,6 +20,14 @@ use std::time::Duration;
 
 const HEARTBEAT_SECS: u64 = 30;
 const AGENT_VERSION: &str = "0.1.0";
+// Anak proses tanpa jendela (tanpa ini tiap denyut nongol terminal).
+const NO_WINDOW: u32 = 0x08000000;
+
+fn silent_cmd(cmd: &str) -> Command {
+    let mut c = Command::new(cmd);
+    c.creation_flags(NO_WINDOW);
+    c
+}
 
 #[derive(Debug)]
 struct Config {
@@ -58,7 +67,7 @@ fn log(msg: &str) {
 
 // Tanggal-jam lokal sederhana tanpa crate tambahan.
 fn chrono_now() -> String {
-    let out = Command::new("powershell")
+    let out = silent_cmd("powershell")
         .args([
             "-NoProfile",
             "-Command",
@@ -104,7 +113,7 @@ fn load_config() -> Config {
         let v = v.trim().trim_matches('"').replace("\\\\", "\\");
         match k {
             "panel_url" => cfg.panel_url = v.trim_end_matches('/').to_string(),
-            "app_path" => cfg.app_path = v.to_string(),
+            "app_path" => cfg.app_path = expand_env(&v),
             "token" => {
                 if !v.is_empty() {
                     cfg.token = Some(v.to_string());
@@ -114,6 +123,31 @@ fn load_config() -> Config {
         }
     }
     cfg
+}
+
+// Kembangkan %NAMA% ala Windows (mis. %LOCALAPPDATA%).
+fn expand_env(value: &str) -> String {
+    let mut out = String::new();
+    let mut rest = value;
+    while let Some(start) = rest.find('%') {
+        out.push_str(&rest[..start]);
+        rest = &rest[start + 1..];
+        match rest.find('%') {
+            Some(end) => {
+                let name = &rest[..end];
+                out.push_str(
+                    &std::env::var(name).unwrap_or_else(|_| format!("%{}%", name)),
+                );
+                rest = &rest[end + 1..];
+            }
+            None => {
+                out.push('%');
+                break;
+            }
+        }
+    }
+    out.push_str(rest);
+    out
 }
 
 fn save_config(cfg: &Config) -> bool {
@@ -136,7 +170,7 @@ fn save_config(cfg: &Config) -> bool {
 }
 
 fn run(cmd: &str, args: &[&str]) -> String {
-    Command::new(cmd)
+    silent_cmd(cmd)
         .args(args)
         .output()
         .map(|o| String::from_utf8_lossy(&o.stdout).to_string())
@@ -197,7 +231,7 @@ fn ensure_autostart() {
     if current.contains("ELibraryAgent") {
         return;
     }
-    let status = Command::new("reg")
+    let status = silent_cmd("reg")
         .args([
             "add",
             r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run",
@@ -217,7 +251,7 @@ fn ensure_autostart() {
 }
 
 fn post_json(url: &str, token: Option<&str>, body: &str) -> Option<String> {
-    let mut cmd = Command::new("curl.exe");
+    let mut cmd = silent_cmd("curl.exe");
     cmd.args(["-s", "-m", "20", "-X", "POST", url]);
     cmd.args(["-H", "Content-Type: application/json"]);
     cmd.args(["-H", "Accept: application/json"]);
@@ -309,7 +343,7 @@ fn execute_command(cfg: &Config, token: &str, id: &str, action: &str) {
     log(&format!("perintah {}: {}", id, action));
     let ok = match action {
         "open_app" => Command::new(&cfg.app_path).spawn().is_ok(),
-        "close_app" => Command::new("taskkill")
+        "close_app" => silent_cmd("taskkill")
             .args(["/F", "/IM", "elibrary-desktop.exe"])
             .status()
             .map(|s| s.success())
