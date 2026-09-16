@@ -94,7 +94,13 @@ fn load_config() -> Config {
         let (Some(k), Some(v)) = (kv.next(), kv.next()) else {
             continue;
         };
+        // Nilai app_path mengandung ':' (C:\...), jadi potong dari kanan:
+        // kunci di kiri ':' pertama, nilai = sisa setelahnya tanpa koma akhir.
         let k = k.trim().trim_matches('"');
+        let mut v = v.trim();
+        if let Some(stripped) = v.strip_suffix(',') {
+            v = stripped;
+        }
         let v = v.trim().trim_matches('"').replace("\\\\", "\\");
         match k {
             "panel_url" => cfg.panel_url = v.trim_end_matches('/').to_string(),
@@ -110,14 +116,23 @@ fn load_config() -> Config {
     cfg
 }
 
-fn save_config(cfg: &Config) {
+fn save_config(cfg: &Config) -> bool {
     let text = format!(
         "{{\n  \"panel_url\": \"{}\",\n  \"app_path\": \"{}\",\n  \"token\": \"{}\"\n}}\n",
         cfg.panel_url,
         cfg.app_path.replace('\\', "\\\\"),
         cfg.token.clone().unwrap_or_default()
     );
-    let _ = fs::write(config_path(), text);
+    match fs::write(config_path(), &text) {
+        Ok(()) => true,
+        Err(e) => {
+            log(&format!(
+                "GAGAL tulis config ({}). Tutup agen, klik kanan agent.exe > Run as administrator sekali, lalu jalankan biasa.",
+                e
+            ));
+            false
+        }
+    }
 }
 
 fn run(cmd: &str, args: &[&str]) -> String {
@@ -235,8 +250,9 @@ fn enroll(cfg: &mut Config) -> bool {
     match post_json(&url, None, &body).and_then(|r| json_get(&r, "token")) {
         Some(token) => {
             cfg.token = Some(token);
-            save_config(cfg);
-            log("enroll OK, token tersimpan");
+            if save_config(cfg) {
+                log("enroll OK, token tersimpan");
+            }
             true
         }
         None => {
@@ -299,13 +315,18 @@ fn execute_command(cfg: &Config, token: &str, id: &str, action: &str) {
             .map(|s| s.success())
             .unwrap_or(false),
         "restart_agent" => {
+            // Ack DULU baru keluar, kalau tidak perintah ini diulang terus.
+            let url = format!("{}/api/v1/commands/{}/ack", cfg.panel_url, id);
+            let mac = mac_address();
+            let body = format!("{{\"mac\":\"{}\",\"status\":\"done\"}}", mac);
+            let _ = post_json(&url, Some(token), &body);
+            log(&format!("perintah {} selesai: restart", id));
             if let Some(path) = std::env::current_exe()
                 .ok()
                 .map(|p| p.to_string_lossy().to_string())
             {
                 let _ = Command::new(&path).spawn();
             }
-            // Keluar; proses baru melanjutkan. Jangan ack (tetap pending).
             std::process::exit(0);
         }
         _ => false,
@@ -325,6 +346,7 @@ fn main() {
     log("=== agen mulai ===");
     let mut cfg = load_config();
     log(&format!("panel: {}", cfg.panel_url));
+    log(&format!("app: {}", cfg.app_path));
     log(&format!("mac: {} host: {}", mac_address(), hostname()));
     ensure_autostart();
 
