@@ -12,6 +12,32 @@ tutup via taskbar semuanya ditolak — tidak ada petunjuk apa pun di UI.
 Catatan jujur: Task Manager Windows tetap bisa menghentikan proses.
 Untuk penguncian total, gabungkan dengan Assigned Access / akun kios Windows.
 
+## Agen Panel (v0.3.0+)
+
+`agent.exe` — service ringan (Rust murni, tanpa runtime tambahan) untuk
+dilapor ke Panel (`panel/`, port 3003):
+
+- Enroll otomatis (MAC + hostname) saat pertama jalan, token tersimpan
+  di `agent.json` sebelah exe.
+- Heartbeat 30 detik: app buka/tutup, judul window aktif.
+- Perintah remote: buka app, tutup app, restart agen.
+- Autostart ditulis sendiri ke Registry Run saat pertama jalan.
+- Log aktivitas di `agent.log` sebelah exe.
+
+Pasang:
+
+```powershell
+cd desktop\src-tauri
+cargo build --release          # hasil: target\release\agent.exe
+copy target\release\agent.exe "C:\Program Files\E-Library\"
+copy ..\agent.json.example "C:\Program Files\E-Library\agent.json"
+notepad "C:\Program Files\E-Library\agent.json"   # isi panel_url + app_path
+"C:\Program Files\E-Library\agent.exe"            # jalan pertama kali (enroll)
+```
+
+Cek di Panel → menu Perangkat: PC muncul otomatis. Setelah itu agen
+jalan sendiri tiap booting via autostart.
+
 ## Bangun installer (di Windows)
 
 ```powershell
