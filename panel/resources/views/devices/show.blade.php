@@ -59,7 +59,16 @@
                         </form>
                     </div>
                     @if ($pending->count())
-                        <p class="text-xs text-amber-700 pt-1">Menunggu dijalankan: {{ $pending->pluck('action')->join(', ') }}</p>
+                        <div class="pt-1 space-y-1">
+                            <p class="text-xs text-amber-700">Menunggu dijalankan:</p>
+                            @foreach ($pending as $cmd)
+                                <form method="POST" action="{{ route('commands.cancel', $cmd) }}" class="flex items-center gap-2 text-xs">
+                                    @csrf
+                                    <span>{{ $cmd->label() }} ({{ $cmd->created_at->diffForHumans() }})</span>
+                                    <button class="text-red-700 hover:underline">Batalkan</button>
+                                </form>
+                            @endforeach
+                        </div>
                     @endif
                 </div>
 

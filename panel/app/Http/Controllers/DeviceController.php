@@ -69,4 +69,16 @@ class DeviceController extends Controller
 
         return back()->with('success', 'Alert ditandai selesai.');
     }
+
+    public function cancelCommand(DeviceCommand $command)
+    {
+        if ($command->status !== 'pending') {
+            return back()->with('error', 'Perintah sudah diproses agen.');
+        }
+
+        $command->update(['status' => 'failed', 'done_at' => now()]);
+        $command->device->log('command', "Dibatalkan guru: {$command->label()}");
+
+        return back()->with('success', 'Perintah pending dibatalkan.');
+    }
 }
