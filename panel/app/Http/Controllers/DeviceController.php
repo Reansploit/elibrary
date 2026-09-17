@@ -96,7 +96,7 @@ class DeviceController extends Controller
     public function command(Request $request, Device $device)
     {
         $validated = $request->validate([
-            'action' => 'required|in:open_app,close_app,restart_agent',
+            'action' => 'required|in:open_app,close_app,restart_agent,update_agent',
         ]);
 
         $command = $device->commands()->create([

@@ -124,6 +124,11 @@
                                 <input type="hidden" name="action" value="restart_agent">
                                 <button class="h-9 rounded-lg bg-white border border-stone-200 px-4 text-sm font-medium hover:bg-stone-50">Restart agen</button>
                             </form>
+                            <form method="POST" action="{{ route('devices.command', $device) }}">
+                                @csrf
+                                <input type="hidden" name="action" value="update_agent">
+                                <button class="h-9 rounded-lg bg-white border border-stone-200 px-4 text-sm font-medium hover:bg-stone-50">Update agen</button>
+                            </form>
                         </div>
                         @if ($pending->count())
                             <div class="pt-3 space-y-1.5">

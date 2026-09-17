@@ -10,6 +10,7 @@ class DeviceCommand extends Model
     public const OPEN_APP = 'open_app';
     public const CLOSE_APP = 'close_app';
     public const RESTART_AGENT = 'restart_agent';
+    public const UPDATE_AGENT = 'update_agent';
 
     protected $fillable = ['device_id', 'action', 'status', 'claimed_at', 'done_at'];
 
@@ -32,6 +33,7 @@ class DeviceCommand extends Model
             self::OPEN_APP => 'Buka app',
             self::CLOSE_APP => 'Tutup app',
             self::RESTART_AGENT => 'Restart agen',
+            self::UPDATE_AGENT => 'Update agen',
             default => $this->action,
         };
     }

@@ -20,7 +20,7 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 const HEARTBEAT_SECS: u64 = 10;
-const AGENT_VERSION: &str = "0.2.1";
+const AGENT_VERSION: &str = "0.2.2";
 // Anak proses tanpa jendela (tanpa ini tiap denyut nongol terminal).
 const NO_WINDOW: u32 = 0x08000000;
 
@@ -269,6 +269,39 @@ fn is_newer(remote: &str, local: &str) -> bool {
     false
 }
 
+// Cek manual ke manifest rilis (dipakai perintah update_agent).
+fn check_update_now(cfg: &Config) -> bool {
+    let url = format!("{}/rilis/manifest.json", cfg.panel_url);
+    let out = silent_cmd("curl.exe")
+        .args(["-s", "-m", "20", &url])
+        .output();
+    let body = match out {
+        Ok(o) if o.status.success() => String::from_utf8_lossy(&o.stdout).to_string(),
+        _ => return false,
+    };
+    let ver = body
+        .find("\"agent_version\":\"")
+        .map(|p| {
+            let s = &body[p + 17..];
+            s[..s.find('"').unwrap_or(0)].to_string()
+        })
+        .unwrap_or_default();
+    let file = body
+        .find("\"agent_file\":\"")
+        .map(|p| {
+            let s = &body[p + 14..];
+            s[..s.find('"').unwrap_or(0)].to_string()
+        })
+        .unwrap_or_default();
+    if ver.is_empty() || file.is_empty() || !is_newer(&ver, AGENT_VERSION) {
+        log("agen sudah versi terbaru");
+        return true;
+    }
+    let dl = format!("{}/rilis/{}", cfg.panel_url, file);
+    self_update(&dl, &ver);
+    true
+}
+
 // Update diri: unduh exe baru, tukar saat keluar, jalan lagi.
 fn self_update(url: &str, version: &str) {
     log(&format!("update agen tersedia: v{}", version));
@@ -489,8 +522,17 @@ fn execute_command(cfg: &Config, token: &str, id: &str, action: &str) {
                 .map(|s| s.success())
                 .unwrap_or(false)
         }
-        "restart_agent" => {
-            // Ack DULU baru keluar, kalau tidak perintah ini diulang terus.
+        "update_agent" => {
+            // Ack dulu agar tidak diulang, lalu cek + pasang (keluar bila update).
+            let url = format!("{}/api/v1/commands/{}/ack", cfg.panel_url, id);
+            let mac = mac_address();
+            let body = format!("{{\"mac\":\"{}\",\"status\":\"done\"}}", mac);
+            let _ = post_json(&url, Some(token), &body);
+            log(&format!("perintah {} selesai: cek update", id));
+            check_update_now(cfg);
+            true
+        }
+        "restart_agent" => {            // Ack DULU baru keluar, kalau tidak perintah ini diulang terus.
             let url = format!("{}/api/v1/commands/{}/ack", cfg.panel_url, id);
             let mac = mac_address();
             let body = format!("{{\"mac\":\"{}\",\"status\":\"done\"}}", mac);
