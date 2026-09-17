@@ -120,6 +120,10 @@
         <header class="top">
           <div class="brand"><span class="dot">L</span><span><b>LUNAR</b><small>Local Unified Network Agent Remote</small></span></div>
           <div style="display:flex;gap:8px;align-items:center">
+            <div class="tabs">
+              <button class="${active === 'apps' ? 'on' : ''}" onclick="viewApps()">Aplikasi</button>
+              <button class="${active !== 'apps' ? 'on' : ''}" onclick="viewDash()">Perangkat</button>
+            </div>
             <span class="muted">${esc(u.name || '')}</span>
             <button class="btn sm" onclick="logout()">Keluar</button>
           </div>
@@ -186,6 +190,68 @@
       } catch (e) {
         viewLogin(e.message);
       }
+    }
+
+    // ---------- layar: aplikasi kelolaan ----------
+    let appsCache = [];
+    async function viewApps() {
+      clearInterval(timer);
+      $app.innerHTML = shell(`<div id="apps"><p class="muted">Memuat…</p></div>`, 'apps');
+      try {
+        const data = await api('/apps');
+        appsCache = data.apps || [];
+        document.getElementById('apps').innerHTML = appsHtml();
+      } catch (e) {
+        document.getElementById('apps').innerHTML = `<div class="err">${esc(e.message)}</div>`;
+      }
+    }
+    function appsHtml() {
+      return `
+        <div class="card" style="margin-bottom:12px">
+          <b>Tambah aplikasi</b>
+          <p class="muted">exe = nama proses (mis. chrome.exe). launch = perintah jalan (path exe / URL / shell command).</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+            <input id="an" placeholder="Nama (mis. Chrome)" style="flex:2;min-width:140px">
+            <input id="ae" placeholder="chrome.exe" style="flex:1;min-width:120px" class="mono">
+            <input id="al" placeholder="C:\\...\\chrome.exe" style="flex:3;min-width:180px" class="mono">
+            <label style="display:flex;gap:6px;align-items:center;font-size:13px"><input type="checkbox" id="ar"> Buka otomatis</label>
+            <button class="btn primary" onclick="doAddApp()">Tambah</button>
+          </div>
+        </div>
+        <div class="card" style="padding:0;overflow:hidden">
+          <table>
+            <thead><tr><th>Aplikasi</th><th>Exe</th><th>Buka otomatis</th><th style="text-align:right">Aksi</th></tr></thead>
+            <tbody>
+              ${appsCache.length ? appsCache.map((a) => `
+                <tr>
+                  <td><b>${esc(a.name)}</b><br><span class="mono muted">${esc(a.launch)}</span></td>
+                  <td class="mono">${esc(a.exe)}</td>
+                  <td><input type="checkbox" ${a.auto_reopen ? 'checked' : ''} onchange="doToggleApp(${a.id},this.checked)" aria-label="Buka otomatis"></td>
+                  <td style="text-align:right"><button class="btn sm danger" onclick="if(confirm('Hapus ${esc(a.name)}?'))doDelApp(${a.id})">Hapus</button></td>
+                </tr>`).join('') : `<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:24px">Belum ada aplikasi. Tambahkan di atas.</td></tr>`}
+            </tbody>
+          </table>
+        </div>`;
+    }
+    async function doAddApp() {
+      const body = {
+        name: document.getElementById('an').value.trim(),
+        exe: document.getElementById('ae').value.trim(),
+        launch: document.getElementById('al').value.trim(),
+        auto_reopen: document.getElementById('ar').checked,
+      };
+      if (!body.name || !body.exe || !body.launch) { alert('Nama, exe, dan launch wajib diisi.'); return; }
+      await api('/apps', { method: 'POST', body });
+      viewApps();
+    }
+    async function doToggleApp(id, on) {
+      await api(`/apps/${id}`, { method: 'PATCH', body: { auto_reopen: on } });
+      const a = appsCache.find((x) => x.id === id);
+      if (a) a.auto_reopen = on;
+    }
+    async function doDelApp(id) {
+      await api(`/apps/${id}`, { method: 'DELETE' });
+      viewApps();
     }
 
     // ---------- layar: dashboard ----------
@@ -257,6 +323,12 @@
     }
     async function loadDetail(id, quiet) {
       try {
+        if (!appsCache.length) {
+          try {
+            const ad = await api('/apps');
+            appsCache = ad.apps || [];
+          } catch { appsCache = []; }
+        }
         const data = await api('/devices/' + id);
         const el = document.getElementById('det');
         if (el) el.innerHTML = detHtml(data);
@@ -308,6 +380,13 @@
               <button class="btn sm" onclick="doCmd(${d.id},'restart_agent')">Restart agen</button>
               <button class="btn sm" onclick="doCmd(${d.id},'update_agent')">Update agen</button>
             </div>
+            <div style="display:flex;gap:6px;margin-top:8px">
+              <select id="appick" style="flex:1;min-width:0">
+                ${appsCache.map((a) => `<option value="${a.id}">${esc(a.name)}</option>`).join('') || '<option value="">(belum ada aplikasi)</option>'}
+              </select>
+              <button class="btn sm ok" onclick="doAppCmd(${d.id},'open_app')">Buka</button>
+              <button class="btn sm danger" onclick="doAppCmd(${d.id},'close_app')">Tutup</button>
+            </div>
             ${(pending || []).map((c) => `<p class="muted">${esc(c.label)} — menunggu <button class="btn sm" onclick="doCancel(${c.id},${d.id})">Batalkan</button></p>`).join('')}
           </div>
           <div class="card">
@@ -327,6 +406,12 @@
     }
     async function doCmd(id, action) {
       await api(`/devices/${id}/commands`, { method: 'POST', body: { action } });
+      loadDetail(id);
+    }
+    async function doAppCmd(id, action) {
+      const sel = document.getElementById('appick');
+      if (!sel || !sel.value) { alert('Pilih aplikasinya dulu (tambah di menu Aplikasi bila kosong).'); return; }
+      await api(`/devices/${id}/commands`, { method: 'POST', body: { action, managed_app_id: Number(sel.value) } });
       loadDetail(id);
     }
     async function doCancel(cid, id) {

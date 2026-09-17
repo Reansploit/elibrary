@@ -26,5 +26,10 @@ Route::prefix('v1')->group(function () {
         Route::post('/devices/{device}/commands', [ManagerController::class, 'command']);
         Route::post('/commands/{command}/cancel', [ManagerController::class, 'cancelCommand']);
         Route::post('/alerts/{alert}/handle', [ManagerController::class, 'handleAlert']);
+
+        Route::get('/apps', [ManagerController::class, 'apps']);
+        Route::post('/apps', [ManagerController::class, 'storeApp']);
+        Route::patch('/apps/{app}', [ManagerController::class, 'updateApp']);
+        Route::delete('/apps/{app}', [ManagerController::class, 'destroyApp']);
     });
 });

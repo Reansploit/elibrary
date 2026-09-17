@@ -112,15 +112,25 @@ class ManagerController extends Controller
     {
         $validated = $request->validate([
             'action' => 'required|in:open_app,close_app,restart_agent,update_agent',
+            'managed_app_id' => 'nullable|integer|exists:managed_apps,id',
         ]);
 
-        $command = $device->commands()->create(['action' => $validated['action']]);
-        if ($validated['action'] === 'open_app') {
+        $payload = null;
+        if (! empty($validated['managed_app_id'])) {
+            $app = \App\Models\ManagedApp::find($validated['managed_app_id']);
+            if ($app && in_array($validated['action'], ['open_app', 'close_app'], true)) {
+                $payload = ['exe' => $app->exe, 'launch' => $app->launch, 'name' => $app->name];
+            }
+        }
+
+        $command = $device->commands()->create(['action' => $validated['action'], 'payload' => $payload]);
+        if ($validated['action'] === 'open_app' && ! $payload) {
             $device->update(['app_expected' => true]);
-        } elseif ($validated['action'] === 'close_app') {
+        } elseif ($validated['action'] === 'close_app' && ! $payload) {
             $device->update(['app_expected' => false]);
         }
-        $device->log('command', "Antre: {$command->label()}");
+        $target = $payload['name'] ?? 'app perpus';
+        $device->log('command', "Antre: {$command->label()} ({$target})");
 
         return response()->json(['ok' => true, 'command' => ['id' => $command->id, 'action' => $command->action]]);
     }
@@ -145,6 +155,62 @@ class ManagerController extends Controller
     public function destroy(Device $device)
     {
         $device->delete();
+
+        return response()->json(['ok' => true]);
+    }
+
+    public function apps()
+    {
+        return response()->json([
+            'apps' => \App\Models\ManagedApp::orderBy('name')->get()->map(fn ($a) => [
+                'id' => $a->id,
+                'name' => $a->name,
+                'exe' => $a->exe,
+                'launch' => $a->launch,
+                'auto_reopen' => (bool) $a->auto_reopen,
+            ])->values(),
+        ]);
+    }
+
+    public function storeApp(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:100',
+            'exe' => ['required', 'string', 'max:100', 'regex:/^[A-Za-z0-9_.~-]+\.exe$/i'],
+            'launch' => 'required|string|max:255',
+            'auto_reopen' => 'nullable|boolean',
+        ]);
+
+        $app = \App\Models\ManagedApp::create([
+            'name' => $validated['name'],
+            'exe' => strtolower($validated['exe']),
+            'launch' => $validated['launch'],
+            'auto_reopen' => (bool) ($validated['auto_reopen'] ?? false),
+        ]);
+
+        return response()->json(['ok' => true, 'app' => $app], 201);
+    }
+
+    public function updateApp(Request $request, \App\Models\ManagedApp $app)
+    {
+        $validated = $request->validate([
+            'name' => 'sometimes|string|max:100',
+            'exe' => ['sometimes', 'string', 'max:100', 'regex:/^[A-Za-z0-9_.~-]+\.exe$/i'],
+            'launch' => 'sometimes|string|max:255',
+            'auto_reopen' => 'nullable|boolean',
+        ]);
+
+        if (isset($validated['exe'])) {
+            $validated['exe'] = strtolower($validated['exe']);
+        }
+        $app->update($validated);
+
+        return response()->json(['ok' => true]);
+    }
+
+    public function destroyApp(\App\Models\ManagedApp $app)
+    {
+        $app->delete();
 
         return response()->json(['ok' => true]);
     }

@@ -12,11 +12,12 @@ class DeviceCommand extends Model
     public const RESTART_AGENT = 'restart_agent';
     public const UPDATE_AGENT = 'update_agent';
 
-    protected $fillable = ['device_id', 'action', 'status', 'claimed_at', 'done_at'];
+    protected $fillable = ['device_id', 'action', 'payload', 'status', 'claimed_at', 'done_at'];
 
     protected function casts(): array
     {
         return [
+            'payload' => 'array',
             'claimed_at' => 'datetime',
             'done_at' => 'datetime',
         ];

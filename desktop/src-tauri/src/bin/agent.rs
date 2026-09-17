@@ -19,7 +19,7 @@ use std::thread;
 use std::time::Duration;
 
 const HEARTBEAT_SECS: u64 = 10;
-const AGENT_VERSION: &str = "0.2.4";
+const AGENT_VERSION: &str = "0.3.0";
 // Anak proses tanpa jendela (tanpa ini tiap denyut nongol terminal).
 const NO_WINDOW: u32 = 0x08000000;
 
@@ -252,7 +252,51 @@ fn json_escape(s: &str) -> String {
     s.replace('\\', "\\\\").replace('"', "\\\"")
 }
 
-// Bandingkan versi "a.b.c". True bila remote lebih baru.
+// Ambil string "kunci":"nilai" pertama dari potongan JSON.
+fn json_field(chunk: &str, key: &str) -> String {
+    let needle = format!("\"{}\":\"", key);
+    chunk
+        .find(&needle)
+        .map(|p| {
+            let s = &chunk[p + needle.len()..];
+            s[..s.find('"').unwrap_or(0)].to_string()
+        })
+        .unwrap_or_default()
+}
+
+// Daftar aplikasi kelolaan: [(exe, launch, reopen)].
+fn parse_managed(resp: &str) -> Vec<(String, String, bool)> {
+    let mut out = Vec::new();
+    let Some(start) = resp.find("\"managed\":[") else {
+        return out;
+    };
+    let mut rest = &resp[start + 11..];
+    // Berhenti di akhir array (tanda ] sebelum "update").
+    let end = rest.find("],\"update\"").or_else(|| rest.find(']')).unwrap_or(rest.len());
+    rest = &rest[..end];
+    for obj in rest.split("{").skip(1) {
+        let body = match obj.find('}') {
+            Some(p) => &obj[..p],
+            None => continue,
+        };
+        let exe = json_field(body, "exe").to_lowercase();
+        let launch = json_field(body, "launch");
+        let reopen = body.contains("\"reopen\":true");
+        if !exe.is_empty() && !launch.is_empty() {
+            out.push((exe, launch, reopen));
+        }
+    }
+    out
+}
+
+fn proc_running(exe: &str) -> bool {
+    run(
+        "tasklist",
+        &["/fi", &format!("IMAGENAME eq {}", exe), "/fo", "csv", "/nh"],
+    )
+    .to_lowercase()
+    .contains(&exe.to_lowercase())
+}
 fn is_newer(remote: &str, local: &str) -> bool {
     let parse = |v: &str| {
         v.split('.')
@@ -510,8 +554,17 @@ fn heartbeat(cfg: &Config) -> bool {
         FOREIGN_STREAK.store(0, std::sync::atomic::Ordering::SeqCst);
     }
 
-    // Ambil perintah: {"commands":[{"id":1,"action":"open_app"}]}
-    let mut rest = resp.as_str();    while let Some(pos) = rest.find("\"id\":") {
+    // Tegakkan daftar kelolaan: yang dicentang buka-otomatis dan mati → hidupkan.
+    for (exe, launch, reopen) in parse_managed(&resp) {
+        if reopen && !proc_running(&exe) {
+            log(&format!("{} mati, dihidupkan lagi (kelolaan)", exe));
+            let _ = Command::new(&launch).spawn();
+        }
+    }
+
+    // Ambil perintah: {"commands":[{"id":1,"action":"open_app","target":{...}}]}
+    let mut rest = resp.as_str();
+    while let Some(pos) = rest.find("\"id\":") {
         rest = &rest[pos + 5..];
         let id: String = rest.chars().take_while(|c| c.is_ascii_digit()).collect();
         let action = rest
@@ -524,22 +577,42 @@ fn heartbeat(cfg: &Config) -> bool {
         if id.is_empty() || action.is_empty() {
             break;
         }
-        execute_command(cfg, &token, &id, &action);
+        // Target opsional: {"exe":"...","launch":"..."} atau null.
+        let target = rest.find("\"target\":{").map(|p| {
+            let s = &rest[p + 10..];
+            let s = &s[..s.find('}').unwrap_or(0)];
+            (json_field(s, "exe"), json_field(s, "launch"))
+        });
+        execute_command(cfg, &token, &id, &action, target);
     }
     true
 }
 
-fn execute_command(cfg: &Config, token: &str, id: &str, action: &str) {
+fn execute_command(
+    cfg: &Config,
+    token: &str,
+    id: &str,
+    action: &str,
+    target: Option<(String, String)>,
+) {
     log(&format!("perintah {}: {}", id, action));
     let ok = match action {
-        "open_app" => Command::new(&cfg.app_path).spawn().is_ok(),
-        "close_app" => {
-            silent_cmd("taskkill")
+        "open_app" => match &target {
+            Some((_, launch)) if !launch.is_empty() => Command::new(launch).spawn().is_ok(),
+            _ => Command::new(&cfg.app_path).spawn().is_ok(),
+        },
+        "close_app" => match &target {
+            Some((exe, _)) if !exe.is_empty() => silent_cmd("taskkill")
+                .args(["/F", "/IM", exe])
+                .status()
+                .map(|s| s.success())
+                .unwrap_or(false),
+            _ => silent_cmd("taskkill")
                 .args(["/F", "/IM", "elibrary-desktop.exe"])
                 .status()
                 .map(|s| s.success())
-                .unwrap_or(false)
-        }
+                .unwrap_or(false),
+        },
         "update_agent" => {
             // Ack dulu agar tidak diulang, lalu cek + pasang (keluar bila update).
             let url = format!("{}/api/v1/commands/{}/ack", cfg.panel_url, id);
@@ -550,7 +623,8 @@ fn execute_command(cfg: &Config, token: &str, id: &str, action: &str) {
             check_update_now(cfg);
             true
         }
-        "restart_agent" => {            // Ack DULU baru keluar, kalau tidak perintah ini diulang terus.
+        "restart_agent" => {
+            // Ack DULU baru keluar, kalau tidak perintah ini diulang terus.
             let url = format!("{}/api/v1/commands/{}/ack", cfg.panel_url, id);
             let mac = mac_address();
             let body = format!("{{\"mac\":\"{}\",\"status\":\"done\"}}", mac);

@@ -149,8 +149,20 @@ class AgentController extends Controller
         }
 
         return response()->json([
-            'commands' => $commands->map(fn ($c) => ['id' => $c->id, 'action' => $c->action])->values(),
+            'commands' => $commands->map(fn ($c) => [
+                'id' => $c->id,
+                'action' => $c->action,
+                'target' => $c->payload ? [
+                    'exe' => $c->payload['exe'] ?? null,
+                    'launch' => $c->payload['launch'] ?? null,
+                ] : null,
+            ])->values(),
             'app_expected' => (bool) $device->app_expected,
+            'managed' => \App\Models\ManagedApp::orderBy('id')->get()->map(fn ($a) => [
+                'exe' => $a->exe,
+                'launch' => $a->launch,
+                'reopen' => (bool) $a->auto_reopen,
+            ])->values(),
             'update' => $this->updateInfo($request, $validated['agent_version'] ?? null),
         ]);
     }
