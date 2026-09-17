@@ -150,6 +150,7 @@ class AgentController extends Controller
 
         return response()->json([
             'commands' => $commands->map(fn ($c) => ['id' => $c->id, 'action' => $c->action])->values(),
+            'app_expected' => (bool) $device->app_expected,
             'update' => $this->updateInfo($request, $validated['agent_version'] ?? null),
         ]);
     }

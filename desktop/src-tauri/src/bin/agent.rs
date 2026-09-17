@@ -15,17 +15,16 @@ use std::io::Write;
 use std::os::windows::process::CommandExt;
 use std::path::PathBuf;
 use std::process::Command;
-use std::sync::Mutex;
 use std::thread;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 const HEARTBEAT_SECS: u64 = 10;
-const AGENT_VERSION: &str = "0.2.2";
+const AGENT_VERSION: &str = "0.2.3";
 // Anak proses tanpa jendela (tanpa ini tiap denyut nongol terminal).
 const NO_WINDOW: u32 = 0x08000000;
 
-// Sampai kapan JANGAN hidupkan lagi app (habis perintah tutup resmi).
-static SUPPRESS_UNTIL: Mutex<Option<Instant>> = Mutex::new(None);
+// Status app yang diinginkan panel (false = jangan hidupkan lagi).
+static APP_EXPECTED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
 
 fn silent_cmd(cmd: &str) -> Command {
     let mut c = Command::new(cmd);
@@ -465,7 +464,15 @@ fn heartbeat(cfg: &Config) -> bool {
         }
     };
 
-    // Update diri bila server punya agen lebih baru.
+    // Status yang diinginkan panel + update diri.
+    if let Some(pos) = resp.find("\"app_expected\":") {
+        let v = resp[pos + 15..].trim_start();
+        APP_EXPECTED.store(
+            v.starts_with("true"),
+            std::sync::atomic::Ordering::SeqCst,
+        );
+    }
+
     if let Some(pos) = resp.find("\"update\":") {
         let chunk = &resp[pos..];
         let ver = chunk
@@ -512,10 +519,6 @@ fn execute_command(cfg: &Config, token: &str, id: &str, action: &str) {
     let ok = match action {
         "open_app" => Command::new(&cfg.app_path).spawn().is_ok(),
         "close_app" => {
-            // Jangan hidupkan lagi selama 10 menit (tutup resmi dari panel).
-            if let Ok(mut t) = SUPPRESS_UNTIL.lock() {
-                *t = Some(Instant::now() + Duration::from_secs(600));
-            }
             silent_cmd("taskkill")
                 .args(["/F", "/IM", "elibrary-desktop.exe"])
                 .status()
@@ -589,12 +592,9 @@ fn main() {
             }
         }
         // Watchdog dua arah: app mati diam-diam (kill/task manager/hotkey)
-        // dihidupkan lagi, kecuali habis perintah tutup resmi.
-        let suppressed = SUPPRESS_UNTIL
-            .lock()
-            .map(|t| t.map(|u| Instant::now() < u).unwrap_or(false))
-            .unwrap_or(false);
-        if !suppressed && !app_running() {
+        // dihidupkan lagi — kecuali panel memang memintanya tertutup.
+        let expected = APP_EXPECTED.load(std::sync::atomic::Ordering::SeqCst);
+        if expected && !app_running() {
             log("app mati diam-diam, dihidupkan lagi");
             let _ = Command::new(&cfg.app_path).spawn();
         }

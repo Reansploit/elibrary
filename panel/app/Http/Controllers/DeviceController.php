@@ -104,6 +104,13 @@ class DeviceController extends Controller
             'status' => 'pending',
         ]);
 
+        // Status yang diinginkan permanen: tutup = jangan hidupkan lagi.
+        if ($validated['action'] === DeviceCommand::OPEN_APP) {
+            $device->update(['app_expected' => true]);
+        } elseif ($validated['action'] === DeviceCommand::CLOSE_APP) {
+            $device->update(['app_expected' => false]);
+        }
+
         $device->log('command', "Antre: {$command->label()}");
 
         return back()->with('success', "Perintah {$command->label()} diantrekan. Dijalankan saat agen lapor.");
