@@ -90,6 +90,50 @@
       get user() { try { return JSON.parse(localStorage.getItem('lunar_user') || 'null'); } catch { return null; } },
     };
     let timer = null;
+    let lastAlerts = 0;
+    let audioCtx = null;
+
+    function beep() {
+      try {
+        audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.connect(g);
+        g.connect(audioCtx.destination);
+        o.frequency.value = 880;
+        g.gain.setValueAtTime(0.001, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.4, audioCtx.currentTime + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+        o.start();
+        o.stop(audioCtx.currentTime + 0.55);
+      } catch {}
+    }
+
+    function toast(msg) {
+      let box = document.getElementById('toasts');
+      if (!box) {
+        box = document.createElement('div');
+        box.id = 'toasts';
+        box.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:999;display:grid;gap:8px;max-width:320px';
+        document.body.appendChild(box);
+      }
+      const el = document.createElement('div');
+      el.style.cssText = 'background:#7F1D1D;color:#fff;border-radius:10px;padding:10px 14px;font-size:13px;box-shadow:0 4px 14px rgba(0,0,0,.25)';
+      el.textContent = msg;
+      box.appendChild(el);
+      setTimeout(() => el.remove(), 8000);
+    }
+
+    // Bunyikan + toast tiap ada alert baru yang belum ditangani.
+    function watchAlerts(n) {
+      if (n > lastAlerts) {
+        const fresh = n - lastAlerts;
+        beep();
+        toast(fresh === 1 ? '1 alert baru perlu perhatian.' : fresh + ' alert baru perlu perhatian.');
+      }
+      lastAlerts = n;
+      document.title = n > 0 ? `(${n}) LUNAR` : 'LUNAR';
+    }
 
     function esc(s) {
       return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -110,6 +154,8 @@
     function logout(silent) {
       localStorage.removeItem('lunar_token');
       localStorage.removeItem('lunar_user');
+      lastAlerts = 0;
+      document.title = 'LUNAR';
       clearInterval(timer);
       if (!silent) render();
     }
@@ -265,6 +311,7 @@
     async function loadDash() {
       try {
         const data = await api('/devices');
+        watchAlerts(data.stats ? data.stats.alerts : 0);
         const rows = (data.devices || []).filter((d) => {
           if (dashTab === 'online' && !d.online) return false;
           if (dashTab === 'perhatian' && !(d.unhandled_alerts > 0 || !d.online)) return false;
@@ -330,6 +377,8 @@
           } catch { appsCache = []; }
         }
         const data = await api('/devices/' + id);
+        const unhandled = ((data.alerts || []).filter((a) => !a.handled)).length;
+        watchAlerts(unhandled);
         const el = document.getElementById('det');
         if (el) el.innerHTML = detHtml(data);
       } catch (e) {
