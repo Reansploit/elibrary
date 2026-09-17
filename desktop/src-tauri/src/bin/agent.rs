@@ -20,7 +20,7 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 const HEARTBEAT_SECS: u64 = 10;
-const AGENT_VERSION: &str = "0.2.0";
+const AGENT_VERSION: &str = "0.2.1";
 // Anak proses tanpa jendela (tanpa ini tiap denyut nongol terminal).
 const NO_WINDOW: u32 = 0x08000000;
 
@@ -206,13 +206,26 @@ fn app_running() -> bool {
 }
 
 fn active_title() -> Option<String> {
-    let ps = r#"Add-Type @"using System;using System.Runtime.InteropServices;using System.Text;public class W{[DllImport("user32.dll")]public static extern IntPtr GetForegroundWindow();[DllImport("user32.dll")]public static extern int GetWindowText(IntPtr h,StringBuilder t,int n);}"@; $h=[W]::GetForegroundWindow(); $s=New-Object Text.StringBuilder 256; [W]::GetWindowText($h,$s,256)|Out-Null; $s.ToString()"#;
+    // Add-Type satu baris (tanpa here-string) + fallback proses GUI terbaru.
+    let ps = "Add-Type -TypeDefinition 'using System; using System.Runtime.InteropServices; using System.Text; public class FG { [DllImport(\"user32.dll\")] public static extern IntPtr GetForegroundWindow(); [DllImport(\"user32.dll\")] public static extern int GetWindowText(IntPtr h, StringBuilder t, int n); }'; $h=[FG]::GetForegroundWindow(); $s=New-Object Text.StringBuilder 256; [FG]::GetWindowText($h,$s,256)|Out-Null; $s.ToString()";
     let title = run("powershell", &["-NoProfile", "-Command", ps]);
     let title = title.trim().to_string();
-    if title.is_empty() {
+    if !title.is_empty() {
+        return Some(title.chars().take(200).collect());
+    }
+    let fb = run(
+        "powershell",
+        &[
+            "-NoProfile",
+            "-Command",
+            "Get-Process | Where-Object { $_.MainWindowTitle } | Sort-Object StartTime -Descending | Select-Object -First 1 -ExpandProperty MainWindowTitle",
+        ],
+    );
+    let fb = fb.trim().to_string();
+    if fb.is_empty() {
         None
     } else {
-        Some(title.chars().take(200).collect())
+        Some(fb.chars().take(200).collect())
     }
 }
 
