@@ -90,6 +90,7 @@
       get user() { try { return JSON.parse(localStorage.getItem('lunar_user') || 'null'); } catch { return null; } },
     };
     let timer = null;
+    let wtimer = null;
     let lastAlerts = 0;
     let audioCtx = null;
 
@@ -157,6 +158,7 @@
       lastAlerts = 0;
       document.title = 'LUNAR';
       clearInterval(timer);
+      clearInterval(wtimer);
       if (!silent) render();
     }
 
@@ -300,6 +302,99 @@
       viewApps();
     }
 
+    // ---------- worker WinRM: pantau + eksekusi langsung ke tiap PC ----------
+    // Syarat PC target: Enable-PSRemoting + akun admin lokal yang sama.
+    // Kredensial tersimpan di PC guru ini saja (localStorage), tidak dikirim ke mana pun selain PC target.
+    function wcreds() {
+      return {
+        user: localStorage.getItem('lunar_winrm_user') || '',
+        pass: localStorage.getItem('lunar_winrm_pass') || '',
+      };
+    }
+    async function winrm(host, script) {
+      const { user, pass } = wcreds();
+      if (!user || !pass) throw new Error('Isi kredensial Windows dulu.');
+      const mod = window.__TAURI__ && window.__TAURI__.core;
+      if (!mod) throw new Error('Hanya jalan di app desktop LUNAR.');
+      return await mod.invoke('winrm_exec', { host, user, pass, script });
+    }
+    const psQ = (s) => `'${String(s).replace(/'/g, "''")}'`;
+
+    async function workerOnce() {
+      const { user, pass } = wcreds();
+      if (!user || !pass || !store.token) return;
+      let managed = [];
+      try {
+        const ad = await api('/apps');
+        managed = ad.apps || [];
+      } catch { return; }
+      let devices = [];
+      try {
+        const dd = await api('/devices');
+        devices = dd.devices || [];
+      } catch { return; }
+      for (const d of devices) {
+        const host = d.ip || d.hostname;
+        if (!host) continue;
+        try {
+          // 1. Status: daftar proses ber-window.
+          const out = await winrm(host, "Get-Process | Where-Object { $_.MainWindowTitle } | ForEach-Object { $_.ProcessName + '|' + $_.MainWindowTitle }");
+          const seen = out.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+          const procs = seen.map((l) => l.split('|')[0].toLowerCase());
+          const apps = seen.slice(0, 25);
+          const open = procs.includes('elibrary-desktop');
+          // 2. Sinkron ke panel (aturan log/alert sama di server).
+          await api('/devices/sync', { method: 'POST', body: { mac: d.mac, hostname: d.hostname, ip: d.ip, app_open: open, active_title: null, apps } });
+          // 3. Tegakkan buka-otomatis.
+          for (const m of managed) {
+            if (m.auto_reopen && !procs.includes(m.exe.replace(/\.exe$/i, '').toLowerCase())) {
+              await winOpen(host, m.launch);
+            }
+          }
+          // 4. Eksekusi antrean perintah.
+          const pd = await api(`/devices/${d.id}/pending`);
+          for (const c of (pd.commands || [])) {
+            try {
+              await execCommand(host, c);
+              await api(`/commands/${c.id}/result`, { method: 'POST', body: { status: 'done' } });
+            } catch {
+              await api(`/commands/${c.id}/result`, { method: 'POST', body: { status: 'failed' } });
+            }
+          }
+        } catch {
+          // PC mati / WinRM tolak — panel tandai offline dari last_seen.
+        }
+      }
+      const el = document.getElementById('wstatus');
+      if (el) el.textContent = 'Worker: ' + new Date().toLocaleTimeString('id-ID');
+    }
+    async function winOpen(host, launch) {
+      const { user } = wcreds();
+      const task = 'LUNAR_' + Date.now().toString(36);
+      const script = `schtasks /create /tn ${task} /tr ${psQ(launch)} /sc once /st 00:00 /ru ${psQ(user)} /it /f | Out-Null; schtasks /run /tn ${task} | Out-Null; Start-Sleep -Seconds 3; schtasks /delete /tn ${task} /f | Out-Null; 'OK'`;
+      await winrm(host, script);
+    }
+    function exeName(exe) {
+      return String(exe || '').replace(/\.exe$/i, '');
+    }
+    async function execCommand(host, c) {
+      const t = c.target || {};
+      if (c.action === 'open_app') {
+        if (t.launch) await winOpen(host, t.launch);
+        else throw new Error('tanpa target');
+      } else if (c.action === 'close_app') {
+        const exe = t.exe || 'elibrary-desktop.exe';
+        await winrm(host, `Stop-Process -Name ${psQ(exeName(exe))} -Force; 'OK'`);
+      } else {
+        throw new Error('tidak didukung mode WinRM');
+      }
+    }
+    function startWorker() {
+      clearInterval(wtimer);
+      workerOnce();
+      wtimer = setInterval(workerOnce, 25000);
+    }
+
     // ---------- layar: dashboard ----------
     let dashTab = 'semua', dashQ = '';
     async function viewDash() {
@@ -307,6 +402,7 @@
       $app.innerHTML = shell(`<div id="dash"><p class="muted">Memuat…</p></div>`);
       await loadDash();
       timer = setInterval(loadDash, 15000);
+      startWorker();
     }
     async function loadDash() {
       try {
@@ -329,7 +425,18 @@
       }
     }
     function dashHtml(s, rows) {
+      const { user, pass } = wcreds();
       return `
+        <div class="card" style="margin-bottom:12px">
+          <b>Kredensial Windows PC lab</b>
+          <span class="muted"> — akun admin lokal yang sama di semua PC (butuh WinRM aktif: <span class="mono">Enable-PSRemoting</span>). Tersimpan di PC ini saja.</span>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+            <input id="wu" placeholder="Username" value="${esc(user)}" style="flex:1;min-width:140px" autocomplete="off">
+            <input id="wp" type="password" placeholder="Password" value="${esc(pass)}" style="flex:1;min-width:140px" autocomplete="off">
+            <button class="btn sm primary" onclick="localStorage.setItem('lunar_winrm_user',document.getElementById('wu').value.trim());localStorage.setItem('lunar_winrm_pass',document.getElementById('wp').value);loadDash();workerOnce()">Simpan & uji</button>
+            <span class="muted" id="wstatus"></span>
+          </div>
+        </div>
         <div class="grid4">
           <div class="card stat"><div class="l">Total PC</div><div class="n">${s.total}</div></div>
           <div class="card stat"><div class="l">Online</div><div class="n" style="color:var(--ok)">${s.online}</div></div>
