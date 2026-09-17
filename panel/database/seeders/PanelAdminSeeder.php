@@ -12,7 +12,7 @@ class PanelAdminSeeder extends Seeder
     {
         User::firstOrCreate(
             ['email' => 'admin@local'],
-            ['name' => 'Administrator', 'password' => Hash::make('123')],
+            ['name' => 'Administrator', 'username' => 'admin', 'password' => Hash::make('123')],
         );
     }
 }

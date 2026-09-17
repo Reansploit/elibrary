@@ -16,15 +16,15 @@ class ManagerController extends Controller
     public function login(Request $request)
     {
         $validated = $request->validate([
-            'email' => 'required|email',
+            'username' => 'required|string',
             'password' => 'required|string',
             'device_name' => 'nullable|string|max:50',
         ]);
 
-        $user = \App\Models\User::where('email', $validated['email'])->first();
+        $user = \App\Models\User::where('username', $validated['username'])->first();
 
         if (! $user || ! Hash::check($validated['password'], $user->password)) {
-            return response()->json(['message' => 'Email atau password salah.'], 401);
+            return response()->json(['message' => 'Username atau password salah.'], 401);
         }
 
         $token = $user->createToken($validated['device_name'] ?? 'lunar')->plainTextToken;
