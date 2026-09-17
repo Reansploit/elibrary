@@ -19,12 +19,14 @@ use std::thread;
 use std::time::Duration;
 
 const HEARTBEAT_SECS: u64 = 10;
-const AGENT_VERSION: &str = "0.2.3";
+const AGENT_VERSION: &str = "0.2.4";
 // Anak proses tanpa jendela (tanpa ini tiap denyut nongol terminal).
 const NO_WINDOW: u32 = 0x08000000;
 
 // Status app yang diinginkan panel (false = jangan hidupkan lagi).
 static APP_EXPECTED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
+// Berapa denyut beruntun window asing di depan.
+static FOREIGN_STREAK: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
 
 fn silent_cmd(cmd: &str) -> Command {
     let mut c = Command::new(cmd);
@@ -494,9 +496,22 @@ fn heartbeat(cfg: &Config) -> bool {
         }
     }
 
+    // Rebut fokus: window asing di depan 3 denyut beruntun → kembalikan app.
+    let expected = APP_EXPECTED.load(std::sync::atomic::Ordering::SeqCst);
+    let mine = title.contains("E-Library");
+    if expected && open && !title.is_empty() && !mine {
+        let n = FOREIGN_STREAK.fetch_add(1, std::sync::atomic::Ordering::SeqCst) + 1;
+        if n >= 3 {
+            log(&format!("window asing dibiarkan, fokus direbut: {}", title));
+            focus_app();
+            FOREIGN_STREAK.store(0, std::sync::atomic::Ordering::SeqCst);
+        }
+    } else {
+        FOREIGN_STREAK.store(0, std::sync::atomic::Ordering::SeqCst);
+    }
+
     // Ambil perintah: {"commands":[{"id":1,"action":"open_app"}]}
-    let mut rest = resp.as_str();
-    while let Some(pos) = rest.find("\"id\":") {
+    let mut rest = resp.as_str();    while let Some(pos) = rest.find("\"id\":") {
         rest = &rest[pos + 5..];
         let id: String = rest.chars().take_while(|c| c.is_ascii_digit()).collect();
         let action = rest
@@ -591,8 +606,14 @@ fn main() {
                 heartbeat(&cfg);
             }
         }
-        // Watchdog dua arah: app mati diam-diam (kill/task manager/hotkey)
-        // dihidupkan lagi — kecuali panel memang memintanya tertutup.
+// Paksa window app kembali ke depan (lawan Alt+Tab).
+fn focus_app() {
+    let ps = "$w=New-Object -ComObject WScript.Shell; $w.AppActivate('E-Library')";
+    let _ = silent_cmd("powershell").args(["-NoProfile", "-Command", ps]).output();
+}
+
+// Watchdog dua arah: app mati diam-diam (kill/task manager/hotkey)
+// dihidupkan lagi — kecuali panel memang memintanya tertutup.
         let expected = APP_EXPECTED.load(std::sync::atomic::Ordering::SeqCst);
         if expected && !app_running() {
             log("app mati diam-diam, dihidupkan lagi");
