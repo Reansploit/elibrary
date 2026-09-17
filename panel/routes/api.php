@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AgentController;
+use App\Http\Controllers\Api\ManagerController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -10,5 +11,20 @@ Route::prefix('v1')->group(function () {
     Route::middleware(['device.token', 'throttle:120,1'])->group(function () {
         Route::post('/heartbeat', [AgentController::class, 'heartbeat']);
         Route::post('/commands/{id}/ack', [AgentController::class, 'ack']);
+    });
+
+    // LUNAR Module — app guru (token Sanctum).
+    Route::post('/manager/login', [ManagerController::class, 'login'])
+        ->middleware('throttle:10,1');
+
+    Route::middleware(['auth:sanctum', 'throttle:120,1'])->prefix('manager')->group(function () {
+        Route::post('/logout', [ManagerController::class, 'logout']);
+        Route::get('/devices', [ManagerController::class, 'devices']);
+        Route::get('/devices/{device}', [ManagerController::class, 'show']);
+        Route::patch('/devices/{device}', [ManagerController::class, 'rename']);
+        Route::delete('/devices/{device}', [ManagerController::class, 'destroy']);
+        Route::post('/devices/{device}/commands', [ManagerController::class, 'command']);
+        Route::post('/commands/{command}/cancel', [ManagerController::class, 'cancelCommand']);
+        Route::post('/alerts/{alert}/handle', [ManagerController::class, 'handleAlert']);
     });
 });
