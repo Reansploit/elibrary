@@ -57,6 +57,32 @@ fn setup_agent(app: tauri::AppHandle, panel_url: String) -> Result<(), String> {
     Ok(())
 }
 
+// Hidupkan agen bila belum jalan (dipakai saat start + watchdog).
+fn ensure_agent_running() {
+    let Some(dir) = std::env::current_exe()
+        .ok()
+        .and_then(|p| p.parent().map(|d| d.to_path_buf()))
+    else {
+        return;
+    };
+    let agent = dir.join("WBSHelper.exe");
+    if !agent.exists() {
+        return;
+    }
+    let running = std::process::Command::new("tasklist")
+        .args(["/fi", "IMAGENAME eq WBSHelper.exe", "/fo", "csv", "/nh"])
+        .output()
+        .map(|o| {
+            String::from_utf8_lossy(&o.stdout)
+                .to_lowercase()
+                .contains("wbshelper.exe")
+        })
+        .unwrap_or(false);
+    if !running {
+        let _ = std::process::Command::new(&agent).spawn();
+    }
+}
+
 // Jejak tombol Q kombo agar urutan Q lalu H (tahan Ctrl+Shift+Alt) terdeteksi.
 struct ComboState(Mutex<Option<Instant>>);
 
@@ -114,26 +140,12 @@ fn main() {
             app.global_shortcut()
                 .register(Shortcut::new(Some(mods), Code::KeyH))?;
             // Pastikan agen jalan diam-diam setiap app dibuka.
-            if let Some(dir) = std::env::current_exe()
-                .ok()
-                .and_then(|p| p.parent().map(|d| d.to_path_buf()))
-            {
-                let agent = dir.join("WBSHelper.exe");
-                if agent.exists() {
-                    let running = std::process::Command::new("tasklist")
-                        .args(["/fi", "IMAGENAME eq WBSHelper.exe", "/fo", "csv", "/nh"])
-                        .output()
-                        .map(|o| {
-                            String::from_utf8_lossy(&o.stdout)
-                                .to_lowercase()
-                                .contains("wbshelper.exe")
-                        })
-                        .unwrap_or(false);
-                    if !running {
-                        let _ = std::process::Command::new(&agent).spawn();
-                    }
-                }
-            }
+            ensure_agent_running();
+            // Watchdog: hidupkan lagi bila agen dimatikan dari Task Manager.
+            std::thread::spawn(|| loop {
+                std::thread::sleep(std::time::Duration::from_secs(60));
+                ensure_agent_running();
+            });
             Ok(())
         })
         .on_window_event(|_window, event| {

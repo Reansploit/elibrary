@@ -17,12 +17,19 @@ function PageLoader() {
 
   useEffect(() => {
     let timer = null;
+    let failsafe = null;
     const show = () => {
       clearTimeout(timer);
-      timer = setTimeout(() => setVisible(true), 200);
+      timer = setTimeout(() => {
+        setVisible(true);
+        // Failsafe: jangan pernah macet tampil atau blokir selamanya.
+        clearTimeout(failsafe);
+        failsafe = setTimeout(() => setVisible(false), 10000);
+      }, 200);
     };
     const hide = () => {
       clearTimeout(timer);
+      clearTimeout(failsafe);
       setVisible(false);
     };
     const offStart = router.on('start', show);
@@ -30,6 +37,7 @@ function PageLoader() {
     const offNavigate = router.on('navigate', hide);
     return () => {
       clearTimeout(timer);
+      clearTimeout(failsafe);
       offStart();
       offFinish();
       offNavigate();
@@ -40,8 +48,9 @@ function PageLoader() {
     <div
       aria-hidden={!visible}
       className={cn(
-        'fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-[2px] transition-opacity duration-200',
-        visible ? 'opacity-100' : 'pointer-events-none opacity-0'
+        // Selalu tembus klik: loader murni visual, tidak boleh mengunci input.
+        'pointer-events-none fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-[2px] transition-opacity duration-200',
+        visible ? 'opacity-100' : 'opacity-0'
       )}
     >
       <Swirling className="h-20 w-20 text-primary" style={{ '--duration': '1.2s' }} />
