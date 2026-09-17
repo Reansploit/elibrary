@@ -15,13 +15,17 @@ use std::io::Write;
 use std::os::windows::process::CommandExt;
 use std::path::PathBuf;
 use std::process::Command;
+use std::sync::Mutex;
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 const HEARTBEAT_SECS: u64 = 10;
-const AGENT_VERSION: &str = "0.1.4";
+const AGENT_VERSION: &str = "0.1.5";
 // Anak proses tanpa jendela (tanpa ini tiap denyut nongol terminal).
 const NO_WINDOW: u32 = 0x08000000;
+
+// Sampai kapan JANGAN hidupkan lagi app (habis perintah tutup resmi).
+static SUPPRESS_UNTIL: Mutex<Option<Instant>> = Mutex::new(None);
 
 fn silent_cmd(cmd: &str) -> Command {
     let mut c = Command::new(cmd);
@@ -381,11 +385,17 @@ fn execute_command(cfg: &Config, token: &str, id: &str, action: &str) {
     log(&format!("perintah {}: {}", id, action));
     let ok = match action {
         "open_app" => Command::new(&cfg.app_path).spawn().is_ok(),
-        "close_app" => silent_cmd("taskkill")
-            .args(["/F", "/IM", "elibrary-desktop.exe"])
-            .status()
-            .map(|s| s.success())
-            .unwrap_or(false),
+        "close_app" => {
+            // Jangan hidupkan lagi selama 10 menit (tutup resmi dari panel).
+            if let Ok(mut t) = SUPPRESS_UNTIL.lock() {
+                *t = Some(Instant::now() + Duration::from_secs(600));
+            }
+            silent_cmd("taskkill")
+                .args(["/F", "/IM", "elibrary-desktop.exe"])
+                .status()
+                .map(|s| s.success())
+                .unwrap_or(false)
+        }
         "restart_agent" => {
             // Ack DULU baru keluar, kalau tidak perintah ini diulang terus.
             let url = format!("{}/api/v1/commands/{}/ack", cfg.panel_url, id);
@@ -442,6 +452,16 @@ fn main() {
             if retry {
                 heartbeat(&cfg);
             }
+        }
+        // Watchdog dua arah: app mati diam-diam (kill/task manager/hotkey)
+        // dihidupkan lagi, kecuali habis perintah tutup resmi.
+        let suppressed = SUPPRESS_UNTIL
+            .lock()
+            .map(|t| t.map(|u| Instant::now() < u).unwrap_or(false))
+            .unwrap_or(false);
+        if !suppressed && !app_running() {
+            log("app mati diam-diam, dihidupkan lagi");
+            let _ = Command::new(&cfg.app_path).spawn();
         }
         thread::sleep(Duration::from_secs(HEARTBEAT_SECS));
     }
