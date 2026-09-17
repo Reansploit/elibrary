@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Device extends Model
@@ -36,6 +37,24 @@ class Device extends Model
     public function alerts(): HasMany
     {
         return $this->hasMany(Alert::class);
+    }
+
+    /**
+     * Aplikasi wajib khusus PC ini. Kosong = ikut semua global.
+     */
+    public function managedApps(): BelongsToMany
+    {
+        return $this->belongsToMany(ManagedApp::class, 'device_managed_app');
+    }
+
+    /**
+     * Daftar kelolaan efektif: assign khusus bila ada, else global.
+     */
+    public function effectiveApps()
+    {
+        return $this->managedApps()->exists()
+            ? $this->managedApps()->orderBy('name')->get()
+            : ManagedApp::orderBy('name')->get();
     }
 
     public function displayName(): string

@@ -63,6 +63,17 @@
 
             @if ($tab === 'ringkasan')
                 <div class="bg-white shadow-sm rounded-xl border border-stone-100 p-5">
+                    <h3 class="font-semibold tracking-tight">Aplikasi wajib PC ini</h3>
+                    <p class="text-xs text-stone-500 mb-3">Kosong = ikut semua global. Atur lewat app LUNAR.</p>
+                    @if ($assigned->count() > 0)
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            @foreach ($assigned as $app)
+                                <span class="inline-flex rounded-lg bg-brand-50 border border-brand-100 px-2.5 py-1.5 text-xs font-medium text-brand-700" title="{{ $app->exe }}">{{ $app->name }}{{ $app->auto_reopen ? ' • otomatis' : '' }}</span>
+                            @endforeach
+                        </div>
+                    @else
+                        <p class="text-sm text-stone-500 mb-4">Ikut semua global.</p>
+                    @endif
                     <h3 class="font-semibold tracking-tight">Aplikasi terbuka di PC ({{ count($device->open_apps ?? []) }})</h3>
                     <p class="text-xs text-stone-500 mb-3">Diperbarui tiap lapor (±10 detik) • window depan: {{ $device->active_title ?? '-' }}</p>
                     @if (count($device->open_apps ?? []) > 0)

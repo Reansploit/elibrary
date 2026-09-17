@@ -20,11 +20,15 @@ Route::prefix('v1')->group(function () {
     Route::middleware(['auth:sanctum', 'throttle:120,1'])->prefix('manager')->group(function () {
         Route::post('/logout', [ManagerController::class, 'logout']);
         Route::get('/devices', [ManagerController::class, 'devices']);
+        Route::post('/devices/sync', [ManagerController::class, 'sync']);
         Route::get('/devices/{device}', [ManagerController::class, 'show']);
+        Route::put('/devices/{device}/apps', [ManagerController::class, 'assignApps']);
         Route::patch('/devices/{device}', [ManagerController::class, 'rename']);
         Route::delete('/devices/{device}', [ManagerController::class, 'destroy']);
         Route::post('/devices/{device}/commands', [ManagerController::class, 'command']);
+        Route::get('/devices/{device}/pending', [ManagerController::class, 'pending']);
         Route::post('/commands/{command}/cancel', [ManagerController::class, 'cancelCommand']);
+        Route::post('/commands/{command}/result', [ManagerController::class, 'result']);
         Route::post('/alerts/{alert}/handle', [ManagerController::class, 'handleAlert']);
 
         Route::get('/apps', [ManagerController::class, 'apps']);

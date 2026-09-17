@@ -69,6 +69,7 @@ class DeviceController extends Controller
 
         $alerts = $device->alerts()->orderBy('id', 'desc')->limit(50)->get();
         $pending = $device->commands()->where('status', 'pending')->orderBy('id')->get();
+        $assigned = $device->managedApps()->orderBy('name')->get();
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -77,7 +78,7 @@ class DeviceController extends Controller
             ]);
         }
 
-        return view('devices.show', compact('device', 'alerts', 'pending', 'tab', 'logs', 'kinds', 'kind'));
+        return view('devices.show', compact('device', 'alerts', 'pending', 'tab', 'logs', 'kinds', 'kind', 'assigned'));
     }
 
     public function rename(Request $request, Device $device)

@@ -83,6 +83,7 @@ class ManagerController extends Controller
 
         return response()->json([
             'device' => $this->present($device),
+            'assigned_app_ids' => $device->managedApps()->pluck('managed_apps.id')->values(),
             'pending' => $device->commands()->where('status', 'pending')->orderBy('id')->get()
                 ->map(fn ($c) => ['id' => $c->id, 'action' => $c->action, 'label' => $c->label()])->values(),
             'alerts' => $device->alerts()->orderBy('id', 'desc')->limit(50)->get()
@@ -159,6 +160,79 @@ class ManagerController extends Controller
         return response()->json(['ok' => true]);
     }
 
+    /**
+     * Sinkronisasi dari LUNAR (WinRM): buat/update perangkat + proses
+     * transisi, log, dan alert lewat aturan yang sama dengan agen.
+     */
+    public function sync(Request $request)
+    {
+        $validated = $request->validate([
+            'mac' => 'required|string|max:17',
+            'hostname' => 'required|string|max:100',
+            'ip' => 'nullable|string|max:45',
+            'app_open' => 'required|boolean',
+            'active_title' => 'nullable|string|max:255',
+            'apps' => 'nullable|array|max:30',
+            'apps.*' => 'string|max:255',
+        ]);
+
+        $mac = strtolower(trim($validated['mac']));
+        $device = Device::firstOrCreate(
+            ['mac' => $mac],
+            ['hostname' => $validated['hostname'], 'token_hash' => hash('sha256', \Illuminate\Support\Str::random(40))]
+        );
+        $device->update(['hostname' => $validated['hostname']]);
+
+        \App\Services\DeviceIngest::ingest($device, [
+            'app_open' => $validated['app_open'],
+            'active_title' => $validated['active_title'] ?? null,
+            'apps' => $validated['apps'] ?? [],
+            'ip' => $validated['ip'] ?? $request->ip(),
+        ]);
+
+        return response()->json(['ok' => true, 'device' => ['id' => $device->id, 'name' => $device->displayName()]]);
+    }
+
+    /**
+     * Ambil perintah pending untuk dieksekusi LUNAR via WinRM.
+     */
+    public function pending(Device $device)
+    {
+        $commands = $device->commands()->where('status', 'pending')->orderBy('id')->get();
+        foreach ($commands as $command) {
+            $command->update(['claimed_at' => now()]);
+        }
+
+        return response()->json([
+            'commands' => $commands->map(fn ($c) => [
+                'id' => $c->id,
+                'action' => $c->action,
+                'target' => $c->payload ? [
+                    'exe' => $c->payload['exe'] ?? null,
+                    'launch' => $c->payload['launch'] ?? null,
+                ] : null,
+            ])->values(),
+            'managed' => $device->effectiveApps()->map(fn ($a) => [
+                'exe' => $a->exe,
+                'launch' => $a->launch,
+                'reopen' => (bool) $a->auto_reopen,
+            ])->values(),
+        ]);
+    }
+
+    /**
+     * Laporkan hasil eksekusi perintah oleh LUNAR.
+     */
+    public function result(Request $request, \App\Models\DeviceCommand $command)
+    {
+        $validated = $request->validate(['status' => 'required|in:done,failed']);
+
+        $command->update(['status' => $validated['status'], 'done_at' => now()]);
+        $command->device->log('command', $command->label() . ' → ' . $validated['status'] . ' (LUNAR)');
+
+        return response()->json(['ok' => true]);
+    }
+
     public function apps()
     {
         return response()->json([
@@ -211,6 +285,23 @@ class ManagerController extends Controller
     public function destroyApp(\App\Models\ManagedApp $app)
     {
         $app->delete();
+
+        return response()->json(['ok' => true]);
+    }
+
+    /**
+     * Atur aplikasi wajib khusus 1 PC. Kosong = ikut global.
+     */
+    public function assignApps(Request $request, Device $device)
+    {
+        $validated = $request->validate([
+            'app_ids' => 'nullable|array',
+            'app_ids.*' => 'integer|exists:managed_apps,id',
+        ]);
+
+        $device->managedApps()->sync($validated['app_ids'] ?? []);
+        $device->log('command', 'Ubah aplikasi wajib: ' .
+            ($device->managedApps()->count() ?: 'ikut global'));
 
         return response()->json(['ok' => true]);
     }
