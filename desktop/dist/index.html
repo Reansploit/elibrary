@@ -40,7 +40,7 @@
   </div>
   <script>
     // NAIKKAN tiap rilis wrapper baru (samakan dengan tauri.conf.json + Cargo.toml).
-    const WRAPPER_VERSION = '0.3.4';
+    const WRAPPER_VERSION = '0.3.5';
 
     document.getElementById('ver-setup').textContent = 'v' + WRAPPER_VERSION;
     document.getElementById('ver-go').textContent = 'v' + WRAPPER_VERSION;
@@ -57,27 +57,10 @@
       checkUpdate(url);
     }
 
-    // Panel jalan di host yang sama, port 3003.
-    function panelOf(u) {
-      try {
-        var a = document.createElement('a');
-        a.href = u;
-        return a.protocol + '//' + a.hostname + ':3003';
-      } catch {
-        return u;
-      }
-    }
-
     function save() {
       let u = document.getElementById('url').value.trim().replace(/\/+$/, '');
       if (!/^https?:\/\//i.test(u)) u = 'http://' + u;
       localStorage.setItem('server_url', u);
-      // Pasang agen panel otomatis (diabaikan bila bukan app desktop).
-      try {
-        if (window.__TAURI__ && window.__TAURI__.core) {
-          window.__TAURI__.core.invoke('setup_agent', { panelUrl: panelOf(u) }).catch(function(){});
-        }
-      } catch {}
       location.href = u;
     }
     function connect() { location.href = localStorage.getItem('server_url'); }
