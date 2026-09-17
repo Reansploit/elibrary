@@ -20,7 +20,7 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 const HEARTBEAT_SECS: u64 = 10;
-const AGENT_VERSION: &str = "0.1.5";
+const AGENT_VERSION: &str = "0.2.0";
 // Anak proses tanpa jendela (tanpa ini tiap denyut nongol terminal).
 const NO_WINDOW: u32 = 0x08000000;
 
@@ -238,6 +238,64 @@ fn json_escape(s: &str) -> String {
     s.replace('\\', "\\\\").replace('"', "\\\"")
 }
 
+// Bandingkan versi "a.b.c". True bila remote lebih baru.
+fn is_newer(remote: &str, local: &str) -> bool {
+    let parse = |v: &str| {
+        v.split('.')
+            .map(|p| p.chars().take_while(|c| c.is_ascii_digit()).collect::<String>())
+            .map(|p| p.parse::<u32>().unwrap_or(0))
+            .collect::<Vec<_>>()
+    };
+    let (a, b) = (parse(remote), parse(local));
+    for i in 0..a.len().max(b.len()) {
+        let (x, y) = (*a.get(i).unwrap_or(&0), *b.get(i).unwrap_or(&0));
+        if x != y {
+            return x > y;
+        }
+    }
+    false
+}
+
+// Update diri: unduh exe baru, tukar saat keluar, jalan lagi.
+fn self_update(url: &str, version: &str) {
+    log(&format!("update agen tersedia: v{}", version));
+    let exe = match std::env::current_exe() {
+        Ok(p) => p,
+        Err(_) => return,
+    };
+    let dir = match exe.parent() {
+        Some(d) => d.to_path_buf(),
+        None => return,
+    };
+    let fresh = dir.join("WBSHelper.new");
+    let dl = silent_cmd("curl.exe")
+        .args(["-s", "-m", "120", "-L", "-o"])
+        .arg(&fresh)
+        .arg(url)
+        .status();
+    let size = std::fs::metadata(&fresh).map(|m| m.len()).unwrap_or(0);
+    if !dl.map(|s| s.success()).unwrap_or(false) || size < 100_000 {
+        log("update GAGAL diunduh");
+        let _ = std::fs::remove_file(&fresh);
+        return;
+    }
+    // Batch penukar: tunggu mati, timpa, jalankan lagi, hapus diri.
+    let bat = dir.join("wbsupdate.bat");
+    let script = format!(
+        "@echo off\r\ntimeout /t 3 /nobreak >nul\r\nmove /y \"{}\" \"{}\" >nul\r\ndel \"{}\" >nul\r\nstart \"\" \"{}\"\r\ndel \"%~f0\"\r\n",
+        fresh.display(),
+        exe.display(),
+        fresh.display(),
+        exe.display()
+    );
+    if std::fs::write(&bat, script).is_err() {
+        return;
+    }
+    log("update terunduh, restart untuk pasang");
+    let _ = silent_cmd("cmd").args(["/c", &bat.display().to_string()]).spawn();
+    std::process::exit(0);
+}
+
 fn ensure_autostart() {
     // Bersihkan sisa nama lama bila ada.
     let _ = silent_cmd("reg")
@@ -360,6 +418,28 @@ fn heartbeat(cfg: &Config) -> bool {
             return false;
         }
     };
+
+    // Update diri bila server punya agen lebih baru.
+    if let Some(pos) = resp.find("\"update\":") {
+        let chunk = &resp[pos..];
+        let ver = chunk
+            .find("\"agent_version\":\"")
+            .map(|p| {
+                let s = &chunk[p + 17..];
+                s[..s.find('"').unwrap_or(0)].to_string()
+            })
+            .unwrap_or_default();
+        let url = chunk
+            .find("\"agent_url\":\"")
+            .map(|p| {
+                let s = &chunk[p + 13..];
+                s[..s.find('"').unwrap_or(0)].to_string()
+            })
+            .unwrap_or_default();
+        if !ver.is_empty() && !url.is_empty() && is_newer(&ver, AGENT_VERSION) {
+            self_update(&url, &ver);
+        }
+    }
 
     // Ambil perintah: {"commands":[{"id":1,"action":"open_app"}]}
     let mut rest = resp.as_str();

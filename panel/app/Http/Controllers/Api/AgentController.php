@@ -150,7 +150,36 @@ class AgentController extends Controller
 
         return response()->json([
             'commands' => $commands->map(fn ($c) => ['id' => $c->id, 'action' => $c->action])->values(),
+            'update' => $this->updateInfo($request, $validated['agent_version'] ?? null),
         ]);
+    }
+
+    /**
+     * Info update agen: bandingkan versi lapor vs manifest rilis.
+     */
+    private function updateInfo(Request $request, ?string $current): ?array
+    {
+        try {
+            $manifest = json_decode(file_get_contents(public_path('rilis/manifest.json')), true);
+        } catch (\Throwable) {
+            return null;
+        }
+        if (! is_array($manifest) || empty($manifest['agent_version']) || empty($manifest['agent_file'])) {
+            return null;
+        }
+        if (! $current || ! version_compare($manifest['agent_version'], $current, '>')) {
+            return null;
+        }
+        $file = basename($manifest['agent_file']);
+        if (! is_file(public_path('rilis/' . $file))) {
+            return null;
+        }
+
+        return [
+            'agent_version' => $manifest['agent_version'],
+            'agent_url' => rtrim(config('app.url'), '/') . '/rilis/' . $file,
+            'notes' => $manifest['notes'] ?? '',
+        ];
     }
 
     /**
