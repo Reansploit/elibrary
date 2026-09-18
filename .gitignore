@@ -1,0 +1,34 @@
+# Data MySQL lokal — jangan ikut repo (besar + berubah tiap detik)
+mysql_data/
+
+# Dependensi (install ulang per mesin)
+node_modules/
+vendor/
+elibrary/node_modules/
+elibrary/vendor/
+panel/node_modules/
+panel/vendor/
+lunar/node_modules/
+desktop/node_modules/
+panel-desktop/node_modules/
+desktop/src-tauri/target/
+panel-desktop/src-tauri/target/
+
+# Build frontend (dibangun per mesin)
+elibrary/public/build/
+panel/public/build/
+public/build/
+
+# Secret per mesin
+.env
+elibrary/.env
+panel/.env
+
+# Data privat santri — jangan ikut repo
+elibrary/public/bahan/gen-1.csv
+
+# File sementara / OS
+keluhan/
+*.log
+.DS_Store
+Thumbs.db
