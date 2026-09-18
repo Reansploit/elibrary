@@ -5,7 +5,7 @@
   "platforms": {
     "windows-x86_64": {
       "signature": "",
-      "url": "http://GANTI-IP-SERVER:3003/rilis/lunar/LUNAR_0.3.0_x64_en-US.msi.zip"
+      "url": "http://192.168.2.51:3003/rilis/lunar/LUNAR_0.3.0_x64_en-US.msi.zip"
     }
   }
 }
