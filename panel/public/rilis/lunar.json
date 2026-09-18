@@ -1,11 +1,11 @@
 {
-  "version": "0.3.1",
-  "notes": "Rebrand ungu linen + logo bulan",
+  "version": "0.3.2",
+  "notes": "Ungu tua + ivory",
   "pubkey": "",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRcmx3QzNERzR4TEdERThEcE1qOTIwTmJQS0Nac3R2RCtZVTYwa0UvdjFnQnV1ZHhRY1pyRUlyTG95cExnMFJYYnc0V2k2Nlk1ZzZkdWRmNkZDSEQ2Yk11b2t6NUQ1UndzPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg5NzAwNTQ4CWZpbGU6TFVOQVJfMC4zLjFfeDY0X2VuLVVTLm1zaS56aXAKWjFWaHRRYUlieGsrVEhrZVhKK1VzcXBtMUZvVDBMOHorZERyVTlUWjRmM0M5RG1VWWVpZnNibzZtbnhqVTMwR21pcGtzWWI3MjBnT2xtRlhEMThSQ0E9PQo=",
-      "url": "http://192.168.2.51:3003/rilis/lunar/LUNAR_0.3.1_x64_en-US.msi.zip"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRcmx3QzNERzR4TENrR05aNk9NT25pNUlaU1Yxd1dBQVMzeEh5RzRkcEtKUkt5VmtQcmVXTkhIaDVvcmtGZkZiS3M0R1lKQjZ1VkV4aHkrd2xYRVp3c2lRUllMY0dHelFnPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg5NzAxNDk2CWZpbGU6TFVOQVJfMC4zLjJfeDY0X2VuLVVTLm1zaS56aXAKclRtbGp1ZFN6RkJFeFExdFN0T21qSitMYytGSU0vLzlkNWUwWUpOMm8rUmdYbXNqVERLTVB0Vm1Jbi9pVms0M2FiS2h1M2tYb0ZjSjFXYW5MZWFWQmc9PQo=",
+      "url": "http://192.168.2.51:3003/rilis/lunar/LUNAR_0.3.2_x64_en-US.msi.zip"
     }
   }
 }
