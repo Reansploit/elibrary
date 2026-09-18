@@ -8,6 +8,11 @@ Route::get('/', function () {
     return redirect()->route('devices.index');
 });
 
+// Shell SPA LUNAR (publik, data tetap lewat API token).
+Route::get('/lunar', function () {
+    return response()->view('lunar')->header('Cache-Control', 'no-store');
+})->name('lunar');
+
 Route::get('/dashboard', function () {
     return redirect()->route('devices.index');
 })->middleware(['auth', 'verified'])->name('dashboard');
