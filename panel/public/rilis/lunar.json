@@ -1,10 +1,10 @@
 {
   "version": "0.3.0",
-  "notes": "",
+  "notes": "Auto-update + checklist aplikasi per PC",
   "pubkey": "",
   "platforms": {
     "windows-x86_64": {
-      "signature": "",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRcmx3QzNERzR4TERzUGprWkRKS3orLzA2aHNVdHBlV2pPWnYxcVJZOTdyVkErbkY0SkQzQzZDa1hQOU5IS1VnQVloMFlCRHVYRHkzbmQyV3lmQ0MvSloxOEgrMWxOZndnPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg5Njk3NTg4CWZpbGU6TFVOQVJfMC4zLjBfeDY0X2VuLVVTLm1zaS56aXAKeG5SZEJOc2tLZkNFaXdVNFhUdktUREo3L2p3NVJ0Q2l2T3dhU1BTUWsvS0hZajVFNS8zOEVtWGpQN2U1aWxsamlhYm1KY3Q1NGZtM2h4T05Ld2oyQ2c9PQo=",
       "url": "http://192.168.2.51:3003/rilis/lunar/LUNAR_0.3.0_x64_en-US.msi.zip"
     }
   }
