@@ -142,6 +142,13 @@
       return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
+    // Tauri invoke melempar string polos (bukan Error) — normalisasi di sini.
+    function errMsg(e) {
+      if (!e) return 'Tidak diketahui';
+      if (typeof e === 'string') return e;
+      return e.message || String(e);
+    }
+
     async function api(path, opts = {}) {
       const res = await fetch('/api/v1/manager' + path, {
         ...opts,
@@ -217,7 +224,7 @@
         localStorage.setItem('lunar_user', JSON.stringify(data.user));
         viewDash();
       } catch (e) {
-        viewLogin(e.message);
+        viewLogin(errMsg(e));
       }
     }
 
@@ -231,7 +238,7 @@
         appsCache = data.apps || [];
         document.getElementById('apps').innerHTML = appsHtml();
       } catch (e) {
-        document.getElementById('apps').innerHTML = `<div class="err">${esc(e.message)}</div>`;
+        document.getElementById('apps').innerHTML = `<div class="err">${esc(errMsg(e))}</div>`;
       }
     }
     function appsHtml() {
@@ -289,7 +296,7 @@
         macEl.value = '';
         loadDash();
       } catch (e) {
-        msg.textContent = 'Gagal: ' + e.message;
+        msg.textContent = 'Gagal: ' + errMsg(e);
       }
     }
     async function doAddApp() {
@@ -428,7 +435,7 @@
         if (el) el.innerHTML = dashHtml(data.stats, rows);
       } catch (e) {
         const el = document.getElementById('dash');
-        if (el) el.innerHTML = `<div class="err">${esc(e.message)}</div>`;
+        if (el) el.innerHTML = `<div class="err">${esc(errMsg(e))}</div>`;
       }
     }
     function dashHtml(s, rows) {
@@ -507,7 +514,7 @@
       } catch (e) {
         if (!quiet) {
           const el = document.getElementById('det');
-          if (el) el.innerHTML = `<div class="err">${esc(e.message)}</div><button class="btn" onclick="viewDash()">Kembali</button>`;
+          if (el) el.innerHTML = `<div class="err">${esc(errMsg(e))}</div><button class="btn" onclick="viewDash()">Kembali</button>`;
         }
       }
     }
