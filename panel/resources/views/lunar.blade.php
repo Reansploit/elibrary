@@ -262,21 +262,29 @@
     }
     async function doAddPc() {
       const el = document.getElementById('nh');
+      const macEl = document.getElementById('nmac');
       const msg = document.getElementById('addmsg');
       const host = (el.value || '').trim();
       if (!host) return;
       msg.textContent = 'Menghubungi…';
       try {
-        // Ambil MAC asli dari PC target sebagai ID tetap.
-        const raw = await winrm(host, "Get-NetAdapter | Where-Object { $_.Status -eq 'Up' -and $_.MacAddress } | Select-Object -First 1 -ExpandProperty MacAddress");
-        const mac = raw.trim().toUpperCase().replace(/-/g, ':');
-        if (!/^(?:[0-9A-F]{2}:){5}[0-9A-F]{2}$/.test(mac)) throw new Error('MAC tak terbaca: ' + (raw.trim() || 'kosong'));
+        let mac = (macEl.value || '').trim().toUpperCase().replace(/-/g, ':');
+        if (!mac) {
+          // Otomatis via WinRM — hanya di app desktop.
+          if (!(window.__TAURI__ && window.__TAURI__.core)) {
+            throw new Error('isi MAC manual (lihat di PC: ipconfig /all), atau buka lewat app desktop LUNAR.');
+          }
+          const raw = await winrm(host, "Get-NetAdapter | Where-Object { $_.Status -eq 'Up' -and $_.MacAddress } | Select-Object -First 1 -ExpandProperty MacAddress");
+          mac = raw.trim().toUpperCase().replace(/-/g, ':');
+        }
+        if (!/^(?:[0-9A-F]{2}:){5}[0-9A-F]{2}$/.test(mac)) throw new Error('MAC tidak valid (format XX:XX:XX:XX:XX:XX).');
         await api('/devices/sync', {
           method: 'POST',
           body: { mac, hostname: host, ip: host, app_open: false, apps: [] },
         });
         msg.textContent = 'Terdaftar: ' + mac;
         el.value = '';
+        macEl.value = '';
         loadDash();
       } catch (e) {
         msg.textContent = 'Gagal: ' + e.message;
@@ -429,6 +437,7 @@
           <span class="muted"> — tanpa install apa pun di PC-nya. Cukup WinRM aktif + se-network.</span>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
             <input id="nh" placeholder="Hostname atau IP (mis. 192.168.2.21)" style="flex:2;min-width:180px" class="mono">
+            <input id="nmac" placeholder="MAC (opsional, mis. AA:BB:..)" style="flex:2;min-width:180px" class="mono">
             <button class="btn sm primary" onclick="doAddPc()">Daftarkan</button>
             <span class="muted" id="addmsg"></span>
           </div>
