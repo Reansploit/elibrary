@@ -270,6 +270,8 @@
         </div>`;
     }
     let addingPc = false;
+    let regMsg = '';
+    let regOk = false;
     async function doAddPc() {
       if (addingPc) return;
       const el = document.getElementById('nh');
@@ -299,11 +301,15 @@
           body: { mac, hostname: host, ip: host, app_open: false, apps: [] },
         });
         msg.textContent = 'Terdaftar: ' + mac;
+        regMsg = 'Terdaftar: ' + mac;
+        regOk = true;
         el.value = '';
         macEl.value = '';
         loadDash();
       } catch (e) {
         msg.textContent = 'Gagal: ' + errMsg(e);
+        regMsg = 'Gagal: ' + errMsg(e);
+        regOk = false;
       } finally {
         addingPc = false;
       }
@@ -470,7 +476,7 @@
             <input id="nh" placeholder="Hostname atau IP (mis. 192.168.2.21)" style="flex:2;min-width:180px" class="mono">
             <input id="nmac" placeholder="MAC (opsional, mis. AA:BB:..)" style="flex:2;min-width:180px" class="mono">
             <button class="btn sm primary" onclick="doAddPc()">Daftarkan</button>
-            <span class="muted" id="addmsg"></span>
+            <span class="muted" id="addmsg" style="${regOk ? 'color:var(--ok);font-weight:600' : ''}">${esc(regMsg)}</span>
           </div>
         </div>
         <div class="card" style="margin-bottom:12px">
