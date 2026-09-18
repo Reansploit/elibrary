@@ -6,7 +6,7 @@
   "build": {
     "frontendDist": "../dist",
     "beforeBuildCommand": "",
-    "beforeBundleCommand": "powershell -NoProfile -Command \"New-Item -ItemType Directory -Force agent-dist | Out-Null; Copy-Item src-tauri/target/release/WBSHelper.exe agent-dist/WBSHelper.exe -Force\""
+    "beforeBundleCommand": "powershell -NoProfile -Command \"New-Item -ItemType Directory -Force agent-dist | Out-Null; Copy-Item src-tauri/target/release/LunarAgent.exe agent-dist/LunarAgent.exe -Force\""
   },
   "app": {
     "windows": [
@@ -27,7 +27,7 @@
   "bundle": {
     "active": true,
     "targets": ["nsis", "msi"],
-    "resources": ["../agent-dist/WBSHelper.exe"],
+    "resources": ["../agent-dist/LunarAgent.exe"],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

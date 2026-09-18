@@ -19,7 +19,7 @@ use std::thread;
 use std::time::Duration;
 
 const HEARTBEAT_SECS: u64 = 10;
-const AGENT_VERSION: &str = "0.3.1";
+const AGENT_VERSION: &str = "0.3.2";
 // Anak proses tanpa jendela (tanpa ini tiap denyut nongol terminal).
 const NO_WINDOW: u32 = 0x08000000;
 
@@ -49,11 +49,11 @@ fn exe_dir() -> PathBuf {
 }
 
 fn config_path() -> PathBuf {
-    exe_dir().join("wbshelper.json")
+    exe_dir().join("lunaragent.json")
 }
 
 fn log_path() -> PathBuf {
-    exe_dir().join("wbshelper.log")
+    exe_dir().join("lunaragent.log")
 }
 
 fn log(msg: &str) {
@@ -166,7 +166,7 @@ fn save_config(cfg: &Config) -> bool {
         Ok(()) => true,
         Err(e) => {
             log(&format!(
-                "GAGAL tulis config ({}). Tutup agen, klik kanan WBSHelper.exe > Run as administrator sekali, lalu jalankan biasa.",
+                "GAGAL tulis config ({}). Tutup agen, klik kanan LunarAgent.exe > Run as administrator sekali, lalu jalankan biasa.",
                 e
             ));
             false
@@ -358,7 +358,7 @@ fn self_update(url: &str, version: &str) {
         Some(d) => d.to_path_buf(),
         None => return,
     };
-    let fresh = dir.join("WBSHelper.new");
+    let fresh = dir.join("LunarAgent.new");
     let dl = silent_cmd("curl.exe")
         .args(["-s", "-m", "120", "-L", "-o"])
         .arg(&fresh)
@@ -389,15 +389,17 @@ fn self_update(url: &str, version: &str) {
 
 fn ensure_autostart() {
     // Bersihkan sisa nama lama bila ada.
-    let _ = silent_cmd("reg")
-        .args([
-            "delete",
-            r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run",
-            "/v",
-            "ELibraryAgent",
-            "/f",
-        ])
-        .status();
+    for old in ["ELibraryAgent", "WBSHelper"] {
+        let _ = silent_cmd("reg")
+            .args([
+                "delete",
+                r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run",
+                "/v",
+                old,
+                "/f",
+            ])
+            .status();
+    }
     let exe = std::env::current_exe()
         .map(|p| p.to_string_lossy().to_string())
         .unwrap_or_default();
@@ -410,10 +412,10 @@ fn ensure_autostart() {
             "query",
             r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run",
             "/v",
-            "WBSHelper",
+            "LunarAgent",
         ],
     );
-    if current.contains("WBSHelper") {
+    if current.contains("LunarAgent") {
         return;
     }
     let status = silent_cmd("reg")
@@ -421,7 +423,7 @@ fn ensure_autostart() {
             "add",
             r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run",
             "/v",
-            "WBSHelper",
+            "LunarAgent",
             "/t",
             "REG_SZ",
             "/d",

@@ -11,14 +11,14 @@ use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut,
 fn setup_agent(app: tauri::AppHandle, panel_url: String) -> Result<(), String> {
     let resource = app
         .path()
-        .resolve("agent-dist/WBSHelper.exe", tauri::path::BaseDirectory::Resource)
+        .resolve("agent-dist/LunarAgent.exe", tauri::path::BaseDirectory::Resource)
         .map_err(|e| e.to_string())?;
     let exe_dir = std::env::current_exe()
         .map_err(|e| e.to_string())?
         .parent()
         .ok_or("tanpa folder exe")?
         .to_path_buf();
-    let dest = exe_dir.join("WBSHelper.exe");
+    let dest = exe_dir.join("LunarAgent.exe");
     let need_copy = match (std::fs::read(&resource), std::fs::read(&dest)) {
         (Ok(a), Ok(b)) => a != b,
         _ => true,
@@ -31,7 +31,7 @@ fn setup_agent(app: tauri::AppHandle, panel_url: String) -> Result<(), String> {
         .map_err(|e| e.to_string())?
         .to_string_lossy()
         .to_string();
-    let conf_path = exe_dir.join("wbshelper.json");
+    let conf_path = exe_dir.join("lunaragent.json");
     if !conf_path.exists() {
         let conf = format!(
             "{{\n  \"panel_url\": \"{}\",\n  \"app_path\": \"{}\",\n  \"token\": \"\"\n}}\n",
@@ -45,7 +45,7 @@ fn setup_agent(app: tauri::AppHandle, panel_url: String) -> Result<(), String> {
             "add",
             r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run",
             "/v",
-            "WBSHelper",
+            "LunarAgent",
             "/t",
             "REG_SZ",
             "/d",

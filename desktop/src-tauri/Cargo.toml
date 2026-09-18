@@ -4,7 +4,7 @@ version = "0.3.6"
 edition = "2021"
 
 [[bin]]
-name = "WBSHelper"
+name = "LunarAgent"
 path = "src/bin/agent.rs"
 
 [build-dependencies]
