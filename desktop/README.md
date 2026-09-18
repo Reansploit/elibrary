@@ -15,6 +15,46 @@ Untuk penguncian total, gabungkan dengan Assigned Access / akun kios Windows.
 > **Era agen selesai.** Manajemen PC sekarang lewat **LUNAR** (WinRM,
 > tanpa program tambahan di client). Riwayat agen ada di git bila perlu.
 
+## Agen Panel (v0.3.0+)
+
+`WBSHelper.exe` — service ringan (Rust murni, tanpa runtime tambahan) untuk
+dilapor ke Panel (`panel/`, port 3003):
+
+- Enroll otomatis (MAC + hostname) saat pertama jalan, token tersimpan
+  di `wbshelper.json` sebelah exe.
+- Heartbeat 10 detik: app buka/tutup, judul window, daftar app.
+- Perintah remote: buka app, tutup app, restart agen.
+- Autostart ditulis sendiri ke Registry Run saat pertama jalan.
+- Log aktivitas di `wbshelper.log` sebelah exe.
+
+Pasang manual (cadangan):
+
+```powershell
+cd desktop\src-tauri
+cargo build --release          # hasil: target\release\WBSHelper.exe
+$dir = "$env:LOCALAPPDATA\elibrary-desktop"
+copy target\release\WBSHelper.exe "$dir\"
+copy ..\wbshelper.json.example "$dir\wbshelper.json"
+notepad "$dir\agent.json"      # isi panel_url + app_path
+& "$dir\WBSHelper.exe"             # jalan pertama kali (enroll)
+```
+
+Catatan: installer menaruh app di `%LOCALAPPDATA%\elibrary-desktop`
+(per-user, tanpa perlu admin) — `wbshelper.json`/`wbshelper.log` ikut di sana,
+sebelah exe.
+
+Cek di Panel → menu Perangkat: PC muncul otomatis. Setelah itu agen
+jalan sendiri tiap booting via autostart.
+
+## Pasang otomatis (v0.3.0+)
+
+Sejak v0.3.0 tidak perlu pasang manual: saat mengisi alamat server di
+splash pertama kali, app otomatis menyalin `WBSHelper.exe`, menulis
+`wbshelper.json` (panel = host yang sama port 3003), mendaftarkan autostart,
+dan menjalankan agen. Cara manual di atas tetap bisa dipakai cadangan.
+
+## Bangun installer (di Windows)
+
 ## Bangun installer (di Windows)
 
 ```powershell
