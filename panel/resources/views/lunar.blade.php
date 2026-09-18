@@ -166,6 +166,7 @@
 
     function shell(inner, active) {
       const u = store.user || {};
+      const desktop = !!(window.__TAURI__ && window.__TAURI__.core);
       return `
         <header class="top">
           <div class="brand"><span class="dot"><img src="/lunar-app/lunar.svg" alt="LUNAR"></span><span><b>LUNAR</b><small>Local Unified Network Agent Remote</small></span></div>
@@ -174,6 +175,7 @@
               <button class="${active === 'apps' ? 'on' : ''}" onclick="viewApps()">Aplikasi</button>
               <button class="${active !== 'apps' ? 'on' : ''}" onclick="viewDash()">Perangkat</button>
             </div>
+            <span class="pill ${desktop ? 'p-ok' : 'p-warn'}" title="${desktop ? 'WinRM aktif' : 'Buka lewat app desktop LUNAR untuk remote WinRM'}">${desktop ? 'Desktop' : 'Browser'}</span>
             <span class="muted">${esc(u.name || '')}</span>
             <button class="btn sm" onclick="logout()">Keluar</button>
           </div>
