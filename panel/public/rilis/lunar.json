@@ -1,11 +1,13 @@
 {
-  "version": "0.3.0",
-  "notes": "Auto-update + checklist aplikasi per PC",
+  "version": "0.3.1",
+  "notes": "Rebrand ungu linen + logo bulan",
   "pubkey": "",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRcmx3QzNERzR4TERzUGprWkRKS3orLzA2aHNVdHBlV2pPWnYxcVJZOTdyVkErbkY0SkQzQzZDa1hQOU5IS1VnQVloMFlCRHVYRHkzbmQyV3lmQ0MvSloxOEgrMWxOZndnPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg5Njk3NTg4CWZpbGU6TFVOQVJfMC4zLjBfeDY0X2VuLVVTLm1zaS56aXAKeG5SZEJOc2tLZkNFaXdVNFhUdktUREo3L2p3NVJ0Q2l2T3dhU1BTUWsvS0hZajVFNS8zOEVtWGpQN2U1aWxsamlhYm1KY3Q1NGZtM2h4T05Ld2oyQ2c9PQo=",
-      "url": "http://192.168.2.51:3003/rilis/lunar/LUNAR_0.3.0_x64_en-US.msi.zip"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRcmx3QzNERzR4TEdERThEcE1qOTIwTmJQS0Nac3R2RCtZVTYwa0UvdjFnQnV1ZHhRY1pyRUlyTG95cExnMFJYYnc0V2k2Nlk1ZzZkdWRmNkZDSEQ2Yk11b2t6NUQ1UndzPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg5NzAwNTQ4CWZpbGU6TFVOQVJfMC4zLjFfeDY0X2VuLVVTLm1zaS56aXAKWjFWaHRRYUlieGsrVEhrZVhKK1VzcXBtMUZvVDBMOHorZERyVTlUWjRmM0M5RG1VWWVpZnNibzZtbnhqVTMwR21pcGtzWWI3MjBnT2xtRlhEMThSQ0E9PQo=",
+      "url": "http://192.168.2.51:3003/rilis/lunar/LUNAR_0.3.1_x64_en-US.msi.zip"
     }
+  }
+}
   }
 }
