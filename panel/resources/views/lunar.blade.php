@@ -269,13 +269,16 @@
           </table>
         </div>`;
     }
+    let addingPc = false;
     async function doAddPc() {
+      if (addingPc) return;
       const el = document.getElementById('nh');
       const macEl = document.getElementById('nmac');
       const msg = document.getElementById('addmsg');
       const host = (el.value || '').trim();
       if (!host) return;
-      msg.textContent = 'Menghubungi…';
+      addingPc = true;
+      msg.textContent = 'Menghubungi… (maks 45 detik)';
       try {
         let mac = (macEl.value || '').trim().toUpperCase().replace(/-/g, ':');
         if (!mac) {
@@ -283,7 +286,11 @@
           if (!(window.__TAURI__ && window.__TAURI__.core)) {
             throw new Error('isi MAC manual (lihat di PC: ipconfig /all), atau buka lewat app desktop LUNAR.');
           }
-          const raw = await winrm(host, "Get-NetAdapter | Where-Object { $_.Status -eq 'Up' -and $_.MacAddress } | Select-Object -First 1 -ExpandProperty MacAddress");
+          const raw = await withTimeout(
+            winrm(host, "Get-NetAdapter | Where-Object { $_.Status -eq 'Up' -and $_.MacAddress } | Select-Object -First 1 -ExpandProperty MacAddress"),
+            45000,
+            'PC tidak merespons. Pastikan menyala, se-network, dan Enable-Remoting sudah jalan di sana.'
+          );
           mac = raw.trim().toUpperCase().replace(/-/g, ':');
         }
         if (!/^(?:[0-9A-F]{2}:){5}[0-9A-F]{2}$/.test(mac)) throw new Error('MAC tidak valid (format XX:XX:XX:XX:XX:XX).');
@@ -297,6 +304,8 @@
         loadDash();
       } catch (e) {
         msg.textContent = 'Gagal: ' + errMsg(e);
+      } finally {
+        addingPc = false;
       }
     }
     async function doAddApp() {
@@ -338,6 +347,15 @@
     }
     const psQ = (s) => `'${String(s).replace(/'/g, "''")}'`;
 
+    // Batas waktu agar satu PC macet tidak menggantung seluruh UI/worker.
+    function withTimeout(promise, ms, label) {
+      let timer = null;
+      const timeout = new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error(label || 'Waktu habis.')), ms);
+      });
+      return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+    }
+
     async function workerOnce() {
       const { user, pass } = wcreds();
       if (!user || !store.token) return;
@@ -350,8 +368,12 @@
         const host = d.ip || d.hostname;
         if (!host) continue;
         try {
-          // 1. Status: daftar proses ber-window.
-          const out = await winrm(host, "Get-Process | Where-Object { $_.MainWindowTitle } | ForEach-Object { $_.ProcessName + '|' + $_.MainWindowTitle }");
+          // 1. Status: daftar proses ber-window (batas 30 dtk per PC).
+          const out = await withTimeout(
+            winrm(host, "Get-Process | Where-Object { $_.MainWindowTitle } | ForEach-Object { $_.ProcessName + '|' + $_.MainWindowTitle }"),
+            30000,
+            'timeout'
+          );
           const seen = out.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
           const procs = seen.map((l) => l.split('|')[0].toLowerCase());
           const apps = seen.slice(0, 25);
