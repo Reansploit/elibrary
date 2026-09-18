@@ -33,9 +33,9 @@ keluhan/
 .DS_Store
 Thumbs.db
 
-# Python
-__pycache__/
-*.pyc
-build/
-dist/
-*.spec
+# Python (agen)
+agent/__pycache__/
+agent/*.pyc
+agent/build/
+agent/dist/
+agent/*.spec
