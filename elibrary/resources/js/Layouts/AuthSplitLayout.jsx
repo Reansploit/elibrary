@@ -2,7 +2,7 @@ import { usePage } from '@inertiajs/react';
 
 export default function AuthSplitLayout({ children }) {
     const { props } = usePage();
-    const libraryName = props.libraryName || 'E-Library';
+    const libraryName = props.libraryName || 'Perpustakaan WBS';
 
     return (
         <div className="flex min-h-screen bg-background">
@@ -12,6 +12,7 @@ export default function AuthSplitLayout({ children }) {
                     alt="Gedung Yayasan Group Sari Bumi"
                     className="absolute inset-0 h-full w-full object-cover"
                 />
+                {/* Gradasi gelap agar teks terbaca di atas foto (R-25: kontras). */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/30" />
                 <div className="relative flex h-full flex-col justify-between p-10 text-white">
                     <div className="flex items-center gap-2">
@@ -29,17 +30,17 @@ export default function AuthSplitLayout({ children }) {
                             <p className="text-sm font-semibold leading-tight drop-shadow">
                                 {libraryName}
                             </p>
-                            <p className="text-xs text-white/80">Perpustakaan Digital</p>
+                            <p className="text-xs text-white/80">Qism Maktabah</p>
                         </div>
                     </div>
                     <div>
                         <h2 className="max-w-md text-2xl font-semibold tracking-tight drop-shadow">
-                            Library and Literacy Division Dashboard
+                            Selamat datang kembali.
                         </h2>
                         <p className="mt-2 text-sm text-white/80">
                             Masuk untuk melanjutkan ke dashboard perpustakaan.
                         </p>
-                        <p className="mt-6 text-xs text-white/60">© 2026 {libraryName}</p>
+                        <p className="mt-6 text-xs text-white/60">© {new Date().getFullYear()} {libraryName}</p>
                     </div>
                 </div>
             </div>

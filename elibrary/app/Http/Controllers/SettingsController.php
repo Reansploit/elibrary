@@ -27,7 +27,7 @@ class SettingsController extends Controller
                 'penalty_enabled' => Setting::get('penalty_enabled', true),
             ],
             'general' => [
-                'library_name' => Setting::get('library_name', 'E-Library'),
+                'library_name' => Setting::get('library_name', 'Perpustakaan WBS'),
             ],
         ];
 

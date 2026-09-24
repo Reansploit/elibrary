@@ -284,7 +284,7 @@ function NavGroup({ group, collapsed, onNavigate, open, onToggle, miniOpen, onMi
 export default function AuthenticatedLayout({ children }) {
     const { url, props } = usePage();
     const user = props.auth.user;
-    const libraryName = props.libraryName || 'E-Library';
+    const libraryName = props.libraryName || 'Perpustakaan WBS';
     const { theme, toggleTheme } = useTheme();
     const [mobileNavOpen, setMobileNavOpen] = useState(false);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {

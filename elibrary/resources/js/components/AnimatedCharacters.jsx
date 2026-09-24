@@ -203,7 +203,7 @@ export default function AnimatedCharacters({
           <div className="flex size-8 items-center justify-center rounded-lg bg-black/5 backdrop-blur-sm">
             <LibraryBig className="size-4" />
           </div>
-          <span>E-Library</span>
+          <span>Perpustakaan WBS</span>
         </div>
       </div>
 

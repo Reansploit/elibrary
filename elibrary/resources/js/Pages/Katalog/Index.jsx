@@ -12,7 +12,7 @@ import KatalogBookCard, { AvailabilityBadge } from '@/components/katalog-book-ca
 
 export default function KatalogIndex({ featured = [], total = 0, categories = [] }) {
     const { props } = usePage();
-    const libraryName = props.libraryName || 'E-Library';
+    const libraryName = props.libraryName || 'Perpustakaan WBS';
     const [query, setQuery] = useState('');
     const [books, setBooks] = useState(null);
     const [loading, setLoading] = useState(false);

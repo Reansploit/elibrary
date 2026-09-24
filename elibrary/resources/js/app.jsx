@@ -58,7 +58,7 @@ function PageLoader() {
   );
 }
 
-const defaultName = import.meta.env.VITE_APP_NAME || 'E-Library';
+const defaultName = import.meta.env.VITE_APP_NAME || 'Perpustakaan WBS';
 let libraryName = defaultName;
 
 createInertiaApp({

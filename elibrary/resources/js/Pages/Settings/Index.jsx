@@ -71,7 +71,7 @@ export default function SettingsIndex({ settings, users, roles, permissions }) {
     const safeSettings = settings ?? {
         loan: { max_loans_per_member: 3, loan_duration_days: 7, reservation_hold_days: 3 },
         penalty: { late_penalty_days: 3, penalty_enabled: true },
-        general: { library_name: 'E-Library' },
+        general: { library_name: 'Perpustakaan WBS' },
     };
     const safeUsers = users ?? [];
     const safeRoles = roles ?? [];
@@ -84,7 +84,7 @@ export default function SettingsIndex({ settings, users, roles, permissions }) {
         max_loans_per_member: safeSettings.loan.max_loans_per_member ?? 3,
         loan_duration_days: safeSettings.loan.loan_duration_days ?? 7,
         reservation_hold_days: safeSettings.loan.reservation_hold_days ?? 3,
-        library_name: safeSettings.general.library_name ?? 'E-Library',
+        library_name: safeSettings.general.library_name ?? 'Perpustakaan WBS',
         ...emptyUserForm,
         ...emptyRoleForm,
     });
@@ -243,7 +243,7 @@ export default function SettingsIndex({ settings, users, roles, permissions }) {
                                     id="library_name"
                                     value={data.library_name}
                                     onChange={(e) => setData('library_name', e.target.value)}
-                                    placeholder="E-Library"
+                                    placeholder="Perpustakaan WBS"
                                 />
                                 {errors.library_name && (
                                     <p className="text-xs text-destructive">{errors.library_name}</p>

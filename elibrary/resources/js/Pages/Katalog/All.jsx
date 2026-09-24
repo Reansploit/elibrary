@@ -9,7 +9,7 @@ import EmptyState from '@/components/empty-state';
 
 export default function KatalogAll({ books, categories = [], activeCategory = '', q = '' }) {
     const { props } = usePage();
-    const libraryName = props.libraryName || 'E-Library';
+    const libraryName = props.libraryName || 'Perpustakaan WBS';
     const [query, setQuery] = useState(q);
 
     const { data = [], current_page = 1, last_page = 1, total = 0 } = books || {};

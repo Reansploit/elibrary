@@ -37,7 +37,7 @@ class HandleInertiaRequests extends Middleware
                 'roles' => $request->user() ? $request->user()->getRoleNames() : [],
                 'permissions' => $request->user() ? $request->user()->getAllPermissions()->pluck('name') : [],
             ],
-            'libraryName' => Setting::get('library_name', config('app.name', 'E-Library')),
+            'libraryName' => Setting::get('library_name', config('app.name', 'Perpustakaan WBS')),
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
