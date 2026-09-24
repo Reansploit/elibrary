@@ -43,7 +43,7 @@ export default function LaporanIndex({ filters, columns, rows, summary, generate
                 <div className="print:hidden">
                     <PageHeader
                         title="Laporan"
-                        description="Rekap untuk arsip pondok — tampilkan, cetak, atau unduh CSV"
+                        description="Rekap untuk arsip pondok: tampilkan, cetak, atau unduh CSV"
                         icon={FileText}
                         actions={
                             <>

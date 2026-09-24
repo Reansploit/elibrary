@@ -36,7 +36,7 @@ export default function Register() {
             <div className="mb-6">
                 <h1 className="text-xl font-semibold tracking-tight">Buat akun baru</h1>
                 <p className="mt-1 text-sm text-muted-foreground">
-                    Langkah {step + 1} dari 2 — {STEPS[step]}
+                    Langkah {step + 1} dari 2: {STEPS[step]}
                 </p>
             </div>
 

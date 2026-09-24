@@ -18,7 +18,7 @@ export default function ConfirmPassword() {
             <div className="mb-6">
                 <h1 className="text-xl font-semibold tracking-tight">Konfirmasi password</h1>
                 <p className="mt-1 text-sm text-muted-foreground">
-                    Area aman — konfirmasi password sebelum lanjut.
+                    Area aman. Konfirmasi password sebelum lanjut.
                 </p>
             </div>
             <form onSubmit={submit} className="space-y-4">

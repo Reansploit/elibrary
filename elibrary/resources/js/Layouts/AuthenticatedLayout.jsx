@@ -173,7 +173,7 @@ function NavLink({ item, onClick, collapsed }) {
     if (item.permission && !can(item.permission)) {
         return (
             <div
-                title={`${item.label} — tidak punya akses`}
+                title={`${item.label} (tidak punya akses)`}
                 aria-disabled="true"
                 className={cn(
                     'flex cursor-not-allowed items-center gap-3.5 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground opacity-40',

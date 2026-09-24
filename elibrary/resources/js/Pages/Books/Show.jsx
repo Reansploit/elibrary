@@ -126,7 +126,7 @@ export default function BookShow({ book, history, exemplars }) {
                         <div>
                             <CardTitle>Eksemplar</CardTitle>
                             <CardDescription>
-                                Tiap unit buku punya kode dan status sendiri — tandai hilang/rusak di sini
+                                Tiap unit buku punya kode dan status sendiri. Tandai hilang/rusak di sini
                             </CardDescription>
                         </div>
                         {canEdit && (

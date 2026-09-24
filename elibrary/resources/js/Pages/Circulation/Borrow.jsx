@@ -166,7 +166,7 @@ export default function Borrow({ books, members, loan_duration = 7 }) {
                                     onEnter={handleBookEnter}
                                     options={(books || []).map((book) => ({
                                         value: book.id,
-                                        label: `${book.id} — ${book.title}${book.location ? ` • ${book.location}` : ''} • tersedia ${book.available ?? 0}`,
+                                        label: `${book.id} - ${book.title}${book.location ? ` • ${book.location}` : ''} • tersedia ${book.available ?? 0}`,
                                     }))}
                                     placeholder="Ketik judul atau ID buku…"
                                     emptyText="Buku tidak ditemukan."
@@ -184,7 +184,7 @@ export default function Borrow({ books, members, loan_duration = 7 }) {
                                     onEnter={handleMemberEnter}
                                     options={(members || []).map((member) => ({
                                         value: member.id,
-                                        label: `${member.id} — ${member.name}${member.sanctioned ? ' (dibatasi)' : ''}`,
+                                        label: `${member.id} - ${member.name}${member.sanctioned ? ' (dibatasi)' : ''}`,
                                     }))}
                                     placeholder="Ketik nama atau RFID anggota…"
                                     emptyText="Anggota tidak ditemukan."

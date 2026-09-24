@@ -82,7 +82,7 @@ export default function OpnameIndex({ items, locations, filters, borrowedCount }
             <div className="space-y-6">
                 <PageHeader
                     title="Opname"
-                    description="Cek fisik buku di rak — centang yang ketemu, sisanya jadi hilang"
+                    description="Cek fisik buku di rak: centang yang ketemu, sisanya jadi hilang"
                     icon={ClipboardCheck}
                     actions={
                         <Button

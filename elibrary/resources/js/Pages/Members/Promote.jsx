@@ -123,7 +123,7 @@ export default function Promote({ classes, members }) {
                     <Card>
                         <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                             <div>
-                                <CardTitle>2. Pilih santri — {kelasAsal}</CardTitle>
+                                <CardTitle>2. Pilih santri: {kelasAsal}</CardTitle>
                                 <CardDescription>
                                     {checked.length} dari {listed.length} dipilih
                                 </CardDescription>

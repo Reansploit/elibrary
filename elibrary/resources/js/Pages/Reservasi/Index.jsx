@@ -260,7 +260,7 @@ export default function ReservasiIndex({ reservations, books, members }) {
                                     onChange={(val) => setData('id_buku', val)}
                                     options={(books || []).map((book) => ({
                                         value: book.id,
-                                        label: `${book.id} — ${book.title}`,
+                                        label: `${book.id} - ${book.title}`,
                                     }))}
                                     placeholder="Ketik judul atau ID buku…"
                                     emptyText="Buku tidak ditemukan."
@@ -276,7 +276,7 @@ export default function ReservasiIndex({ reservations, books, members }) {
                                     onChange={(val) => setData('id_anggota', val)}
                                     options={(members || []).map((member) => ({
                                         value: member.id,
-                                        label: `${member.id} — ${member.name}`,
+                                        label: `${member.id} - ${member.name}`,
                                     }))}
                                     placeholder="Ketik nama atau RFID anggota…"
                                     emptyText="Anggota tidak ditemukan."

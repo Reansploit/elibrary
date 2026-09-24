@@ -105,7 +105,7 @@ export default function ImportIndex({ type, preview }) {
                             <div>
                                 <CardTitle>3. Preview</CardTitle>
                                 <CardDescription>
-                                    {preview.valid} valid • {preview.invalid} bermasalah — yang bermasalah
+                                    {preview.valid} valid • {preview.invalid} bermasalah. Yang bermasalah
                                     dilewati saat simpan
                                 </CardDescription>
                             </div>

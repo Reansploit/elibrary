@@ -43,7 +43,7 @@ function GuideImage({ src, alt }) {
                     <ImagePlus className="h-5 w-5 text-muted-foreground" />
                 </span>
                 <p className="text-xs text-muted-foreground">
-                    Screenshot menyusul — letakkan file di <span className="font-mono">public/images/panduan/{src}</span> lalu
+                    Screenshot menyusul: letakkan file di <span className="font-mono">public/images/panduan/{src}</span> lalu
                     refresh halaman ini.
                 </p>
             </div>
@@ -97,7 +97,7 @@ const guides = [
         image: 'buku.png',
         steps: [
             'Tambah buku hanya butuh ID dan judul (harus unik); pengarang, jumlah, foto, dan lokasi opsional.',
-            'ID buku bisa diubah di form Edit — data peminjaman ikut menyesuaikan otomatis.',
+            'ID buku bisa diubah di form Edit. Data peminjaman ikut menyesuaikan otomatis.',
             'Stok menentukan berapa eksemplar yang bisa dipinjam bersamaan.',
             'Buka halaman detail buku untuk melihat tiap eksemplar (BK-001-01, BK-001-02, ...) dan menandai yang hilang atau rusak.',
             'Buku banyak? Pakai tombol Impor di halaman Buku: unduh template, isi di Excel, Save As CSV, unggah.',
@@ -111,7 +111,7 @@ const guides = [
         image: 'anggota.png',
         steps: [
             'ID RFID diisi sekali saat tambah anggota dan tidak bisa diubah.',
-            'Tempel kartu ke scanner di kolom anggota form pinjam, tekan Enter — anggota langsung terpilih.',
+            'Tempel kartu ke scanner di kolom anggota form pinjam, tekan Enter, anggota langsung terpilih.',
             'Kalau scanner tidak ada, ketik nama/RFID lalu Enter atau klik hasil.',
             'Nomor RFID disembunyikan di tampilan demi keamanan kartu.',
             'Santri baru banyak? Pakai tombol Impor di halaman Anggota seperti impor buku.',
@@ -126,7 +126,7 @@ const guides = [
         steps: [
             'Cari buku (judul/ID) dan anggota (nama/RFID), atau scan kartu lalu Enter untuk simpan otomatis.',
             'Tanggal kembali terisi otomatis dari pengaturan lama pinjam, tapi bisa diubah manual.',
-            'Pinjaman ditolak bila: stok habis, anggota dibatasi, melewati batas pinjaman, atau buku direservasi pihak lain — baca pesan errornya.',
+            'Pinjaman ditolak bila: stok habis, anggota dibatasi, melewati batas pinjaman, atau buku direservasi pihak lain. Baca pesan errornya.',
         ],
     },
     {
@@ -179,8 +179,8 @@ const guides = [
         desc: 'Menu Lokasi: master data rak penyimpanan.',
         image: 'lokasi.png',
         steps: [
-            'Buat dulu lokasinya (kode + nama, mis. A1 — Rak Fiksi).',
-            'Pilih lokasi di form tambah/edit buku — hanya bisa pilih yang sudah ada.',
+            'Buat dulu lokasinya (kode + nama, mis. A1 - Rak Fiksi).',
+            'Pilih lokasi di form tambah/edit buku. Hanya bisa pilih yang sudah ada.',
             'Lokasi yang masih dipakai buku tidak bisa dihapus.',
         ],
     },
@@ -190,8 +190,8 @@ const guides = [
         desc: 'Menu Kategori: kelompok kitab/buku.',
         image: 'kategori.png',
         steps: [
-            'Buat dulu kategorinya (kode + nama, mis. FIQ — Fikih).',
-            'Pilih kategori di form tambah/edit buku — opsional, boleh kosong.',
+            'Buat dulu kategorinya (kode + nama, mis. FIQ - Fikih).',
+            'Pilih kategori di form tambah/edit buku. Opsional, boleh kosong.',
             'Kategori yang masih dipakai buku tidak bisa dihapus.',
         ],
     },
@@ -209,11 +209,11 @@ const guides = [
     {
         id: 'katalog',
         title: 'Katalog publik',
-        desc: 'Halaman /katalog — bisa dibuka santri tanpa login.',
+        desc: 'Halaman /katalog: bisa dibuka santri tanpa login.',
         image: 'katalog.png',
         steps: [
             'Bagikan alamat katalog ke santri untuk cek stok mandiri.',
-            'Menampilkan foto, stok, lokasi rak, dan status tersedia/habis — tanpa data peminjam.',
+            'Menampilkan foto, stok, lokasi rak, dan status tersedia/habis. Tanpa data peminjam.',
         ],
     },
     {
@@ -225,19 +225,19 @@ const guides = [
             'Catatan terisi otomatis setiap ada peminjaman dan pengembalian.',
             'Pakai filter Semua / Dipinjam / Kembali dan kolom cari untuk menelusuri.',
             'Tab Perubahan data mencatat siapa menambah, mengubah, atau menghapus data buku dan anggota.',
-            'Halaman ini hanya baca — tidak bisa diubah atau dihapus.',
+            'Halaman ini hanya baca. Tidak bisa diubah atau dihapus.',
         ],
     },
     {
         id: 'pengaturan',
         title: 'Pengaturan (admin)',
-        desc: 'Menu Pengaturan — hanya untuk yang berizin.',
+        desc: 'Menu Pengaturan. Hanya untuk yang berizin.',
         image: 'pengaturan.png',
         steps: [
             'Umum: ganti nama aplikasi yang tampil di sidebar dan judul.',
             'Peminjaman: lama pinjam default dan batas pinjaman per anggota.',
             'Pengguna: tambah/edit akun + tentukan role-nya (tanpa email pun bisa).',
-            'Role: atur izin per role — menu yang tak berizin otomatis abu dan URL-nya ditolak.',
+            'Role: atur izin per role. Menu yang tak berizin otomatis abu dan URL-nya ditolak.',
         ],
     },
     {

@@ -213,7 +213,7 @@ export default function SettingsIndex({ settings, users, roles, permissions }) {
                                 key={tab.id}
                                 type="button"
                                 disabled={locked}
-                                title={locked ? `${tab.label} — tidak punya akses` : undefined}
+                                title={locked ? `${tab.label} (tidak punya akses)` : undefined}
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                                     active

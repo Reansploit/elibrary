@@ -73,7 +73,7 @@ export default function SanksiIndex({ members }) {
             <div className="space-y-6">
                 <PageHeader
                     title="Pembatasan"
-                    description="Kelola pembatasan anggota — yang dibatasi tidak bisa meminjam"
+                    description="Kelola pembatasan anggota. Yang dibatasi tidak bisa meminjam"
                     icon={Gavel}
                 />
 
