@@ -4,7 +4,6 @@ use App\Http\Controllers\BookController;
 use App\Http\Controllers\CirculationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EksemplarController;
-use App\Http\Controllers\KatalogController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\LokasiController;
 use App\Http\Controllers\KategoriController;
@@ -29,12 +28,12 @@ Route::get('/', function () {
     return Inertia::render('Welcome');
 });
 
-// Katalog publik (tanpa login)
-Route::get('/katalog', [KatalogController::class, 'index'])->name('katalog');
-Route::get('/katalog/semua', [KatalogController::class, 'all'])->name('katalog.all');
-Route::get('/katalog/search', [KatalogController::class, 'search'])
-    ->middleware('throttle:60,1')
-    ->name('katalog.search');
+// Katalog publik pindah ke portal viewer (repo ebook-viewer-for-elibrary).
+// Alamat lama dialihkan agar tautan santri tidak mati.
+$viewer = rtrim(config('app.viewer_url', 'http://localhost:5173'), '/');
+Route::get('/katalog', fn () => redirect()->away($viewer . '/#/katalog'));
+Route::get('/katalog/semua', fn () => redirect()->away($viewer . '/#/semua'));
+Route::get('/katalog/search', fn () => redirect()->away($viewer . '/#/cari'));
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

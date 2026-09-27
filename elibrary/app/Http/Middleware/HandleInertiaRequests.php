@@ -38,6 +38,7 @@ class HandleInertiaRequests extends Middleware
                 'permissions' => $request->user() ? $request->user()->getAllPermissions()->pluck('name') : [],
             ],
             'libraryName' => Setting::get('library_name', config('app.name', 'Perpustakaan WBS')),
+            'viewerUrl' => rtrim(config('app.viewer_url', 'http://localhost:5173'), '/'),
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),

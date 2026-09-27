@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import AuthSplitLayout from '@/Layouts/AuthSplitLayout';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,6 +13,7 @@ export default function Login({ status, canResetPassword }) {
         remember: false,
     });
     const [showPassword, setShowPassword] = useState(false);
+    const viewerUrl = usePage().props.viewerUrl || 'http://localhost:5173';
 
     const submit = (e) => {
         e.preventDefault();
@@ -95,9 +96,9 @@ export default function Login({ status, canResetPassword }) {
 
             <p className="mt-6 text-center text-sm text-muted-foreground">
                 Santri?{' '}
-                <Link href={route('katalog')} className="font-medium text-foreground hover:underline">
+                <a href={`${viewerUrl}/#/katalog`} className="font-medium text-foreground hover:underline">
                     Lihat katalog buku
-                </Link>
+                </a>
             </p>
         </AuthSplitLayout>
     );

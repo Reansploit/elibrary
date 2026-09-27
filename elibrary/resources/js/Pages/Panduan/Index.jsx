@@ -209,7 +209,7 @@ const guides = [
     {
         id: 'katalog',
         title: 'Katalog publik',
-        desc: 'Halaman /katalog: bisa dibuka santri tanpa login.',
+        desc: 'Katalog ada di aplikasi viewer: bisa dibuka santri tanpa login.',
         image: 'katalog.png',
         steps: [
             'Bagikan alamat katalog ke santri untuk cek stok mandiri.',
