@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Book;
 use App\Models\Eksemplar;
 use App\Models\Kategori;
+use App\Models\ReaderVote;
 use App\Models\Setting;
 use Illuminate\Http\Request;
 
@@ -119,6 +120,8 @@ class KatalogController extends Controller
             'location' => $book->lokasiRak ? $book->lokasiRak->id_lokasi . ' - ' . $book->lokasiRak->nama : null,
             'category' => $book->kategoriRef?->nama,
             'remaining' => $remaining,
+            'likes' => ReaderVote::where('id_buku', $book->id_buku)->where('vote', 1)->count(),
+            'dislikes' => ReaderVote::where('id_buku', $book->id_buku)->where('vote', -1)->count(),
         ];
     }
 }

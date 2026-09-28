@@ -12,6 +12,8 @@ use App\Models\ReaderNote;
 use App\Models\ReaderProgress;
 use App\Models\ReaderSetting;
 use App\Models\ReaderToken;
+use App\Models\ReaderVote;
+use App\Models\ReaderSave;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -316,6 +318,87 @@ class ReaderController extends Controller
         }
     }
 
+    /** Suara milik akun: {id_buku: 1|-1}. Satu suara per buku. */
+    public function votes(Request $request)
+    {
+        $map = ReaderVote::where('id_anggota', $request->reader->id_anggota)
+            ->pluck('vote', 'id_buku');
+
+        return response()->json(['votes' => $map]);
+    }
+
+    /** Beri/tarik suara: vote 1 (suka), -1 (tidak), 0 (batal). */
+    public function vote(Request $request)
+    {
+        $validated = $request->validate([
+            'id_buku' => 'required|string|max:10',
+            'vote' => 'required|integer|in:-1,0,1',
+        ]);
+
+        if ($validated['vote'] === 0) {
+            ReaderVote::where('id_anggota', $request->reader->id_anggota)
+                ->where('id_buku', $validated['id_buku'])
+                ->delete();
+        } else {
+            ReaderVote::updateOrCreate(
+                ['id_anggota' => $request->reader->id_anggota, 'id_buku' => $validated['id_buku']],
+                ['vote' => $validated['vote']]
+            );
+        }
+
+        return response()->json($this->rating($validated['id_buku']));
+    }
+
+    /** Simpanan ebook milik akun. */
+    public function saves(Request $request)
+    {
+        $rows = ReaderSave::where('id_anggota', $request->reader->id_anggota)
+            ->orderByDesc('id')
+            ->get()
+            ->map(fn ($s) => $this->bookCard($s->id_buku))
+            ->filter()
+            ->values();
+
+        return response()->json(['saves' => $rows]);
+    }
+
+    /** Simpan ebook (hanya yang ada berkasnya). */
+    public function storeSave(Request $request)
+    {
+        $validated = $request->validate(['id_buku' => 'required|string|max:10']);
+
+        $book = Book::find($validated['id_buku']);
+
+        if (! $book || ! $book->file_ebook) {
+            return response()->json(['message' => 'Hanya ebook yang bisa disimpan.'], 422);
+        }
+
+        ReaderSave::firstOrCreate([
+            'id_anggota' => $request->reader->id_anggota,
+            'id_buku' => $validated['id_buku'],
+        ]);
+
+        return response()->json(['ok' => true], 201);
+    }
+
+    public function destroySave(Request $request, $bookId)
+    {
+        ReaderSave::where('id_anggota', $request->reader->id_anggota)
+            ->where('id_buku', $bookId)
+            ->delete();
+
+        return response()->json(['ok' => true]);
+    }
+
+    private function rating(string $bookId): array
+    {
+        return [
+            'id_buku' => $bookId,
+            'likes' => ReaderVote::where('id_buku', $bookId)->where('vote', 1)->count(),
+            'dislikes' => ReaderVote::where('id_buku', $bookId)->where('vote', -1)->count(),
+        ];
+    }
+
     private function withBook(ReaderProgress $progress): array
     {
         return [
@@ -344,6 +427,8 @@ class ReaderController extends Controller
             'author' => $book->pengarang,
             'photo' => $photo ? url($photo) : null,
             'file' => $file ? url($file) : null,
+            'likes' => ReaderVote::where('id_buku', $book->id_buku)->where('vote', 1)->count(),
+            'dislikes' => ReaderVote::where('id_buku', $book->id_buku)->where('vote', -1)->count(),
         ];
     }
 }

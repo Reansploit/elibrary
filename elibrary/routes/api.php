@@ -34,5 +34,10 @@ Route::prefix('v1/reader')->group(function () {
         Route::put('/settings', [ReaderController::class, 'saveSettings']);
         Route::post('/wallpaper', [ReaderController::class, 'uploadWallpaper']);
         Route::delete('/wallpaper', [ReaderController::class, 'deleteWallpaper']);
+        Route::get('/votes', [ReaderController::class, 'votes']);
+        Route::post('/vote', [ReaderController::class, 'vote']);
+        Route::get('/saves', [ReaderController::class, 'saves']);
+        Route::post('/saves', [ReaderController::class, 'storeSave']);
+        Route::delete('/saves/{bookId}', [ReaderController::class, 'destroySave']);
     });
 });
