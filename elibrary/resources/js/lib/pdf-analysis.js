@@ -36,7 +36,46 @@ function textRunsFromContent(content, viewport) {
         .filter((run) => run.height > 0 && run.width > 0);
 }
 
-function imageRegionsFromOperatorList(operatorList, viewport) {
+function graphicRegionsFromOperatorList(operatorList) {
+    const regions = [];
+    const stack = [];
+    let currentTransform = [1, 0, 0, 1, 0, 0];
+
+    for (let index = 0; index < operatorList.fnArray.length; index += 1) {
+        const fn = operatorList.fnArray[index];
+        const args = operatorList.argsArray[index] || [];
+
+        if (fn === OPS.save) {
+            stack.push([...currentTransform]);
+        } else if (fn === OPS.restore) {
+            currentTransform = stack.pop() || [1, 0, 0, 1, 0, 0];
+        } else if (fn === OPS.transform && args.length >= 6) {
+            currentTransform = multiply(args.slice(0, 6), currentTransform);
+        } else if (fn === OPS.constructPath && args[2]) {
+            const box = args[2];
+            const corners = [
+                transformedPoint(currentTransform, box[0], box[1]),
+                transformedPoint(currentTransform, box[2], box[1]),
+                transformedPoint(currentTransform, box[0], box[3]),
+                transformedPoint(currentTransform, box[2], box[3]),
+            ];
+            const xValues = corners.map((point) => point[0]);
+            const yValues = corners.map((point) => point[1]);
+            const x = Math.min(...xValues);
+            const y = Math.min(...yValues);
+            const width = Math.max(...xValues) - x;
+            const height = Math.max(...yValues) - y;
+
+            if (width > 0 && height > 0) {
+                regions.push({ x, y, width, height });
+            }
+        }
+    }
+
+    return regions;
+}
+
+function imageRegionsFromOperatorList(operatorList) {
     const regions = [];
     const stack = [];
     let currentTransform = [1, 0, 0, 1, 0, 0];
@@ -57,12 +96,11 @@ function imageRegionsFromOperatorList(operatorList, viewport) {
         } else if (fn === OPS.transform && args.length >= 6) {
             currentTransform = multiply(args.slice(0, 6), currentTransform);
         } else if (imageOps.has(fn)) {
-            const viewportTransform = viewport.transform;
             const corners = [
-                transformedPoint(viewportTransform, ...transformedPoint(currentTransform, 0, 0)),
-                transformedPoint(viewportTransform, ...transformedPoint(currentTransform, 1, 0)),
-                transformedPoint(viewportTransform, ...transformedPoint(currentTransform, 0, 1)),
-                transformedPoint(viewportTransform, ...transformedPoint(currentTransform, 1, 1)),
+                transformedPoint(currentTransform, 0, 0),
+                transformedPoint(currentTransform, 1, 0),
+                transformedPoint(currentTransform, 0, 1),
+                transformedPoint(currentTransform, 1, 1),
             ];
             const xValues = corners.map((point) => point[0]);
             const yValues = corners.map((point) => point[1]);
@@ -94,13 +132,13 @@ export async function analyzePdfPageFromPdf(pdf, pageNumber) {
         page.getTextContent(),
         page.getOperatorList(),
     ]);
-
     return analyzePdfPage({
         pageNumber,
         width: viewport.width,
         height: viewport.height,
         textRuns: textRunsFromContent(textContent, viewport),
-        imageRegions: imageRegionsFromOperatorList(operatorList, viewport),
+        imageRegions: imageRegionsFromOperatorList(operatorList),
+        graphicRegions: graphicRegionsFromOperatorList(operatorList),
         backgroundConfidence: 0.5,
     });
 }

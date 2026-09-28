@@ -7,7 +7,7 @@ import { ArrowLeft, ChevronLeft, ChevronRight, FileText, Minus, Plus, RotateCcw 
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/components/theme-provider';
 import { pdfPagesToDocumentIR } from '@reo-engine/parser-pdf';
-import { mountDocumentReader } from '@reo-engine/renderer-web';
+import { mountAdaptivePage } from '@reo-engine/renderer-web';
 import { analyzePdfPageFromPdf } from '@/lib/pdf-analysis';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
@@ -24,11 +24,11 @@ function formatSize(bytes) {
 
 export default function ReaderPdf({ book, file, assetBaseUrl }) {
     const { theme } = useTheme();
-    const themeRef = useRef(theme);
     const canvasRef = useRef(null);
-    const engineRef = useRef(null);
-    const engineInstanceRef = useRef(null);
-    const engineDocumentRef = useRef(null);
+    const adaptiveOverlayRef = useRef(null);
+    const adaptiveInstanceRef = useRef(null);
+    const analysisMapRef = useRef(new Map());
+    const currentPageRef = useRef(1);
     const [pdf, setPdf] = useState(null);
     const [mode, setMode] = useState('original');
     const [pageNumber, setPageNumber] = useState(1);
@@ -38,6 +38,10 @@ export default function ReaderPdf({ book, file, assetBaseUrl }) {
     const [engineStatus, setEngineStatus] = useState('idle');
     const [engineProgress, setEngineProgress] = useState(0);
     const [engineError, setEngineError] = useState('');
+    const [analysisVersion, setAnalysisVersion] = useState(0);
+    const [activeAnalysis, setActiveAnalysis] = useState(null);
+    const [pageRenderVersion, setPageRenderVersion] = useState(0);
+    currentPageRef.current = pageNumber;
 
     const pdfjsAssets = {
         wasmUrl: `${assetBaseUrl}/wasm/`,
@@ -46,13 +50,6 @@ export default function ReaderPdf({ book, file, assetBaseUrl }) {
         standardFontDataUrl: `${assetBaseUrl}/standard_fonts/`,
         iccUrl: `${assetBaseUrl}/iccs/`,
     };
-
-    useEffect(() => {
-        themeRef.current = theme;
-        if (engineDocumentRef.current && engineInstanceRef.current) {
-            engineInstanceRef.current.update(engineDocumentRef.current, { theme });
-        }
-    }, [theme]);
 
     useEffect(() => {
         let active = true;
@@ -111,6 +108,9 @@ export default function ReaderPdf({ book, file, assetBaseUrl }) {
                 });
                 return renderTask.promise;
             })
+            .then(() => {
+                if (active) setPageRenderVersion((value) => value + 1);
+            })
             .catch((error) => {
                 if (active && error?.name !== 'RenderingCancelledException') {
                     setErrorMessage(error.message || 'Halaman gagal dirender.');
@@ -130,10 +130,8 @@ export default function ReaderPdf({ book, file, assetBaseUrl }) {
         if (mode !== 'engine' || !pdf) {
             setEngineStatus('idle');
             setEngineProgress(0);
-            engineInstanceRef.current?.destroy();
-            engineInstanceRef.current = null;
-            engineDocumentRef.current = null;
-            engineRef.current?.replaceChildren();
+            adaptiveInstanceRef.current?.destroy();
+            adaptiveInstanceRef.current = null;
             return undefined;
         }
 
@@ -141,6 +139,8 @@ export default function ReaderPdf({ book, file, assetBaseUrl }) {
             setEngineStatus('loading');
             setEngineProgress(0);
             setEngineError('');
+            analysisMapRef.current.clear();
+            setAnalysisVersion((value) => value + 1);
             const pages = [];
             const total = pdf.numPages;
 
@@ -151,6 +151,10 @@ export default function ReaderPdf({ book, file, assetBaseUrl }) {
                 );
                 const batch = await Promise.all(numbers.map(async (number) => {
                     const analysis = await analyzePdfPageFromPdf(pdf, number);
+                    analysisMapRef.current.set(number, analysis);
+                    if (active && number === currentPageRef.current) {
+                        setAnalysisVersion((value) => value + 1);
+                    }
                     return {
                         pageNumber: number,
                         text: analysis.textRegions.map((region) => region.text).join('\n'),
@@ -170,16 +174,6 @@ export default function ReaderPdf({ book, file, assetBaseUrl }) {
                 setEngineStatus('empty');
                 return;
             }
-            if (!engineRef.current) {
-                setEngineStatus('error');
-                setEngineError('Area engine tidak siap.');
-                return;
-            }
-
-            engineDocumentRef.current = documentIR;
-            engineInstanceRef.current = mountDocumentReader(engineRef.current, documentIR, {
-                theme: themeRef.current,
-            });
             setEngineStatus('ready');
         };
 
@@ -191,11 +185,32 @@ export default function ReaderPdf({ book, file, assetBaseUrl }) {
 
         return () => {
             active = false;
-            engineInstanceRef.current?.destroy();
-            engineInstanceRef.current = null;
-            engineDocumentRef.current = null;
         };
     }, [mode, pdf, book.id, book.title, book.author]);
+
+    useEffect(() => {
+        setActiveAnalysis(analysisMapRef.current.get(pageNumber) || null);
+    }, [pageNumber, analysisVersion]);
+
+    useEffect(() => {
+        if (mode !== 'engine' || !activeAnalysis || !canvasRef.current || !adaptiveOverlayRef.current) {
+            adaptiveInstanceRef.current?.destroy();
+            adaptiveInstanceRef.current = null;
+            return undefined;
+        }
+
+        adaptiveInstanceRef.current = mountAdaptivePage(
+            adaptiveOverlayRef.current,
+            canvasRef.current,
+            activeAnalysis,
+            { theme: theme === 'dark' ? 'dark' : 'light' },
+        );
+
+        return () => {
+            adaptiveInstanceRef.current?.destroy();
+            adaptiveInstanceRef.current = null;
+        };
+    }, [mode, activeAnalysis, pageRenderVersion, theme]);
 
     const changePage = (value) => {
         if (!pdf) return;
@@ -251,135 +266,115 @@ export default function ReaderPdf({ book, file, assetBaseUrl }) {
                         </Button>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                        {mode === 'original' ? 'Tampilan PDF asli' : 'Teks diekstrak menjadi IR lalu dirender engine'}
+                        {mode === 'original' ? 'Tampilan PDF asli' : 'Teks dianalisis per region, gambar dipertahankan'}
                     </p>
                 </div>
 
                 <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card p-3">
-                    {mode === 'original' ? (
-                        <>
-                            <div className="flex items-center gap-2" role="group" aria-label="Navigasi halaman">
-                                <Button
-                                    variant="outline"
-                                    size="icon"
-                                    className="h-11 w-11"
-                                    onClick={() => changePage(pageNumber - 1)}
-                                    disabled={!pdf || pageNumber <= 1}
-                                    aria-label="Halaman sebelumnya"
-                                >
-                                    <ChevronLeft className="h-4 w-4" />
-                                </Button>
-                                <span className="min-w-24 text-center text-sm tabular-nums" aria-live="polite">
-                                    {pdf ? `${pageNumber} / ${pdf.numPages}` : 'Memuat...'}
-                                </span>
-                                <Button
-                                    variant="outline"
-                                    size="icon"
-                                    className="h-11 w-11"
-                                    onClick={() => changePage(pageNumber + 1)}
-                                    disabled={!pdf || pageNumber >= pdf.numPages}
-                                    aria-label="Halaman berikutnya"
-                                >
-                                    <ChevronRight className="h-4 w-4" />
-                                </Button>
-                            </div>
+                    <div className="flex items-center gap-2" role="group" aria-label="Navigasi halaman">
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-11 w-11"
+                            onClick={() => changePage(pageNumber - 1)}
+                            disabled={!pdf || pageNumber <= 1}
+                            aria-label="Halaman sebelumnya"
+                        >
+                            <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <span className="min-w-24 text-center text-sm tabular-nums" aria-live="polite">
+                            {pdf ? `${pageNumber} / ${pdf.numPages}` : 'Memuat...'}
+                        </span>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-11 w-11"
+                            onClick={() => changePage(pageNumber + 1)}
+                            disabled={!pdf || pageNumber >= pdf.numPages}
+                            aria-label="Halaman berikutnya"
+                        >
+                            <ChevronRight className="h-4 w-4" />
+                        </Button>
+                    </div>
 
-                            <div className="flex items-center gap-2" role="group" aria-label="Zoom halaman">
-                                <Button
-                                    variant="outline"
-                                    size="icon"
-                                    className="h-11 w-11"
-                                    onClick={() => changeScale(-SCALE_STEP)}
-                                    disabled={scale <= MIN_SCALE}
-                                    aria-label="Perkecil halaman"
-                                >
-                                    <Minus className="h-4 w-4" />
-                                </Button>
-                                <span className="min-w-14 text-center text-sm tabular-nums">{Math.round(scale * 100)}%</span>
-                                <Button
-                                    variant="outline"
-                                    size="icon"
-                                    className="h-11 w-11"
-                                    onClick={() => changeScale(SCALE_STEP)}
-                                    disabled={scale >= MAX_SCALE}
-                                    aria-label="Perbesar halaman"
-                                >
-                                    <Plus className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-11 w-11"
-                                    onClick={() => setScale(1)}
-                                    aria-label="Kembalikan ukuran halaman"
-                                    title="Kembalikan ukuran halaman"
-                                >
-                                    <RotateCcw className="h-4 w-4" />
-                                </Button>
-                            </div>
-                        </>
+                    {mode === 'original' ? (
+                        <div className="flex items-center gap-2" role="group" aria-label="Zoom halaman">
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-11 w-11"
+                                onClick={() => changeScale(-SCALE_STEP)}
+                                disabled={scale <= MIN_SCALE}
+                                aria-label="Perkecil halaman"
+                            >
+                                <Minus className="h-4 w-4" />
+                            </Button>
+                            <span className="min-w-14 text-center text-sm tabular-nums">{Math.round(scale * 100)}%</span>
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-11 w-11"
+                                onClick={() => changeScale(SCALE_STEP)}
+                                disabled={scale >= MAX_SCALE}
+                                aria-label="Perbesar halaman"
+                            >
+                                <Plus className="h-4 w-4" />
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-11 w-11"
+                                onClick={() => setScale(1)}
+                                aria-label="Kembalikan ukuran halaman"
+                                title="Kembalikan ukuran halaman"
+                            >
+                                <RotateCcw className="h-4 w-4" />
+                            </Button>
+                        </div>
                     ) : (
                         <p className="text-sm text-muted-foreground" aria-live="polite">
-                            {engineStatus === 'loading' && `Membangun Document IR... ${engineProgress}%`}
-                            {engineStatus === 'ready' && `${engineProgress}% teks diproses`}
+                            {engineStatus === 'loading' && `Menganalisis halaman... ${engineProgress}%`}
+                            {engineStatus === 'ready' && `${engineProgress}% halaman dianalisis`}
                             {engineStatus === 'empty' && 'PDF ini tidak memiliki layer teks.'}
                             {engineStatus === 'error' && engineError}
                         </p>
                     )}
                 </div>
 
-                {mode === 'original' ? (
-                    <section className="min-h-[32rem] overflow-auto rounded-xl border bg-slate-100 p-3 dark:bg-slate-950 sm:p-6" aria-label="Halaman PDF">
-                        {status === 'loading' && (
-                            <div className="flex min-h-[28rem] items-center justify-center text-sm text-slate-700 dark:text-slate-300" role="status">
-                                Memuat PDF...
+                <section className="min-h-[32rem] overflow-auto rounded-xl border bg-slate-100 p-3 dark:bg-slate-950 sm:p-6" aria-label={mode === 'original' ? 'Halaman PDF' : 'Halaman PDF adaptif'}>
+                    {status === 'loading' && (
+                        <div className="flex min-h-[28rem] items-center justify-center text-sm text-slate-700 dark:text-slate-300" role="status">
+                            Memuat PDF...
+                        </div>
+                    )}
+                    {status === 'error' && (
+                        <div className="flex min-h-[28rem] flex-col items-center justify-center gap-3 p-8 text-center" role="alert">
+                            <FileText className="h-8 w-8 text-slate-600 dark:text-slate-300" aria-hidden="true" />
+                            <div>
+                                <p className="font-medium text-slate-900 dark:text-slate-100">PDF tidak dapat dibaca</p>
+                                <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">{errorMessage}</p>
                             </div>
-                        )}
-                        {status === 'error' && (
-                            <div className="flex min-h-[28rem] flex-col items-center justify-center gap-3 p-8 text-center" role="alert">
-                                <FileText className="h-8 w-8 text-slate-600 dark:text-slate-300" aria-hidden="true" />
-                                <div>
-                                    <p className="font-medium text-slate-900 dark:text-slate-100">PDF tidak dapat dibaca</p>
-                                    <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">{errorMessage}</p>
-                                </div>
-                                <Button variant="outline" onClick={() => window.location.reload()}>
-                                    Muat ulang
-                                </Button>
-                            </div>
-                        )}
-                        <canvas ref={canvasRef} className={status === 'ready' ? 'mx-auto block max-w-full shadow-sm' : 'hidden'} />
-                    </section>
-                ) : (
-                    <section className="reader-surface min-h-[32rem] overflow-auto rounded-xl border bg-card p-3 sm:p-6" aria-label="Reader Reo-Engine">
-                        {engineStatus === 'loading' && (
-                            <div className="flex min-h-[28rem] items-center justify-center text-sm text-muted-foreground" role="status">
-                                Mengambil teks halaman...
-                            </div>
-                        )}
-                        {engineStatus === 'error' && (
-                            <div className="flex min-h-[28rem] flex-col items-center justify-center gap-3 p-8 text-center" role="alert">
-                                <FileText className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
-                                <p className="text-sm text-muted-foreground">{engineError}</p>
-                                <Button variant="outline" onClick={() => setMode('original')}>
-                                    Buka mode Original
-                                </Button>
-                            </div>
-                        )}
-                        {engineStatus === 'empty' && (
-                            <div className="flex min-h-[28rem] flex-col items-center justify-center gap-3 p-8 text-center">
-                                <FileText className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
-                                <p className="font-medium">Layer teks tidak tersedia</p>
-                                <p className="max-w-md text-sm text-muted-foreground">
-                                    PDF ini kemungkinan hasil scan. Pilih mode Original untuk melihat halaman.
-                                </p>
-                                <Button variant="outline" onClick={() => setMode('original')}>
-                                    Buka mode Original
-                                </Button>
-                            </div>
-                        )}
-                        <div ref={engineRef} className={engineStatus === 'ready' ? 'block' : 'hidden'} />
-                    </section>
-                )}
+                            <Button variant="outline" onClick={() => window.location.reload()}>
+                                Muat ulang
+                            </Button>
+                        </div>
+                    )}
+                    {status === 'ready' && (
+                        <div className="relative mx-auto w-fit max-w-full">
+                            <canvas ref={canvasRef} className="block max-w-full shadow-sm" />
+                            <div
+                                ref={adaptiveOverlayRef}
+                                className={mode === 'engine' ? 'absolute inset-0' : 'pointer-events-none absolute inset-0 hidden'}
+                                aria-hidden={mode === 'original'}
+                            />
+                        </div>
+                    )}
+                    {mode === 'engine' && status === 'ready' && engineStatus === 'empty' && (
+                        <p className="mt-4 text-center text-sm text-slate-700 dark:text-slate-300">
+                            PDF ini hasil scan tanpa text layer. Tampilan asli dipertahankan.
+                        </p>
+                    )}
+                </section>
             </div>
         </AuthenticatedLayout>
     );
