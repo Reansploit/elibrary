@@ -13,6 +13,7 @@ use App\Http\Controllers\GuideController;
 use App\Http\Controllers\LogController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\StatistikController;
 use App\Http\Controllers\SanksiController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\ProfileController;
@@ -79,6 +80,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/laporan', [ReportController::class, 'index'])->name('laporan.index');
     Route::get('/laporan/export', [ReportController::class, 'export'])->name('laporan.export');
+    Route::get('/statistik', [StatistikController::class, 'index'])->name('statistik.index');
 
     Route::get('/circulation', [CirculationController::class, 'index'])->name('circulation.index');
     Route::get('/circulation/overdue', [CirculationController::class, 'overdue'])->name('circulation.overdue');
