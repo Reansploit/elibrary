@@ -246,20 +246,74 @@ class ReaderController extends Controller
             ['wallpaper' => 'polos', 'theme' => 'light']
         );
 
-        return response()->json(['wallpaper' => $setting->wallpaper, 'theme' => $setting->theme]);
+        return response()->json([
+            'wallpaper' => $setting->wallpaper === 'polos' ? 'polos' : url(ltrim($setting->wallpaper, '/')),
+            'theme' => $setting->theme,
+        ]);
     }
 
     public function saveSettings(Request $request)
     {
         $validated = $request->validate([
-            'wallpaper' => 'nullable|string|max:30',
+            'wallpaper' => 'nullable|string|max:255',
             'theme' => 'nullable|in:light,dark',
         ]);
 
         $setting = ReaderSetting::firstOrCreate(['id_anggota' => $request->reader->id_anggota]);
-        $setting->fill(array_filter($validated, fn ($v) => $v !== null))->save();
+        $patch = array_filter($validated, fn ($v) => $v !== null);
+        if (isset($patch['wallpaper']) && str_starts_with($patch['wallpaper'], 'http')) {
+            $patch['wallpaper'] = ltrim((string) parse_url($patch['wallpaper'], PHP_URL_PATH), '/');
+        }
+        $setting->fill($patch)->save();
 
-        return response()->json(['wallpaper' => $setting->wallpaper, 'theme' => $setting->theme]);
+        return response()->json([
+            'wallpaper' => $setting->wallpaper === 'polos' ? 'polos' : url(ltrim($setting->wallpaper, '/')),
+            'theme' => $setting->theme,
+        ]);
+    }
+
+    /** Unggah foto wallpaper milik akun (maks 2MB). */
+    public function uploadWallpaper(Request $request)
+    {
+        $validated = $request->validate([
+            'photo' => 'required|image|max:2048',
+        ]);
+
+        $setting = ReaderSetting::firstOrCreate(['id_anggota' => $request->reader->id_anggota]);
+
+        $file = $request->file('photo');
+        $name = \Illuminate\Support\Str::random(40) . '.' . strtolower($file->getClientOriginalExtension() ?: 'jpg');
+        \Illuminate\Support\Facades\File::ensureDirectoryExists(public_path('wallpaper-reader'));
+        $file->move(public_path('wallpaper-reader'), $name);
+
+        $this->deleteWallpaperFile($setting->wallpaper);
+        $setting->wallpaper = 'wallpaper-reader/' . $name;
+        $setting->save();
+
+        return response()->json(['wallpaper' => url($setting->wallpaper)], 201);
+    }
+
+    /** Kembali ke polos (hapus foto milik akun). */
+    public function deleteWallpaper(Request $request)
+    {
+        $setting = ReaderSetting::firstOrCreate(['id_anggota' => $request->reader->id_anggota]);
+        $this->deleteWallpaperFile($setting->wallpaper);
+        $setting->wallpaper = 'polos';
+        $setting->save();
+
+        return response()->json(['wallpaper' => 'polos']);
+    }
+
+    private function deleteWallpaperFile(?string $path): void
+    {
+        if (! $path || $path === 'polos' || str_contains($path, '..')) {
+            return;
+        }
+
+        $path = ltrim($path, '/');
+        if (is_file(public_path($path))) {
+            @unlink(public_path($path));
+        }
     }
 
     private function withBook(ReaderProgress $progress): array

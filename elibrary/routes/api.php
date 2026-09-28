@@ -32,5 +32,7 @@ Route::prefix('v1/reader')->group(function () {
         Route::delete('/notes/{id}', [ReaderController::class, 'destroyNote']);
         Route::get('/settings', [ReaderController::class, 'settings']);
         Route::put('/settings', [ReaderController::class, 'saveSettings']);
+        Route::post('/wallpaper', [ReaderController::class, 'uploadWallpaper']);
+        Route::delete('/wallpaper', [ReaderController::class, 'deleteWallpaper']);
     });
 });
