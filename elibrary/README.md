@@ -81,6 +81,36 @@ Login awal: username `admin` / password `123` — langsung ganti setelah masuk.
 | Upload foto "failed to upload" | Limit PHP `upload_max_filesize` (default 2M) — app mengkompresi otomatis di browser; untuk file besar naikkan limit server |
 | Halaman putih setelah `git pull` | `public/build` tidak ikut repo — jalankan `npm run build` (atau `npm run dev`) di server |
 
+## Jenis koleksi
+
+Setiap buku punya kolom `jenis` dengan nilai `buku` atau `ebook`. Nilai ini dipilih saat menambah atau mengubah data, tampil di daftar, detail, dan katalog. Menu **Ebook** memakai route `ebooks.index` yang memakai data yang sama dengan tabel `tb_buku`, jadi tidak ada duplikasi data.
+
+## Preview reader
+
+Halaman `Books/Show` sekarang memiliki tombol **Pratinjau reader**. Route `books.preview` merender demo Document IR v0.1 memakai renderer web dari Reo-Engine. Ini slice visual untuk menguji reflow, ukuran teks, dan tema sebelum file PDF disambungkan.
+
+Build lokal memakai checkout engine di folder saudara secara default:
+
+```text
+D:/Job/elibrary/elibrary
+D:/Job/Reo-Engine
+```
+
+Jika folder engine berada di lokasi lain, set `REO_ENGINE_PATH` sebelum menjalankan Vite:
+
+```powershell
+$env:REO_ENGINE_PATH = 'D:/path/ke/Reo-Engine'
+npm run build
+```
+
+Pratinjau ini memakai Document IR demo dan terpisah dari file PDF yang diunggah. Preview engine tetap berguna untuk menguji renderer tanpa biaya ekstraksi seluruh buku.
+
+## Upload dan baca ebook
+
+Pada form Ebook, field **Lokasi / rak** dan jumlah eksemplar fisik disembunyikan. File PDF wajib dipilih dengan batas 50 MB. File disimpan pada disk `local` di `storage/app/private/ebooks`, tidak diekspos langsung melalui `public/`.
+
+Route `books.file` hanya dapat diakses pengguna yang sudah login dan punya izin buku. Viewer `books.read` memiliki dua mode di bagian atas. **Original** merender PDF persis melalui PDF.js. **Reo-Engine** mengambil text run dan image operator dari PDF.js, meneruskannya ke `@reo-engine/parser-pdf` untuk menghasilkan page analysis, lalu merender IR dengan `@reo-engine/renderer-web`. Halaman tanpa layer teks, misalnya cover gambar atau hasil scan, hanya tersedia pada mode Original. Vite menyalin asset decoder, CMaps, font standar, dan ICC ke `public/build/pdfjs` otomatis; folder tersebut tidak ikut repo. Saat mode dev, URL asset dikirim dari origin Laravel agar request WASM tidak diproses Vite.
+
 ## Struktur singkat
 
 ```

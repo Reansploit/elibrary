@@ -108,6 +108,7 @@ class KatalogController extends Controller
             'photo' => static::photoUrl($book->foto),
             'location' => $book->lokasiRak ? $book->lokasiRak->id_lokasi . ' — ' . $book->lokasiRak->nama : null,
             'category' => $book->kategoriRef?->nama,
+            'jenis' => $book->jenis ?: 'buku',
             'remaining' => $remaining,
         ];
     }

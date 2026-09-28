@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
-import { ArrowLeft, Pencil, BookOpen, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Pencil, BookOpen, Eye, FileText, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
@@ -67,6 +67,20 @@ export default function BookShow({ book, history, exemplars }) {
                                     Kembali
                                 </Link>
                             </Button>
+                            {book.ebook && (
+                                <Button asChild>
+                                    <Link href={route('books.read', book.id)}>
+                                        <FileText className="h-4 w-4" />
+                                        Baca PDF
+                                    </Link>
+                                </Button>
+                            )}
+                            <Button variant="outline" asChild>
+                                <Link href={route('books.preview', book.id)}>
+                                    <Eye className="h-4 w-4" />
+                                    Pratinjau engine
+                                </Link>
+                            </Button>
                             {can(['edit_books', 'manage_books']) && (
                                 <Button asChild>
                                     <Link href={route('books.edit', book.id)}>
@@ -92,7 +106,9 @@ export default function BookShow({ book, history, exemplars }) {
                                 <p className="font-semibold">{book.title}</p>
                                 <p className="font-mono text-xs text-muted-foreground">{book.id}</p>
                             </div>
-                            {!book.borrowed ? (
+                            {book.jenis === 'ebook' ? (
+                                <Badge variant="secondary">Koleksi digital</Badge>
+                            ) : !book.borrowed ? (
                                 <Badge variant="outline">Tersedia</Badge>
                             ) : (
                                 <Badge variant="secondary">
@@ -114,9 +130,13 @@ export default function BookShow({ book, history, exemplars }) {
                             <InfoRow label="ID buku">{book.id}</InfoRow>
                             <InfoRow label="Judul">{book.title}</InfoRow>
                             <InfoRow label="Pengarang">{book.author || '-'}</InfoRow>
-                            <InfoRow label="Lokasi">{book.location || '-'}</InfoRow>
+                            {book.jenis === 'buku' && <InfoRow label="Lokasi">{book.location || '-'}</InfoRow>}
                             <InfoRow label="Kategori">{book.category || '-'}</InfoRow>
-                            <InfoRow label="Jumlah">{book.stock ?? 0}</InfoRow>
+                            <InfoRow label="Jenis">{book.jenis === 'ebook' ? 'Ebook' : 'Buku'}</InfoRow>
+                            {book.ebook && (
+                                <InfoRow label="File PDF">{book.ebook.original_name}</InfoRow>
+                            )}
+                            <InfoRow label="Jumlah">{book.jenis === 'ebook' ? 'Tanpa eksemplar fisik' : (book.stock ?? 0)}</InfoRow>
                         </CardContent>
                     </Card>
                 </div>

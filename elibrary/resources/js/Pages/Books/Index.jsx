@@ -3,6 +3,7 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import { Plus, Pencil, Trash2, BookOpen, Search, BarChart2, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
@@ -13,8 +14,15 @@ import Pagination from '@/components/pagination';
 import { useCan } from '@/hooks/useCan';
 import { usePagination } from '@/hooks/usePagination';
 
-export default function BookIndex({ books }) {
+export default function BookIndex({ books, activeJenis = null }) {
     const can = useCan();
+    const isEbook = activeJenis === 'ebook';
+    const pageTitle = isEbook ? 'Ebook' : 'Buku';
+    const typeFilters = [
+        { label: 'Semua', value: null, href: route('books.index') },
+        { label: 'Buku', value: 'buku', href: route('books.index', { jenis: 'buku' }) },
+        { label: 'Ebook', value: 'ebook', href: route('ebooks.index') },
+    ];
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [bookToDelete, setBookToDelete] = useState(null);
     const [search, setSearch] = useState('');
@@ -29,7 +37,8 @@ export default function BookIndex({ books }) {
                 book.author?.toLowerCase().includes(q) ||
                 book.id?.toLowerCase().includes(q) ||
                 book.location?.toLowerCase().includes(q) ||
-                book.category?.toLowerCase().includes(q)
+                book.category?.toLowerCase().includes(q) ||
+                (book.jenis || 'buku').toLowerCase().includes(q)
         );
     }, [books, search]);
 
@@ -52,26 +61,26 @@ export default function BookIndex({ books }) {
 
     return (
         <AuthenticatedLayout>
-            <Head title="Buku" />
+            <Head title={pageTitle} />
 
             <div className="space-y-6">
                 <PageHeader
-                    title="Buku"
-                    description="Kelola data buku perpustakaan"
+                    title={pageTitle}
+                    description={isEbook ? 'Kelola koleksi ebook digital' : 'Kelola data buku perpustakaan'}
                     icon={BookOpen}
                     actions={
                         <>
                             <Button variant="outline" asChild>
                                 <Link href={route('books.management')}>
                                     <BarChart2 className="h-4 w-4" />
-                                    Status buku
+                                    Status koleksi
                                 </Link>
                             </Button>
-                            {can(['create_books', 'manage_books']) && (
+                            {!isEbook && can(['create_books', 'manage_books']) && (
                                 <Button variant="outline" asChild>
                                     <Link href={route('import.index', { type: 'buku' })}>
                                         <Upload className="h-4 w-4" />
-                                        Impor
+                                        Impor buku
                                     </Link>
                                 </Button>
                             )}
@@ -79,7 +88,7 @@ export default function BookIndex({ books }) {
                                 <Button asChild>
                                     <Link href={route('books.create')}>
                                         <Plus className="h-4 w-4" />
-                                        Tambah buku
+                                        Tambah {pageTitle.toLowerCase()}
                                     </Link>
                                 </Button>
                             )}
@@ -90,9 +99,9 @@ export default function BookIndex({ books }) {
                 <Card>
                     <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                         <div>
-                            <CardTitle>Daftar buku</CardTitle>
+                            <CardTitle>Daftar {pageTitle.toLowerCase()}</CardTitle>
                             <CardDescription>
-                                {filteredBooks.length} dari {books?.length || 0} buku
+                                {filteredBooks.length} dari {books?.length || 0} {pageTitle.toLowerCase()}
                                 {search ? ` • hasil untuk "${search}"` : ''}
                             </CardDescription>
                         </div>
@@ -107,6 +116,22 @@ export default function BookIndex({ books }) {
                         </div>
                     </CardHeader>
                     <CardContent>
+                        <div className="mb-4 flex flex-wrap gap-2" aria-label="Filter jenis koleksi">
+                            {typeFilters.map((filter) => (
+                                <Link
+                                    key={filter.label}
+                                    href={filter.href}
+                                    aria-current={activeJenis === filter.value ? 'page' : undefined}
+                                    className={
+                                        activeJenis === filter.value
+                                            ? 'rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground'
+                                            : 'rounded-lg border bg-card px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground'
+                                    }
+                                >
+                                    {filter.label}
+                                </Link>
+                            ))}
+                        </div>
                         {filteredBooks.length > 0 ? (
                             <>
                             <Table>
@@ -114,10 +139,11 @@ export default function BookIndex({ books }) {
                                     <TableRow>
                                         <TableHead>ID</TableHead>
                                         <TableHead>Judul</TableHead>
+                                        <TableHead>Jenis</TableHead>
                                         <TableHead>Pengarang</TableHead>
                                         <TableHead>Lokasi</TableHead>
                                         <TableHead>Kategori</TableHead>
-                                        <TableHead className="text-center">Tersedia</TableHead>
+                                         <TableHead className="text-center">Status</TableHead>
                                         <TableHead className="text-right">Aksi</TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -135,6 +161,11 @@ export default function BookIndex({ books }) {
                                                     {book.title}
                                                 </Link>
                                             </TableCell>
+                                            <TableCell>
+                                                <Badge variant={book.jenis === 'ebook' ? 'secondary' : 'outline'}>
+                                                    {book.jenis === 'ebook' ? 'Ebook' : 'Buku'}
+                                                </Badge>
+                                            </TableCell>
                                             <TableCell className="max-w-40 truncate text-muted-foreground">
                                                 {book.author || '-'}
                                             </TableCell>
@@ -146,12 +177,20 @@ export default function BookIndex({ books }) {
                                             </TableCell>
                                             <TableCell
                                                 className="text-center font-medium"
-                                                title={`Total ${book.stock ?? 0} eksemplar`}
-                                            >
-                                                {book.available ?? 0}/{book.stock ?? 0}
-                                            </TableCell>
+                                                 title={book.jenis === 'ebook' ? 'Koleksi digital' : `Total ${book.stock ?? 0} eksemplar`}
+                                             >
+                                                 {book.jenis === 'ebook' ? 'Digital' : `${book.available ?? 0}/${book.stock ?? 0}`}
+                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex justify-end gap-2">
+                                                    {book.ebook && (
+                                                        <Button variant="outline" size="sm" asChild>
+                                                            <Link href={route('books.read', book.id)}>
+                                                                <BookOpen className="h-3.5 w-3.5" />
+                                                                Baca
+                                                            </Link>
+                                                        </Button>
+                                                    )}
                                                     {can(['edit_books', 'manage_books']) && (
                                                         <Button variant="outline" size="sm" asChild>
                                                             <Link href={route('books.edit', book.id)}>
@@ -181,18 +220,18 @@ export default function BookIndex({ books }) {
                         ) : (
                             <EmptyState
                                 icon={BookOpen}
-                                title={search ? 'Tidak ada hasil' : 'Belum ada data buku'}
+                                title={search ? 'Tidak ada hasil' : `Belum ada data ${pageTitle.toLowerCase()}`}
                                 description={
                                     search
-                                        ? `Tidak ditemukan buku untuk "${search}".`
-                                        : 'Tambah buku baru untuk memulai.'
+                                        ? `Tidak ditemukan ${pageTitle.toLowerCase()} untuk "${search}".`
+                                        : `Tambah ${pageTitle.toLowerCase()} baru untuk memulai.`
                                 }
                                 action={
                                     !search && can(['create_books', 'manage_books']) && (
                                         <Button size="sm" asChild>
                                             <Link href={route('books.create')}>
                                                 <Plus className="h-4 w-4" />
-                                                Tambah buku
+                                                Tambah {pageTitle.toLowerCase()}
                                             </Link>
                                         </Button>
                                     )

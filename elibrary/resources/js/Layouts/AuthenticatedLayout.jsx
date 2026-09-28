@@ -57,6 +57,13 @@ const navGroups = [
                 permission: ['view_books', 'manage_books'],
             },
             {
+                label: 'Ebook',
+                icon: FileText,
+                href: 'ebooks.index',
+                match: ['ebooks.index'],
+                permission: ['view_books', 'manage_books'],
+            },
+            {
                 label: 'Anggota',
                 icon: Users,
                 href: 'members.index',

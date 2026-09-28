@@ -22,6 +22,7 @@ class Book extends Model
         'foto',
         'lokasi',
         'kategori',
+        'jenis',
     ];
 
     public function lokasiRak()
@@ -42,6 +43,11 @@ class Book extends Model
     public function exemplars()
     {
         return $this->hasMany(Eksemplar::class, 'id_buku', 'id_buku');
+    }
+
+    public function ebookFile()
+    {
+        return $this->hasOne(EbookFile::class, 'id_buku', 'id_buku')->where('format', 'pdf');
     }
 
     /**

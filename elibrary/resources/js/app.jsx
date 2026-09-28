@@ -1,4 +1,5 @@
 import '../css/app.css';
+import '../css/reader.css';
 import './bootstrap';
 
 import { createInertiaApp, router } from '@inertiajs/react';

@@ -40,7 +40,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::resource('books', BookController::class)->except(['show']);
+    Route::get('/ebook', [BookController::class, 'index'])->defaults('jenis', 'ebook')->name('ebooks.index');
     Route::get('/books/management', [BookController::class, 'management'])->name('books.management');
+    Route::get('/books/{id}/read', [BookController::class, 'read'])->name('books.read');
+    Route::get('/books/{id}/file', [BookController::class, 'file'])->name('books.file');
+    Route::get('/books/{id}/preview', [BookController::class, 'preview'])->name('books.preview');
     Route::get('/books/{id}', [BookController::class, 'show'])->name('books.show');
     Route::post('/books/{id}/exemplars', [EksemplarController::class, 'store'])->name('exemplars.store');
     Route::put('/exemplars/{id}', [EksemplarController::class, 'update'])->name('exemplars.update');
