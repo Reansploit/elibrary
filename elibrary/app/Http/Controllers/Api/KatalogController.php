@@ -17,7 +17,8 @@ class KatalogController extends Controller
      */
     public function index()
     {
-        $featured = Book::orderByDesc('id_buku')
+        $featured = Book::whereNull('file_ebook')
+            ->orderByDesc('id_buku')
             ->limit(20)
             ->get()
             ->map(fn ($b) => $this->present($b));
@@ -25,20 +26,24 @@ class KatalogController extends Controller
         return response()->json([
             'library' => Setting::get('library_name', config('app.name', 'Perpustakaan WBS')),
             'featured' => $featured,
-            'total' => Book::count(),
+            'total' => Book::whereNull('file_ebook')->count(),
             'categories' => $this->categoryOptions(),
         ]);
     }
 
     /**
      * Semua buku, paginasi 20/halaman + saring kategori + kata kunci.
+     * digital=1 hanya yang ada berkas (jalur Baca), =0 hanya fisik (jalur Katalog).
      */
     public function all(Request $request)
     {
         $kategori = trim($request->query('kategori', ''));
         $q = trim($request->query('q', ''));
+        $digital = $request->query('digital', '');
 
         $books = Book::when($kategori !== '', fn ($query) => $query->where('kategori', $kategori))
+            ->when($digital === '1', fn ($query) => $query->whereNotNull('file_ebook'))
+            ->when($digital === '0', fn ($query) => $query->whereNull('file_ebook'))
             ->when(mb_strlen($q) >= 1, function ($query) use ($q) {
                 $like = "%{$q}%";
                 $query->where(function ($w) use ($like) {
@@ -61,6 +66,7 @@ class KatalogController extends Controller
     {
         $q = trim($request->query('q', ''));
         $kategori = trim($request->query('kategori', ''));
+        $digital = $request->query('digital', '');
 
         if (mb_strlen($q) < 1) {
             return response()->json(['books' => []]);
@@ -74,6 +80,8 @@ class KatalogController extends Controller
                     ->orWhere('pengarang', 'like', $like);
             })
             ->when($kategori !== '', fn ($w) => $w->where('kategori', $kategori))
+            ->when($digital === '1', fn ($w) => $w->whereNotNull('file_ebook'))
+            ->when($digital === '0', fn ($w) => $w->whereNull('file_ebook'))
             ->orderBy('judul_buku')
             ->limit(12)
             ->get()
