@@ -217,9 +217,9 @@ class ReaderController extends Controller
     public function storeNote(Request $request)
     {
         $validated = $request->validate([
-            'id_buku' => 'required|string|max:10',
+            'id_buku' => 'nullable|string|max:10',
             'page' => 'nullable|integer|min:1',
-            'catatan' => 'required|string|max:2000',
+            'catatan' => 'required|string|max:5000',
         ]);
 
         $note = ReaderNote::create([
@@ -410,8 +410,12 @@ class ReaderController extends Controller
         ];
     }
 
-    private function bookCard(string $bookId): ?array
+    private function bookCard(?string $bookId): ?array
     {
+        if (! $bookId) {
+            return null;
+        }
+
         $book = Book::find($bookId);
 
         if (! $book) {
