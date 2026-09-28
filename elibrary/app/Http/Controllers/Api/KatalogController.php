@@ -99,6 +99,7 @@ class KatalogController extends Controller
         $remaining = $book->exemplars()->where('status', Eksemplar::TERSEDIA)->count();
         $book->loadMissing(['lokasiRak', 'kategoriRef']);
         $photo = static::photoUrl($book->foto);
+        $file = static::photoUrl($book->file_ebook);
 
         return [
             'id' => $book->id_buku,
@@ -106,6 +107,7 @@ class KatalogController extends Controller
             'author' => $book->pengarang,
             'stock' => $book->jumlah,
             'photo' => $photo ? url($photo) : null,
+            'file' => $file ? url($file) : null,
             'location' => $book->lokasiRak ? $book->lokasiRak->id_lokasi . ' - ' . $book->lokasiRak->nama : null,
             'category' => $book->kategoriRef?->nama,
             'remaining' => $remaining,

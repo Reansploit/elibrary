@@ -75,11 +75,11 @@ abstract class Controller
      * bergantung pada symlink storage. Ganti/hapus file lama bila ada.
      * Kembalikan path baru (atau lama).
      */
-    protected function storePhoto(Request $request, string $field, string $dir, ?string $old = null): ?string
+    protected function storePhoto(Request $request, string $field, string $dir, ?string $old = null, string $flag = 'hapus_foto'): ?string
     {
         $dir = trim($dir, '/');
 
-        if ($request->boolean('hapus_foto')) {
+        if ($request->boolean($flag)) {
             $this->deletePhoto($old);
 
             return null;

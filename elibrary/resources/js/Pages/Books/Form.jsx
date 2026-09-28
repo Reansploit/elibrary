@@ -43,10 +43,14 @@ export default function BookForm({ book, locations = [], categories = [] }) {
         kategori: book?.category || '',
         foto: null,
         hapus_foto: false,
+        file_ebook: null,
+        hapus_file_ebook: false,
         ...(isEdit ? { _method: 'PUT' } : {}),
     });
 
     const existingPhoto = !isEdit ? null : !data.hapus_foto && !preview ? book?.photo : null;
+    const existingFile =
+        !isEdit || data.hapus_file_ebook || data.file_ebook ? null : (book?.file || null);
 
     const handleFile = async (e) => {
         const file = e.target.files?.[0] || null;
@@ -71,6 +75,12 @@ export default function BookForm({ book, locations = [], categories = [] }) {
         setPreview(null);
         setData({ ...data, foto: null, hapus_foto: true });
         const el = document.getElementById('foto');
+        if (el) el.value = '';
+    };
+
+    const clearFile = () => {
+        setData({ ...data, file_ebook: null, hapus_file_ebook: true });
+        const el = document.getElementById('file_ebook');
         if (el) el.value = '';
     };
 
@@ -246,6 +256,39 @@ export default function BookForm({ book, locations = [], categories = [] }) {
                                     {compressing && ' Memproses foto…'}
                                 </p>
                                 <FieldError message={errors.foto} />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="file_ebook">Berkas ebook (opsional)</Label>
+                                {(data.file_ebook || existingFile) && (
+                                    <div className="flex items-center gap-3">
+                                        <p className="truncate text-sm">
+                                            {data.file_ebook
+                                                ? data.file_ebook.name
+                                                : String(existingFile).split('/').pop()}
+                                        </p>
+                                        <Button type="button" variant="ghost" size="sm" onClick={clearFile}>
+                                            Hapus berkas
+                                        </Button>
+                                    </div>
+                                )}
+                                <Input
+                                    id="file_ebook"
+                                    type="file"
+                                    accept=".pdf,.epub"
+                                    onChange={(e) =>
+                                        setData({
+                                            ...data,
+                                            file_ebook: e.target.files?.[0] || null,
+                                            hapus_file_ebook: false,
+                                        })
+                                    }
+                                    aria-invalid={!!errors.file_ebook || undefined}
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    PDF atau EPUB, maks 50MB. Format bacanya mengikuti engine viewer.
+                                </p>
+                                <FieldError message={errors.file_ebook} />
                             </div>
 
                             {isEdit && (

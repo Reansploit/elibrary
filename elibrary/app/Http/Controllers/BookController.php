@@ -143,6 +143,7 @@ class BookController extends Controller
             'pengarang' => 'nullable|string|max:30',
             'jumlah' => 'required|integer|min:0|max:9999',
             'foto' => 'nullable|image|max:2048',
+            'file_ebook' => 'nullable|file|mimes:pdf,epub|max:51200',
             'lokasi' => 'nullable|string|max:10|exists:tb_lokasi,id_lokasi',
             'kategori' => 'nullable|string|max:10|exists:tb_kategori,id_kategori',
         ]);
@@ -153,6 +154,7 @@ class BookController extends Controller
             'pengarang' => $validated['pengarang'] ?? null,
             'jumlah' => $validated['jumlah'],
             'foto' => $this->storePhoto($request, 'foto', 'foto-buku'),
+            'file_ebook' => $this->storePhoto($request, 'file_ebook', 'ebook-buku', null, 'hapus_file_ebook'),
             'lokasi' => $validated['lokasi'] ?? null,
             'kategori' => $validated['kategori'] ?? null,
         ]);
@@ -185,6 +187,7 @@ class BookController extends Controller
                 'year' => $book->th_terbit,
                 'stock' => $book->jumlah,
                 'photo' => static::photoUrl($book->foto),
+                'file' => static::photoUrl($book->file_ebook),
                 'location' => $book->lokasi,
                 'category' => $book->kategori,
             ],
@@ -204,6 +207,7 @@ class BookController extends Controller
             'pengarang' => 'nullable|string|max:30',
             'jumlah' => 'required|integer|min:0|max:9999',
             'foto' => 'nullable|image|max:2048',
+            'file_ebook' => 'nullable|file|mimes:pdf,epub|max:51200',
             'lokasi' => 'nullable|string|max:10|exists:tb_lokasi,id_lokasi',
             'kategori' => 'nullable|string|max:10|exists:tb_kategori,id_kategori',
         ]);
@@ -251,6 +255,7 @@ class BookController extends Controller
             'pengarang' => $validated['pengarang'] ?? null,
             'jumlah' => $newTotal,
             'foto' => $this->storePhoto($request, 'foto', 'foto-buku', $book->foto),
+            'file_ebook' => $this->storePhoto($request, 'file_ebook', 'ebook-buku', $book->file_ebook, 'hapus_file_ebook'),
             'lokasi' => $validated['lokasi'] ?? null,
             'kategori' => $validated['kategori'] ?? null,
         ]);
@@ -319,6 +324,7 @@ class BookController extends Controller
                 'author' => $book->pengarang,
                 'stock' => $book->jumlah,
                 'photo' => static::photoUrl($book->foto),
+                'file' => static::photoUrl($book->file_ebook),
                 'location' => $book->lokasiRak ? $book->lokasiRak->id_lokasi . ' — ' . $book->lokasiRak->nama : null,
                 'category' => $book->kategoriRef ? $book->kategoriRef->id_kategori . ' — ' . $book->kategoriRef->nama : null,
                 'borrowed' => $activeLoans->isNotEmpty(),
@@ -346,6 +352,7 @@ class BookController extends Controller
         }
 
         $this->deletePhoto($book->foto);
+        $this->deletePhoto($book->file_ebook);
         $book->delete();
 
         $this->audit('hapus', 'tb_buku', $id, "Hapus buku {$book->judul_buku}");

@@ -20,6 +20,7 @@ class Book extends Model
         'th_terbit',
         'jumlah',
         'foto',
+        'file_ebook',
         'lokasi',
         'kategori',
     ];
