@@ -15,7 +15,9 @@ import {
     Minus,
     Plus,
     RotateCcw,
+    SlidersHorizontal,
     Square,
+    X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/components/theme-provider';
@@ -159,6 +161,7 @@ export default function ReaderPdf({ book, file, assetBaseUrl }) {
     const [engineError, setEngineError] = useState('');
     const [analysisVersion, setAnalysisVersion] = useState(0);
     const [isFullscreen, setIsFullscreen] = useState(false);
+    const [showFullscreenControls, setShowFullscreenControls] = useState(false);
 
     const pdfjsAssets = {
         wasmUrl: `${assetBaseUrl}/wasm/`,
@@ -170,13 +173,27 @@ export default function ReaderPdf({ book, file, assetBaseUrl }) {
 
     const spread = layout === 'spread' && !isNarrow;
     const scale = userScale ?? fitScale;
-    const pageStep = spread ? 2 : 1;
 
     const visiblePages = useMemo(() => {
         if (!pdf) return [];
         if (!spread) return [pageNumber];
-        return [pageNumber, pageNumber + 1].filter((number) => number <= pdf.numPages);
+        if (pageNumber <= 1) return [1];
+        const pair = [pageNumber, pageNumber + 1].filter((number) => number <= pdf.numPages);
+        return pair;
     }, [pdf, spread, pageNumber]);
+
+    const lastLeftPage = useMemo(() => {
+        const total = pdf?.numPages ?? 1;
+        if (!spread) return total;
+        if (total <= 2) return total;
+        return total % 2 === 0 ? total : total - 1;
+    }, [pdf, spread]);
+
+    const stepFrom = useCallback((current, direction) => {
+        if (!spread) return current + direction;
+        if (direction > 0) return current <= 1 ? 2 : current + 2;
+        return current <= 2 ? 1 : current - 2;
+    }, [spread]);
 
     useEffect(() => {
         visiblePagesRef.current = visiblePages;
@@ -218,6 +235,10 @@ export default function ReaderPdf({ book, file, assetBaseUrl }) {
         document.addEventListener('fullscreenchange', onChange);
         return () => document.removeEventListener('fullscreenchange', onChange);
     }, []);
+
+    useEffect(() => {
+        setShowFullscreenControls(false);
+    }, [isFullscreen]);
 
     useEffect(() => {
         const container = pagesRef.current;
@@ -301,13 +322,9 @@ export default function ReaderPdf({ book, file, assetBaseUrl }) {
         };
     }, [mode, pdf, book.id, book.title, book.author]);
 
-    const changePage = useCallback((value) => {
-        setPageNumber((current) => {
-            const total = pdf?.numPages ?? 1;
-            const last = spread ? total - ((total - 1) % 2 || 2) : total;
-            return clamp(value, 1, Math.max(1, last));
-        });
-    }, [pdf, spread]);
+    const changePage = useCallback((direction) => {
+        setPageNumber((current) => clamp(stepFrom(current, direction), 1, lastLeftPage));
+    }, [lastLeftPage, stepFrom]);
 
     const changeScale = (amount) => {
         setUserScale(clamp(Number(((userScale ?? fitScale) + amount).toFixed(1)), MIN_SCALE, MAX_SCALE));
@@ -322,12 +339,9 @@ export default function ReaderPdf({ book, file, assetBaseUrl }) {
     };
 
     const pageLabel = pdf
-        ? (() => {
-            const total = pdf.numPages;
-            if (!spread) return `${pageNumber} / ${total}`;
-            if (visiblePages.length < 2) return `${pageNumber} / ${total}`;
-            return `${visiblePages[0]}–${visiblePages[1]} / ${total}`;
-        })()
+        ? (visiblePages.length > 1
+            ? `${visiblePages[0]}–${visiblePages[1]} / ${pdf.numPages}`
+            : `${pageNumber} / ${pdf.numPages}`)
         : 'Memuat...';
 
     return (
@@ -354,10 +368,42 @@ export default function ReaderPdf({ book, file, assetBaseUrl }) {
                 <div
                     ref={fullscreenRef}
                     className={isFullscreen
-                        ? 'flex h-full flex-col gap-3 overflow-hidden bg-slate-100 p-3 dark:bg-slate-950 sm:p-6'
+                        ? 'relative flex h-full flex-col gap-3 overflow-hidden bg-slate-100 p-3 dark:bg-slate-950 sm:p-6'
                         : 'flex flex-col gap-4'}
                 >
-                    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card p-3">
+                    {isFullscreen && (
+                        <div className="absolute bottom-3 right-3 z-10 flex items-center gap-2 sm:bottom-5 sm:right-5">
+                            <Button
+                                type="button"
+                                size="icon"
+                                variant="outline"
+                                onClick={() => setShowFullscreenControls((value) => !value)}
+                                aria-expanded={showFullscreenControls}
+                                aria-label={showFullscreenControls ? 'Sembunyikan kontrol' : 'Tampilkan kontrol'}
+                                title={showFullscreenControls ? 'Sembunyikan kontrol' : 'Tampilkan kontrol'}
+                                className="h-9 w-9 border-foreground/20 bg-card/85 text-muted-foreground backdrop-blur hover:bg-card hover:text-foreground"
+                            >
+                                {showFullscreenControls
+                                    ? <X className="h-4 w-4" />
+                                    : <SlidersHorizontal className="h-4 w-4" />}
+                            </Button>
+                            <Button
+                                type="button"
+                                size="icon"
+                                variant="outline"
+                                onClick={toggleFullscreen}
+                                aria-label="Keluar dari layar penuh"
+                                title="Keluar dari layar penuh"
+                                className="h-9 w-9 border-foreground/20 bg-card/85 text-muted-foreground backdrop-blur hover:bg-card hover:text-foreground"
+                            >
+                                <Minimize2 className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    )}
+
+                    <div
+                        className={isFullscreen && !showFullscreenControls ? 'hidden' : 'flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card p-3'}
+                    >
                         <div className="flex flex-wrap items-center gap-2">
                             <div className="flex items-center gap-2" role="tablist" aria-label="Mode reader">
                                 <Button
@@ -432,13 +478,15 @@ export default function ReaderPdf({ book, file, assetBaseUrl }) {
                         </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card p-3">
+                    <div
+                        className={isFullscreen && !showFullscreenControls ? 'hidden' : 'flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card p-3'}
+                    >
                         <div className="flex items-center gap-2" role="group" aria-label="Navigasi halaman">
                             <Button
                                 variant="outline"
                                 size="icon"
                                 className="h-11 w-11"
-                                onClick={() => changePage(pageNumber - pageStep)}
+                                onClick={() => changePage(-1)}
                                 disabled={!pdf || pageNumber <= 1}
                                 aria-label="Halaman sebelumnya"
                             >
@@ -451,17 +499,23 @@ export default function ReaderPdf({ book, file, assetBaseUrl }) {
                                 variant="outline"
                                 size="icon"
                                 className="h-11 w-11"
-                                onClick={() => changePage(pageNumber + pageStep)}
-                                disabled={!pdf || (spread
-                                    ? pageNumber + 1 >= pdf.numPages
-                                    : pageNumber >= pdf.numPages)}
+                                onClick={() => changePage(1)}
+                                disabled={!pdf || pageNumber >= lastLeftPage}
                                 aria-label="Halaman berikutnya"
                             >
                                 <ChevronRight className="h-4 w-4" />
                             </Button>
                         </div>
 
-                        {mode === 'original' ? (
+                        <div className="flex flex-wrap items-center gap-3">
+                            {mode === 'engine' && (
+                                <p className="text-sm text-muted-foreground" aria-live="polite">
+                                    {engineStatus === 'loading' && `Menganalisis... ${engineProgress}%`}
+                                    {engineStatus === 'ready' && `${engineProgress}% dianalisis`}
+                                    {engineStatus === 'empty' && 'Tanpa text layer'}
+                                    {engineStatus === 'error' && engineError}
+                                </p>
+                            )}
                             <div className="flex items-center gap-2" role="group" aria-label="Zoom halaman">
                                 <Button
                                     variant="outline"
@@ -498,14 +552,7 @@ export default function ReaderPdf({ book, file, assetBaseUrl }) {
                                     <RotateCcw className="h-4 w-4" />
                                 </Button>
                             </div>
-                        ) : (
-                            <p className="text-sm text-muted-foreground" aria-live="polite">
-                                {engineStatus === 'loading' && `Menganalisis halaman... ${engineProgress}%`}
-                                {engineStatus === 'ready' && `${engineProgress}% halaman dianalisis`}
-                                {engineStatus === 'empty' && 'PDF ini tidak memiliki layer teks.'}
-                                {engineStatus === 'error' && engineError}
-                            </p>
-                        )}
+                        </div>
                     </div>
 
                     <section
@@ -575,7 +622,7 @@ export default function ReaderPdf({ book, file, assetBaseUrl }) {
                         )}
                     </section>
 
-                    {isFullscreen && (
+                    {isFullscreen && showFullscreenControls && (
                         <p className="flex items-center justify-center gap-2 text-xs text-slate-600 dark:text-slate-300">
                             <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
                             Tekan Esc untuk keluar dari layar penuh

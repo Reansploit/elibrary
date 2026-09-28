@@ -45,11 +45,22 @@ Yang *memang* berubah di sisi engine adalah dari commit sebelumnya
 
 ### 1. Mode Buku (spread)
 
-Dua halaman berdampingan seperti buku yang terbuka. Navigasi melompat 2 halaman
-sekali, dan label berubah jadi rentang, mis. `1–2 / 226`.
+Dua halaman berdampingan seperti buku yang terbuka, dengan pasangan halaman
+ala buku cetak: **halaman 1 berdiri sendiri** sebagai sampul, lalu pasangan
+genap-ganjil.
 
-- Pasangan halaman: `(1,2)`, `(3,4)`, …, `(225,226)`
-- Spread terakhir otomatis dijepit supaya tidak keluar rentang dokumen
+```
+halaman 1        →  sampul, sendirian
+halaman 2 – 3    →  spread
+halaman 4 – 5    →  spread
+halaman 6 – 7    →  spread
+...
+halaman 224–225  →  spread
+halaman 226      →  halaman terakhir, sendirian
+```
+
+- Label berubah jadi rentang, mis. `2–3 / 226`
+- Halaman ganjil terakhir berdiri sendiri otomatis
 - Setiap halaman punya canvas + overlay adaptive sendiri
 
 ### 2. Layar penuh
@@ -57,11 +68,15 @@ sekali, dan label berubah jadi rentang, mis. `1–2 / 226`.
 Tombol layar penuh di toolbar, memakai Fullscreen API bawaan browser.
 
 - Sidebar dan chrome aplikasi ikut hilang
-- Kontrol navigasi tetap tersedia karena ikut masuk elemen fullscreen
-- Keluar lewat tombol lagi atau `Esc` (perilaku native browser)
+- **Toolbar disembunyikan otomatis** supaya tidak mengganggu pandangan
+- Muncul **dua tombol kecil di kanan bawah**:
+  - ikon `SlidersHorizontal` untuk memunculkan toolbar
+  - ikon `Minimize2` untuk keluar dari layar penuh
+- Ikon `SlidersHorizontal` berubah jadi `X` saat toolbar sedang tampil
+- Keluar lewat tombol kecil, tombol layar penuh di toolbar, atau `Esc` (perilaku native browser)
 - Ukuran kanvas dihitung ulang otomatis karena `ResizeObserver` mendeteksi perubahan ukuran container
 
-### 3. Paskan ke layar (auto-fit)
+### 3. Paskan ke layar (auto-fit) dan zoom di kedua mode
 
 Sebelumnya skala halaman selalu `100%` dan halaman besar bisa melebihi layar.
 Sekarang skala dihitung agar halaman muat, dibatasi `20%`–`200%`.
@@ -69,6 +84,11 @@ Sekarang skala dihitung agar halaman muat, dibatasi `20%`–`200%`.
 - Spread ikut dihitung: dua halaman dihitung sebagai satu lebar
 - Tombol `↺` sekarang berarti "paskan ke layar", bukan "kembali ke 100%"
 - Setelah menekan `+`/`-` zoom manual, tombol `↺` aktif kembali untuk mengembalikan auto-fit
+- **Zoom sekarang bisa dipakai di mode Reo-Engine juga.** Sebelumnya kontrol
+  zoom sengaja disembunyikan di mode engine karena tempatnya dipakai untuk
+  teks progres analisis. Sekarang progres dipindah ke sebelah kontrol zoom,
+  jadi `+` / `-` / `↺` tersedia di Original maupun Reo-Engine.
+- Batas zoom manual tetap `60%`–`200%`. Auto-fit boleh turun sampai `20%`.
 
 ### 4. Gutter antar halaman
 
@@ -104,9 +124,21 @@ Toolbar atas, kiri:
 - `Tunggal` / `Buku` — ganti tata letak
 - Ikon layar penuh — masuk/keluar layar penuh
 
-Toolbar atas, kanan: tombol layar penuh.
+Toolbar kedua: navigasi halaman + zoom (`−` `+` `↺` paskan ke layar). Ketiganya
+berfungsi di mode Original maupun Reo-Engine.
 
-Toolbar kedua: navigasi halaman + zoom (`−` `+` `↺` paskan ke layar).
+Di dalam layar penuh:
+
+- Toolbar disembunyikan
+- Dua tombol kecil kanan bawah: `SlidersHorizontal` (tampilkan toolbar) dan
+  `Minimize2` (keluar layar penuh)
+- Tombol `SlidersHorizontal` berubah jadi `X` saat toolbar tampil, untuk
+  menyembunyikannya lagi
+
+Tombol keluar sengaja diletakkan terpisah dari toggle toolbar. Kalau hanya ada
+satu tombol, pengguna yang menyembunyikan toolbar tidak punya jalan keluar dari
+layar penuh kecuali mengandalkan `Esc` — dan `Esc` tidak bisa diandalkan di
+semua browser.
 
 ---
 
@@ -119,6 +151,20 @@ canvas, overlay adaptive, dan pembersihannya sendiri. Ini memecah tanggung
 jawab yang sebelumnya semua menumpuk di komponen induk, dan yang membuat spread
 menjadi perubahan kecil.
 
+**Pasangan halaman ala buku.**
+
+```js
+const stepFrom = (current, direction) => {
+    if (!spread) return current + direction;
+    if (direction > 0) return current <= 1 ? 2 : current + 2;
+    return current <= 2 ? 1 : current - 2;
+};
+```
+
+`visiblePages` mengembalikan `[1]` untuk sampul, `[genap, genap+1]` untuk isi,
+dan satu elemen lagi kalau halaman berikutnya melewati `numPages`. `lastLeftPage`
+dijepit supaya navigasi tidak keluar dokumen.
+
 **Skala.**
 
 ```js
@@ -127,10 +173,16 @@ const scale = userScale ?? fitScale;
 
 `userScale` bernilai `null` sampai user menekan zoom. Selama `null`, skala
 mengikuti `fitScale` yang dihitung `ResizeObserver` dari tinggi dan lebar
-container.
+container. `fitScale` ikut memperhitungkan jumlah halaman yang tampil, jadi
+spread dihitung sebagai satu lebar gabung.
 
 **Lazy spread.** `isNarrow` mematikan spread, jadi `visiblePages` selalu
 length 1 di HP. Tidak perlu branch tambahan di mana-mana.
+
+**Toolbar fullscreen.** Toolbar tetap di DOM, hanya diberi class `hidden` saat
+`isFullscreen && !showFullscreenControls`. State `showFullscreenControls`
+selalu direset `false` saat masuk fullscreen, supaya layar penuh berikutnya
+selalu bersih.
 
 **Rerender saat pindah halaman.** `analysisVersion` dinaikkan hanya kalau
 halaman yang sedang terlihat selesai dianalisis, supaya tidak mount ulang
@@ -149,10 +201,27 @@ php artisan serve --host=127.0.0.1 --port=8000
 
 Buka `http://127.0.0.1:8000/books/BKA-001/read`, lalu cek:
 
-1. Klik `Buku` → dua halaman muncul, label jadi `1–2 / 226`
-2. Klik `→` → label jadi `3–4 / 226`
-3. Tekan `↺` → halaman pas ke layar
-4. Klik ikon layar penuh → sidebar hilang
-5. Klik `Buku` + `Reo-Engine` → dua halaman tetap tampil utuh
-6. Perkecil jendela di bawah 768px → tombol tata letak hilang, kembali Tunggal
-7. Klik `→` sampai habis → spread terakhir `225–226`, tombol `→` nonaktif
+**Pasangan halaman**
+
+1. Klik `Buku` → **satu** halaman tampil, label `1 / 226`
+2. Klik `→` → dua halaman, label `2–3 / 226`
+3. Klik `→` → label `4–5 / 226`
+4. Klik `←` → balik ke `2–3 / 226`, lalu ke `1 / 226`
+5. Klik `→` sampai habis → halaman terakhir `226 / 226` berdiri sendiri
+
+**Zoom di Reo-Engine**
+
+6. Klik `Reo-Engine`, tunggu progres selesai
+7. Tekan `+` beberapa kali → persentase naik, halaman membesar
+8. Tekan `↺` → kembali pas ke layar
+
+**Layar penuh**
+
+9. Klik ikon layar penuh → sidebar dan toolbar hilang, tersisa tombol kecil kanan bawah
+10. Klik tombol kecil → toolbar muncul
+11. Klik `X` → toolbar hilang lagi
+12. Klik tombol layar penuh → keluar
+
+**Layar sempit**
+
+13. Perkecil jendela di bawah 768px → tombol tata letak hilang, kembali Tunggal
