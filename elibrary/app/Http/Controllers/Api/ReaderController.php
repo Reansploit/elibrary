@@ -276,7 +276,7 @@ class ReaderController extends Controller
     public function uploadWallpaper(Request $request)
     {
         $validated = $request->validate([
-            'photo' => 'required|image|max:2048',
+            'photo' => 'required|image|max:8192',
         ]);
 
         $setting = ReaderSetting::firstOrCreate(['id_anggota' => $request->reader->id_anggota]);
