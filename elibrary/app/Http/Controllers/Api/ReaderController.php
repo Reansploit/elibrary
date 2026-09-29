@@ -249,7 +249,7 @@ class ReaderController extends Controller
         );
 
         return response()->json([
-            'wallpaper' => $setting->wallpaper === 'polos' ? 'polos' : url(ltrim($setting->wallpaper, '/')),
+            'wallpaper' => $this->wallpaperUrl($setting->wallpaper),
             'theme' => $setting->theme,
         ]);
     }
@@ -274,6 +274,25 @@ class ReaderController extends Controller
         ]);
     }
 
+    /**
+     * URL wallpaper untuk viewer. Berkas unggahan (milik elibrary) absolut;
+     * bawaan `wallpapers/*` milik viewer, tetap relatif.
+     */
+    private function wallpaperUrl(?string $path): string
+    {
+        $path = ltrim((string) $path, '/');
+
+        if ($path === '' || $path === 'polos') {
+            return 'polos';
+        }
+
+        if (str_starts_with($path, 'wallpapers/')) {
+            return '/' . $path;
+        }
+
+        return url($path);
+    }
+
     /** Unggah foto wallpaper milik akun (maks 2MB). */
     public function uploadWallpaper(Request $request)
     {
@@ -292,7 +311,7 @@ class ReaderController extends Controller
         $setting->wallpaper = 'wallpaper-reader/' . $name;
         $setting->save();
 
-        return response()->json(['wallpaper' => url($setting->wallpaper)], 201);
+        return response()->json(['wallpaper' => $this->wallpaperUrl($setting->wallpaper)], 201);
     }
 
     /** Kembali ke polos (hapus foto milik akun). */
