@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie', 'wrapper-version.json', 'wallpaper-reader/*'],
+    'paths' => ['api/*', 'sanctum/csrf-cookie', 'wrapper-version.json', 'wallpaper-reader/*', 'ebook-buku/*', 'foto-buku/*', 'foto-anggota/*'],
 
     'allowed_methods' => ['*'],
 
