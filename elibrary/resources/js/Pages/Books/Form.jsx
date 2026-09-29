@@ -286,7 +286,7 @@ export default function BookForm({ book, locations = [], categories = [] }) {
                                     aria-invalid={!!errors.file_ebook || undefined}
                                 />
                                 <p className="text-xs text-muted-foreground">
-                                    PDF atau EPUB, maks 50MB. Format bacanya mengikuti engine viewer.
+                                    PDF atau EPUB, maks 100MB. Format bacanya mengikuti engine viewer.
                                 </p>
                                 <FieldError message={errors.file_ebook} />
                             </div>

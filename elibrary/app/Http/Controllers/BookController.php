@@ -143,7 +143,7 @@ class BookController extends Controller
             'pengarang' => 'nullable|string|max:30',
             'jumlah' => 'required|integer|min:0|max:9999',
             'foto' => 'nullable|image|max:2048',
-            'file_ebook' => 'nullable|file|mimes:pdf,epub|max:51200',
+            'file_ebook' => 'nullable|file|mimes:pdf,epub|max:102400',
             'lokasi' => 'nullable|string|max:10|exists:tb_lokasi,id_lokasi',
             'kategori' => 'nullable|string|max:10|exists:tb_kategori,id_kategori',
         ]);
@@ -207,7 +207,7 @@ class BookController extends Controller
             'pengarang' => 'nullable|string|max:30',
             'jumlah' => 'required|integer|min:0|max:9999',
             'foto' => 'nullable|image|max:2048',
-            'file_ebook' => 'nullable|file|mimes:pdf,epub|max:51200',
+            'file_ebook' => 'nullable|file|mimes:pdf,epub|max:102400',
             'lokasi' => 'nullable|string|max:10|exists:tb_lokasi,id_lokasi',
             'kategori' => 'nullable|string|max:10|exists:tb_kategori,id_kategori',
         ]);
