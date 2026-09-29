@@ -430,7 +430,7 @@ class ReaderController extends Controller
             'title' => $book->judul_buku,
             'author' => $book->pengarang,
             'photo' => $photo ? url($photo) : null,
-            'file' => $file ? url($file) : null,
+            'file' => $file ? url('/api/v1/katalog/berkas/' . basename($file)) : null,
             'likes' => ReaderVote::where('id_buku', $book->id_buku)->where('vote', 1)->count(),
             'dislikes' => ReaderVote::where('id_buku', $book->id_buku)->where('vote', -1)->count(),
         ];

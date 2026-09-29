@@ -91,6 +91,25 @@ class KatalogController extends Controller
         return response()->json(['books' => $books]);
     }
 
+    /**
+     * Unduh berkas ebook lewat API agar header CORS menempel
+     * (server PHP menyajikan file statis tanpa middleware).
+     */
+    public function file(string $nama)
+    {
+        if (! preg_match('/^[A-Za-z0-9]+\.(pdf|epub)$/i', $nama)) {
+            abort(404);
+        }
+
+        $path = public_path('ebook-buku/' . $nama);
+
+        if (! is_file($path)) {
+            abort(404);
+        }
+
+        return response()->file($path);
+    }
+
     private function categoryOptions(): array
     {
         return Kategori::orderBy('nama')->get()->map(fn ($k) => [
@@ -116,7 +135,7 @@ class KatalogController extends Controller
             'author' => $book->pengarang,
             'stock' => $book->jumlah,
             'photo' => $photo ? url($photo) : null,
-            'file' => $file ? url($file) : null,
+            'file' => $file ? url('/api/v1/katalog/berkas/' . basename($file)) : null,
             'location' => $book->lokasiRak ? $book->lokasiRak->id_lokasi . ' - ' . $book->lokasiRak->nama : null,
             'category' => $book->kategoriRef?->nama,
             'remaining' => $remaining,
