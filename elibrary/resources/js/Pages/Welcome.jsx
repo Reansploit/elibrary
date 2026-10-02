@@ -1,4 +1,4 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { buttonVariants } from '@/Components/ui/button';
 
 // Landing publik Perpustakaan WBS.
@@ -8,7 +8,6 @@ import { buttonVariants } from '@/Components/ui/button';
 // dua tombol sesuai dua kebutuhan nyata (lihat koleksi, masuk petugas),
 // tanpa statistik/klaim karena datanya tidak ditampilkan di sini (R-17, R-36).
 export default function Welcome({ auth }) {
-    const viewerUrl = usePage().props.viewerUrl || 'http://localhost:5173';
     return (
         <>
             <Head title="Perpustakaan WBS" />
@@ -26,12 +25,6 @@ export default function Welcome({ auth }) {
                         Sistem informasi perpustakaan pondok.
                     </p>
                     <div className="mt-8 flex w-full flex-col gap-3 sm:flex-row sm:justify-center">
-                        <a
-                            href={`${viewerUrl}/#/katalog`}
-                            className={buttonVariants({ size: 'lg' })}
-                        >
-                            Lihat Katalog
-                        </a>
                         {auth?.user ? (
                             <Link
                                 href={route('dashboard')}
