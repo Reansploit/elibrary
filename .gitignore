@@ -33,3 +33,7 @@ keluhan/
 .DS_Store
 Thumbs.db
 
+
+# lokal editor/asisten
+.claude/
+.vscode/
