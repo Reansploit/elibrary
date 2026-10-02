@@ -293,6 +293,7 @@ export default function AuthenticatedLayout({ children }) {
     const { url, props } = usePage();
     const user = props.auth.user;
     const libraryName = props.libraryName || 'Perpustakaan WBS';
+    const libraryLogo = props.libraryLogo || '/images/logo-wbs.png';
     const { theme, toggleTheme } = useTheme();
     const [mobileNavOpen, setMobileNavOpen] = useState(false);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
@@ -372,7 +373,7 @@ export default function AuthenticatedLayout({ children }) {
                     className="flex h-9 w-9 items-center justify-center rounded-lg border bg-card outline-none transition-colors hover:bg-muted"
                     title={sidebarCollapsed ? 'Buka sidebar' : 'Tutup sidebar'}
                 >
-                    <img src="/images/logo-wbs.png" alt="Logo" className="h-6 w-6 object-contain" />
+                    <img src={libraryLogo} alt="Logo" className="h-6 w-6 object-contain" />
                 </button>
                 {!mini && (
                     <div className="min-w-0">

@@ -85,6 +85,8 @@ export default function SettingsIndex({ settings, users, roles, permissions }) {
         loan_duration_days: safeSettings.loan.loan_duration_days ?? 7,
         reservation_hold_days: safeSettings.loan.reservation_hold_days ?? 3,
         library_name: safeSettings.general.library_name ?? 'Perpustakaan WBS',
+        library_logo: null,
+        hapus_library_logo: false,
         ...emptyUserForm,
         ...emptyRoleForm,
     });
@@ -167,6 +169,8 @@ export default function SettingsIndex({ settings, users, roles, permissions }) {
             max_loans_per_member: data.max_loans_per_member,
             loan_duration_days: data.loan_duration_days,
             library_name: data.library_name,
+            library_logo: data.library_logo,
+            hapus_library_logo: data.hapus_library_logo,
         });
     };
 
@@ -247,6 +251,38 @@ export default function SettingsIndex({ settings, users, roles, permissions }) {
                                 />
                                 {errors.library_name && (
                                     <p className="text-xs text-destructive">{errors.library_name}</p>
+                                )}
+                                <Label htmlFor="library_logo">Logo perpustakaan (opsional)</Label>
+                                {safeSettings.general.library_logo && !data.hapus_library_logo && !data.library_logo && (
+                                    <div className="flex items-center gap-3">
+                                        <img
+                                            src={safeSettings.general.library_logo}
+                                            alt="Logo saat ini"
+                                            className="h-16 w-16 rounded-lg border object-contain"
+                                        />
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => setData({ ...data, library_logo: null, hapus_library_logo: true })}
+                                        >
+                                            Hapus logo
+                                        </Button>
+                                    </div>
+                                )}
+                                <Input
+                                    id="library_logo"
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) =>
+                                        setData({ ...data, library_logo: e.target.files?.[0] || null, hapus_library_logo: false })
+                                    }
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    Tampil di sidebar dan landing. Login tetap pakai logo bawaan.
+                                </p>
+                                {errors.library_logo && (
+                                    <p className="text-xs text-destructive">{errors.library_logo}</p>
                                 )}
                             </CardContent>
                             <CardFooter className="flex justify-end">

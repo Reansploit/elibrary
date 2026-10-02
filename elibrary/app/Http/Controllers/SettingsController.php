@@ -28,6 +28,7 @@ class SettingsController extends Controller
             ],
             'general' => [
                 'library_name' => Setting::get('library_name', 'Perpustakaan WBS'),
+                'library_logo' => static::photoUrl(Setting::get('library_logo')),
             ],
         ];
 
@@ -70,7 +71,10 @@ class SettingsController extends Controller
             'late_penalty_days' => 'sometimes|integer|min:0|max:365',
             'penalty_enabled' => 'sometimes|boolean',
             'library_name' => 'required|string|max:100',
+            'library_logo' => 'nullable|image|max:2048',
         ]);
+
+        Setting::set('library_logo', $this->storePhoto($request, 'library_logo', 'logo-app', Setting::get('library_logo'), 'hapus_library_logo') ?? '', 'string', 'general', 'Logo Perpustakaan', 'Logo tampil di sidebar dan landing (login tetap logo bawaan)');
 
         Setting::set('max_loans_per_member', $validated['max_loans_per_member'], 'integer', 'loan', 'Maks Pinjam per Anggota', 'Maksimal jumlah buku yang bisa dipinjam per anggota sekaligus');
         Setting::set('loan_duration_days', $validated['loan_duration_days'], 'integer', 'loan', 'Lama Pinjam (Hari)', 'Jumlah hari buku bisa dipinjam sebelum harus dikembalikan');

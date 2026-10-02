@@ -26,6 +26,7 @@ class KatalogController extends Controller
 
         return response()->json([
             'library' => Setting::get('library_name', config('app.name', 'Perpustakaan WBS')),
+            'logo' => ($logo = static::photoUrl(Setting::get('library_logo'))) ? url($logo) : null,
             'featured' => $featured,
             'total' => Book::whereNull('file_ebook')->count(),
             'categories' => $this->categoryOptions(),

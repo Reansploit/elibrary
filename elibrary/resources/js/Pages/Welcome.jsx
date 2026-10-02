@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { buttonVariants } from '@/Components/ui/button';
 
 // Landing publik Perpustakaan WBS.
@@ -8,13 +8,14 @@ import { buttonVariants } from '@/Components/ui/button';
 // dua tombol sesuai dua kebutuhan nyata (lihat koleksi, masuk petugas),
 // tanpa statistik/klaim karena datanya tidak ditampilkan di sini (R-17, R-36).
 export default function Welcome({ auth }) {
+    const libraryLogo = usePage().props.libraryLogo || '/images/logo-wbs.png';
     return (
         <>
             <Head title="Perpustakaan WBS" />
             <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 text-foreground">
                 <main className="flex w-full max-w-md flex-col items-center text-center">
                     <img
-                        src="/images/logo-wbs.png"
+                        src={libraryLogo}
                         alt="Logo Perpustakaan WBS"
                         className="h-20 w-20 object-contain"
                     />

@@ -55,7 +55,7 @@ abstract class Controller
      * Upload baru tinggal di public/, file lama (era symlink storage)
      * tetap dilayani lewat /storage/ bila masih ada di sana.
      */
-    protected static function photoUrl(?string $path): ?string
+    public static function photoUrl(?string $path): ?string
     {
         if (! $path) {
             return null;
