@@ -251,7 +251,7 @@ export default function Dashboard({ stats, recentLoans, overdueLoans, dueSoonLoa
                             ) : (
                                 <EmptyState
                                     icon={Clock}
-                                    title="Tidak ada yang hampir terlambat"
+                                    title="Belum ada yang harus dikembalikan"
                                     description="Semua peminjaman masih dalam batas waktu."
                                 />
                             )}

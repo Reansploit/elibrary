@@ -227,7 +227,7 @@ export default function Overdue({ overdueLoans, dueSoonLoans, loan_duration = 7 
                         ) : (
                             <EmptyState
                                 icon={Clock}
-                                title="Tidak ada yang hampir terlambat"
+                                title="Belum ada yang harus dikembalikan"
                                 description="Semua peminjaman dalam batas waktu."
                             />
                         )}
