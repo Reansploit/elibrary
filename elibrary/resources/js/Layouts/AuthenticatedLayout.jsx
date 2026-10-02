@@ -516,6 +516,9 @@ export default function AuthenticatedLayout({ children }) {
                     <main key={url} className="mx-auto w-full max-w-6xl space-y-6 p-4 lg:p-6">
                         {children}
                     </main>
+                    <footer className="mx-auto w-full max-w-6xl px-4 pb-6 text-center text-xs text-muted-foreground lg:px-6">
+                        © 2026 Studio-Alpaca
+                    </footer>
                 </ScrollArea>
             </div>
         </div>

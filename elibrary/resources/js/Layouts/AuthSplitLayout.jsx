@@ -60,6 +60,7 @@ export default function AuthSplitLayout({ children }) {
                         </div>
                     </div>
                     {children}
+                    <p className="mt-8 text-center text-xs text-muted-foreground">© 2026 Studio-Alpaca</p>
                 </div>
             </div>
         </div>

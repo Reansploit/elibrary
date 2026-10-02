@@ -49,6 +49,9 @@ export default function Welcome({ auth }) {
                         )}
                     </div>
                 </main>
+                <footer className="pb-8 text-center text-xs text-muted-foreground">
+                    © 2026 Studio-Alpaca
+                </footer>
             </div>
         </>
     );
