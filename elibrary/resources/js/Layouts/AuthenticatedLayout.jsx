@@ -517,7 +517,7 @@ export default function AuthenticatedLayout({ children }) {
                         {children}
                     </main>
                     <footer className="mx-auto w-full max-w-6xl px-4 pb-6 text-center text-xs text-muted-foreground lg:px-6">
-                        © 2026 Studio-Alpaca
+                        Copyright © {new Date().getFullYear()} Studio-Alpaca
                     </footer>
                 </ScrollArea>
             </div>
