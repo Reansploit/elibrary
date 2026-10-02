@@ -9,18 +9,19 @@ import { buttonVariants } from '@/Components/ui/button';
 // tanpa statistik/klaim karena datanya tidak ditampilkan di sini (R-17, R-36).
 export default function Welcome({ auth }) {
     const libraryLogo = usePage().props.libraryLogo || '/images/logo-wbs.png';
+    const libraryName = usePage().props.libraryName || 'Perpustakaan WBS';
     return (
         <>
-            <Head title="Perpustakaan WBS" />
+            <Head title={libraryName} />
             <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 text-foreground">
                 <main className="flex w-full max-w-md flex-col items-center text-center">
                     <img
                         src={libraryLogo}
-                        alt="Logo Perpustakaan WBS"
+                        alt={`Logo ${libraryName}`}
                         className="h-20 w-20 object-contain"
                     />
                     <h1 className="mt-6 text-2xl font-bold tracking-tight">
-                        Perpustakaan WBS
+                        {libraryName}
                     </h1>
                     <p className="mt-2 text-sm text-muted-foreground">
                         Sistem informasi perpustakaan pondok.
