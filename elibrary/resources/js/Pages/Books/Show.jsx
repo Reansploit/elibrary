@@ -92,6 +92,9 @@ export default function BookShow({ book, history, exemplars }) {
                                 <p className="font-semibold">{book.title}</p>
                                 <p className="font-mono text-xs text-muted-foreground">{book.id}</p>
                             </div>
+                            <Badge variant={book.jenis === 'Fisik' ? 'outline' : 'secondary'}>
+                                {book.jenis || 'Fisik'}
+                            </Badge>
                             {!book.borrowed ? (
                                 <Badge variant="outline">Tersedia</Badge>
                             ) : (

@@ -3,6 +3,7 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import { Plus, Pencil, Trash2, BookOpen, Search, BarChart2, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
@@ -117,6 +118,7 @@ export default function BookIndex({ books }) {
                                         <TableHead>Pengarang</TableHead>
                                         <TableHead>Lokasi</TableHead>
                                         <TableHead>Kategori</TableHead>
+                                        <TableHead>Jenis</TableHead>
                                         <TableHead className="text-center">Tersedia</TableHead>
                                         <TableHead className="text-right">Aksi</TableHead>
                                     </TableRow>
@@ -143,6 +145,11 @@ export default function BookIndex({ books }) {
                                             </TableCell>
                                             <TableCell className="max-w-32 truncate text-muted-foreground">
                                                 {book.category || '-'}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant={book.jenis === 'Fisik' ? 'outline' : 'secondary'}>
+                                                    {book.jenis || 'Fisik'}
+                                                </Badge>
                                             </TableCell>
                                             <TableCell
                                                 className="text-center font-medium"

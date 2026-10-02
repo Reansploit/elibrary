@@ -105,6 +105,19 @@ abstract class Controller
      * Hapus file foto (abaikan bila kosong). Cek lokasi baru dulu,
      * lalu lokasi lama era symlink.
      */
+    /**
+     * Jenis buku: ada berkas = Ebook, stok > 1 = Fisik + Ebook,
+     * sisanya Fisik.
+     */
+    protected static function jenis($book): string
+    {
+        if (empty($book->file_ebook)) {
+            return 'Fisik';
+        }
+
+        return ((int) ($book->jumlah ?? 0)) > 1 ? 'Fisik + Ebook' : 'Ebook';
+    }
+
     protected function deletePhoto(?string $path): void
     {
         if (! $path || str_contains($path, '..')) {
